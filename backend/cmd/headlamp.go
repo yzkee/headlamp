@@ -47,6 +47,7 @@ type HeadlampConfig struct {
 	insecure              bool
 	enableHelm            bool
 	enableDynamicClusters bool
+	watchPluginsChanges   bool
 	port                  uint
 	kubeConfigPath        string
 	skippedKubeContexts   string
@@ -358,7 +359,7 @@ func createHeadlampHandler(config *HeadlampConfig) http.Handler {
 
 	skipFunc := kubeconfig.SkipKubeContextInCommaSeparatedString(config.skippedKubeContexts)
 
-	if !config.useInCluster {
+	if !config.useInCluster || config.watchPluginsChanges {
 		// in-cluster mode is unlikely to want reloading plugins.
 		pluginEventChan := make(chan string)
 		go plugins.Watch(config.pluginDir, pluginEventChan)
