@@ -22,6 +22,8 @@ type Metrics struct {
 	ClusterProxyRequests metric.Int64Counter
 	// PluginLoadCount tracks the number of plugin loads
 	PluginLoadCount metric.Int64Counter
+	// PluginDeleteCount tracks the number of plugin deletions
+	PluginDeleteCount metric.Int64Counter
 	// ErrorCounter counts application errors by category
 	ErrorCounter metric.Int64Counter
 }
@@ -33,74 +35,95 @@ type Metrics struct {
 func NewMetrics() (*Metrics, error) {
 	meter := otel.Meter("headlamp")
 
-	requestCounter, err := meter.Int64Counter(
+	metrics := &Metrics{}
+
+	if err := initRequestMetrics(meter, metrics); err != nil {
+		return nil, err
+	}
+
+	if err := initApplicationMetrics(meter, metrics); err != nil {
+		return nil, err
+	}
+
+	return metrics, nil
+}
+
+// initRequestMetrics initializes HTTP request-related metrics.
+func initRequestMetrics(meter metric.Meter, metrics *Metrics) error {
+	var err error
+
+	metrics.RequestCounter, err = meter.Int64Counter(
 		"http.server.request_count",
 		metric.WithDescription("Total number of HTTP requests"),
 	)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	requestDuration, err := meter.Float64Histogram(
+	metrics.RequestDuration, err = meter.Float64Histogram(
 		"http.server.duration",
 		metric.WithDescription("Duration of HTTP requests"),
 		metric.WithUnit("ms"),
 	)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	activeRequests, err := meter.Int64UpDownCounter(
+	metrics.ActiveRequestsGauge, err = meter.Int64UpDownCounter(
 		"http.server.active_requests",
 		metric.WithDescription("Number of active HTTP requests"),
 	)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	clusterProxyRequests, err := meter.Int64Counter(
+	metrics.ClusterProxyRequests, err = meter.Int64Counter(
 		"headlamp.cluster_proxy.requests",
 		metric.WithDescription("Total number of cluster proxy requests"),
 	)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	pluginLoadCount, err := meter.Int64Counter(
+	return nil
+}
+
+// initApplicationMetrics initializes Headlamp-specific application metrics.
+func initApplicationMetrics(meter metric.Meter, metrics *Metrics) error {
+	var err error
+
+	metrics.PluginLoadCount, err = meter.Int64Counter(
 		"headlamp.plugin.load_count",
 		metric.WithDescription("Number of plugin loads"),
 	)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	errorCounter, err := meter.Int64Counter(
+	metrics.PluginDeleteCount, err = meter.Int64Counter(
+		"headlamp.plugin.delete_count",
+		metric.WithDescription("Number of plugin deletions"),
+	)
+	if err != nil {
+		return err
+	}
+
+	metrics.ErrorCounter, err = meter.Int64Counter(
 		"headlamp.errors",
 		metric.WithDescription("Count of errors"),
 	)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return &Metrics{
-		RequestCounter:       requestCounter,
-		RequestDuration:      requestDuration,
-		ActiveRequestsGauge:  activeRequests,
-		ClusterProxyRequests: clusterProxyRequests,
-		PluginLoadCount:      pluginLoadCount,
-		ErrorCounter:         errorCounter,
-	}, nil
+	return nil
 }
 
 // RequestCounterMiddleware creates HTTP middleware that tracks request metrics.
-// The middleware:
-// 1. Increments the active requests gauge when a request starts
-// 2. Records the request count with method, path, and status code attributes
-// 3. Decrements the active requests gauge when the request completes
-// 4. Handles panics by recording them with a 500 status code
 func (m *Metrics) RequestCounterMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		m.ActiveRequestsGauge.Add(r.Context(), 1)
+
 		wrapper := newResponseWriter(w)
 
 		defer func() {
