@@ -39,7 +39,11 @@ const queryClient = new QueryClient({
     },
   },
 });
-const queryDevtoolsEnabled = false;
+
+// https://vite.dev/guide/env-and-mode
+// if you want to enable the devtools for react-query,
+// just set REACT_APP_ENABLE_REACT_QUERY_DEVTOOLS=true in .env file
+const queryDevtoolsEnabled = import.meta.env.REACT_APP_ENABLE_REACT_QUERY_DEVTOOLS === 'true';
 
 function App() {
   return (
