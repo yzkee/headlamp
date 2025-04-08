@@ -18,6 +18,7 @@ interface ListItemLinkProps {
   iconOnly?: boolean;
   hasParent?: boolean;
   fullWidth?: boolean;
+  divider?: boolean;
   containerProps?: {
     [prop: string]: any;
   };
@@ -98,6 +99,7 @@ export default function ListItemLink(props: ListItemLinkProps) {
             theme.palette.sidebar.color ??
             theme.palette.getContrastText(theme.palette.sidebar.background),
           margin: 0,
+          border: 'none',
           borderRadius: theme.shape.borderRadius + 'px',
           height: iconOnly ? '50px' : undefined,
           opacity: hasParent ? 0.9 : 1.0,
@@ -106,6 +108,18 @@ export default function ListItemLink(props: ListItemLinkProps) {
           svg: {
             color: 'currentColor',
           },
+
+          ':before': other.divider
+            ? {
+                content: '""',
+                position: 'absolute',
+                bottom: 0,
+                left: theme.shape.borderRadius + 'px',
+                right: theme.shape.borderRadius + 'px',
+                height: '1px',
+                background: alpha(theme.palette.sidebar.color, 0.15),
+              }
+            : undefined,
 
           '&.Mui-selected': hasParent
             ? {
