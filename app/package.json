@@ -116,7 +116,6 @@
     "files": [
       "electron/main.js",
       "electron/preload.js",
-      "electron/locales/",
       "electron/i18next.config.js",
       "electron/i18n-helper.js",
       "electron/windowSize.js",
@@ -159,6 +158,7 @@
     "@electron/notarize": "^2.3.2",
     "@headlamp-k8s/eslint-config": "^0.6.0",
     "@types/jest": "^29.5.14",
+    "@types/node": "^22.14.0",
     "electron": "^31.2.0",
     "electron-builder": "^24.13.3",
     "i18next-parser": "^9.0.0",
