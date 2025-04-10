@@ -27,6 +27,9 @@ make run-frontend
 This command leverages the `create-react-app`'s start script that launches
 a development server for the frontend (by default at `localhost:3000`).
 
+We use [react-query](https://tanstack.com/query/latest/docs/framework/react/overview) 
+for network request, if you need the devtools for react-query, you can simply set `REACT_APP_ENABLE_REACT_QUERY_DEVTOOLS=true` in the `.env` file.
+
 ## API documentation
 
 API documentation for TypeScript is done with [typedoc](https://typedoc.org/) and [typedoc-plugin-markdown](https://github.com/tgreyuk/typedoc-plugin-markdown), and is configured in tsconfig.json
