@@ -30,6 +30,7 @@
   "Warnings": "",
   "Home": "Startseite",
   "All Clusters": "Alle Cluster",
+  "Selected clusters": "",
   "Load cluster": "Cluster laden",
   "Something went wrong with cluster {{ cluster }}": "Mit dem Cluster ist etwas schief gelaufen {{ cluster }}",
   "Choose another cluster": "Wählen Sie einen anderen Cluster",

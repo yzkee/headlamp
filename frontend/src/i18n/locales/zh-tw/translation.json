@@ -30,6 +30,7 @@
   "Warnings": "警告",
   "Home": "首頁",
   "All Clusters": "所有叢集",
+  "Selected clusters": "",
   "Load cluster": "讀取叢集",
   "Something went wrong with cluster {{ cluster }}": "叢集 {{ cluster }} 出現問題",
   "Choose another cluster": "選擇其他叢集",
