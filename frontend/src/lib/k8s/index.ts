@@ -124,7 +124,7 @@ export function useCluster() {
   React.useEffect(() => {
     // Listen to route changes
     return history.listen(() => {
-      const newCluster = getCluster();
+      const newCluster = getCluster(history.location.pathname);
       // Update the state only when the cluster changes
       setCluster(currentCluster => (newCluster !== currentCluster ? newCluster : currentCluster));
     });
@@ -140,9 +140,10 @@ export function useCluster() {
  */
 export function useSelectedClusters(): string[] {
   const clusterInURL = useCluster();
+  const history = useHistory();
 
   const clusterGroup = React.useMemo(() => {
-    return getSelectedClusters();
+    return getSelectedClusters([], history.location.pathname);
   }, [clusterInURL]);
 
   return clusterGroup;

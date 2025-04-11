@@ -83,7 +83,7 @@ export function useKubeObject<K extends KubeObject>({
   kubeObjectClass,
   namespace,
   name,
-  cluster = getCluster() ?? undefined,
+  cluster = getCluster() ?? '',
   queryParams,
 }: {
   /** Class to instantiate the object with */
@@ -96,9 +96,6 @@ export function useKubeObject<K extends KubeObject>({
   cluster?: string;
   queryParams?: QueryParameters;
 }): [K | null, ApiError | null] & QueryResponse<K, ApiError> {
-  if (!cluster) {
-    throw new Error('No cluster provided');
-  }
   type Instance = K;
   const { endpoint, error: endpointError } = useEndpoints(
     kubeObjectClass.apiEndpoint.apiInfo,

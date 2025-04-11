@@ -172,17 +172,6 @@ export function useFilterFunc<
   };
 }
 
-/**
- * Get list of selected clusters.
- *
- * @param returnWhenNoClusters return this value when no clusters are found.
- * @returns the cluster group from the URL.
- */
-export function getSelectedClusters(returnWhenNoClusters: string[] = []): string[] {
-  const clusterFromURL = getClusterPathParam();
-  return clusterFromURL?.split('+') || returnWhenNoClusters;
-}
-
 export function useErrorState(dependentSetter?: (...args: any) => void) {
   const [error, setError] = React.useState<ApiError | null>(null);
 
