@@ -369,7 +369,7 @@ export const useSidebarItems = (sidebarName: string = DefaultSidebars.IN_CLUSTER
     }
 
     return sidebars;
-  }, [customSidebarEntries, shouldShowHomeItem, Object.keys(clusters).join(','), cluster]);
+  }, [customSidebarEntries, shouldShowHomeItem, Object.keys(clusters).join(','), cluster, t]);
 
   const unsortedItems =
     sidebars[sidebarName === '' ? DefaultSidebars.IN_CLUSTER : sidebarName] ?? [];
