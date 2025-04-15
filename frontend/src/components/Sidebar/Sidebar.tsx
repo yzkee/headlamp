@@ -63,6 +63,7 @@ function AddClusterButton() {
         <Button
           onClick={() => history.push(createRouteURL('addCluster'))}
           startIcon={<InlineIcon icon="mdi:plus-box-outline" />}
+          sx={{ color: theme => theme.palette.sidebar.color }}
         >
           {t('translation|Add Cluster')}
         </Button>
