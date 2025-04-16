@@ -88,35 +88,6 @@ export function debugVerbose(modName: string): void {
   verboseModDebug.push(modName);
 }
 
-export function addQuery(
-  queryObj: { [key: string]: string },
-  queryParamDefaultObj: { [key: string]: string } = {},
-  history: any,
-  location: any,
-  tableName = ''
-) {
-  const pathname = location.pathname;
-  const searchParams = new URLSearchParams(location.search);
-
-  if (!!tableName) {
-    searchParams.set('tableName', tableName);
-  }
-  // Ensure that default values will not show up in the URL
-  for (const key in queryObj) {
-    const value = queryObj[key];
-    if (value !== queryParamDefaultObj[key]) {
-      searchParams.set(key, value);
-    } else {
-      searchParams.delete(key);
-    }
-  }
-
-  history.push({
-    pathname: pathname,
-    search: searchParams.toString(),
-  });
-}
-
 /**
  * @returns true if the app is in development mode.
  */
