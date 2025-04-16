@@ -1,5 +1,6 @@
 import { Cluster } from '../lib/k8s/cluster';
 import { loadClusterSettings, storeClusterSettings } from './clusterSettings';
+import { isDockerDesktop } from './isDockerDesktop';
 import { isElectron } from './isElectron';
 import { getTablesRowsPerPage, setTablesRowsPerPage } from './tablesRowsPerPage';
 
@@ -87,20 +88,6 @@ export function debugVerbose(modName: string): void {
   verboseModDebug.push(modName);
 }
 
-/**
- * isDockerDesktop checks if ddClient is available in the window object
- * if it is available then it is running in docker desktop
- *
- *
- * @returns true if Headlamp is running inside docker desktop
- */
-function isDockerDesktop(): boolean {
-  if (window?.ddClient === undefined) {
-    return false;
-  }
-  return true;
-}
-
 export function getFilterValueByNameFromURL(key: string, location: any): string[] {
   const searchParams = new URLSearchParams(location.search);
 
@@ -161,7 +148,7 @@ function isDevMode(): boolean {
 function getAppUrl(): string {
   let url =
     exportFunctions.isDevMode() || isElectron() ? 'http://localhost:4466' : window.location.origin;
-  if (exportFunctions.isDockerDesktop()) {
+  if (isDockerDesktop()) {
     url = 'http://localhost:64446';
   }
 
@@ -176,7 +163,6 @@ declare global {
     headlampBaseUrl?: string;
     Buffer: typeof Buffer;
     clusterConfigFetchHandler: number;
-    ddClient: any | undefined;
   }
 }
 
