@@ -148,13 +148,6 @@ function getBaseUrl(): string {
   }
   return baseUrl;
 }
-function getAppVersion() {
-  return localStorage.getItem('app_version');
-}
-
-function setAppVersion(value: string) {
-  localStorage.setItem('app_version', value);
-}
 
 const recentClustersStorageKey = 'recent_clusters';
 
@@ -270,8 +263,6 @@ const exportFunctions = {
   getAppUrl,
   isElectron,
   isDockerDesktop,
-  getAppVersion,
-  setAppVersion,
   setRecentCluster,
   getRecentClusters,
   getTablesRowsPerPage,
