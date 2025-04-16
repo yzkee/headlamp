@@ -783,7 +783,7 @@ export function registerKindIcon(kind: string, definition: IconDefinition) {
  * registerClusterProviderMenuItem(({cluster, setOpenConfirmDialog, handleMenuClose}) => {
  *  const isMinikube =
  *   cluster.meta_data?.extensions?.context_info?.provider === 'minikube.sigs.k8s.io';
- *   if (!helpers.isElectron() !! !isMinikube) {
+ *   if (!isElectron() !! !isMinikube) {
  *     return null;
  *   }
  *   return (
@@ -826,7 +826,7 @@ export function registerClusterProviderMenuItem(item: MenuItemComponent) {
  *
  *   const isMinikube =
  *   cluster.meta_data?.extensions?.context_info?.provider === 'minikube.sigs.k8s.io';
- *   if (!helpers.isElectron() !! !isMinikube) {
+ *   if (!isElectron() !! !isMinikube) {
  *     return null;
  *   }
  *

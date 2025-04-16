@@ -21,6 +21,7 @@ import * as Recharts from 'recharts';
 import semver from 'semver';
 import * as CommonComponents from '../components/common';
 import helpers from '../helpers';
+import { isElectron } from '../helpers/isElectron';
 import * as K8s from '../lib/k8s';
 import * as ApiProxy from '../lib/k8s/apiProxy';
 import * as Crd from '../lib/k8s/crd';
@@ -298,7 +299,7 @@ export async function fetchAndExecutePlugins(
   const { sourcesToExecute, incompatiblePlugins } = filterSources(
     sources,
     packageInfos,
-    helpers.isElectron(),
+    isElectron(),
     compatibleHeadlampPluginVersion,
     updatedSettingsPackages
   );

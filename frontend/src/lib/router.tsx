@@ -91,7 +91,7 @@ import ValidatingWebhookConfigurationDetails from '../components/webhookconfigur
 import ValidatingWebhookConfigurationList from '../components/webhookconfiguration/ValidatingWebhookConfigList';
 import WorkloadDetails from '../components/workload/Details';
 import WorkloadOverview from '../components/workload/Overview';
-import helpers from '../helpers';
+import { isElectron } from '../helpers/isElectron';
 import LocaleSelect from '../i18n/LocaleSelect/LocaleSelect';
 import store from '../redux/stores/store';
 import { useCluster } from './k8s';
@@ -846,7 +846,7 @@ const defaultRoutes: {
     exact: true,
     name: 'PortForwards',
     sidebar: 'portforwards',
-    disabled: !helpers.isElectron(),
+    disabled: !isElectron(),
     component: () => <PortForwardingList />,
   },
   loadKubeConfig: {
@@ -856,7 +856,7 @@ const defaultRoutes: {
     sidebar: null,
     useClusterURL: false,
     noAuthRequired: true,
-    disabled: !helpers.isElectron(),
+    disabled: !isElectron(),
     component: () => <KubeConfigLoader />,
   },
   addCluster: {
@@ -869,7 +869,7 @@ const defaultRoutes: {
     },
     useClusterURL: false,
     noAuthRequired: true,
-    disabled: !helpers.isElectron(),
+    disabled: !isElectron(),
     component: () => <AddCluster open onChoice={() => {}} />,
   },
   map: {

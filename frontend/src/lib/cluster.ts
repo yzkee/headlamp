@@ -1,5 +1,6 @@
 import { matchPath } from 'react-router';
 import helpers from '../helpers';
+import { isElectron } from '../helpers/isElectron';
 
 /**
  * @returns A path prefixed with cluster path, and the given path.
@@ -19,7 +20,7 @@ export function getClusterPrefixedPath(path?: string | null) {
  */
 export function getCluster(): string | null {
   const prefix = helpers.getBaseUrl();
-  const urlPath = helpers.isElectron()
+  const urlPath = isElectron()
     ? window.location.hash.substring(1)
     : window.location.pathname.slice(prefix.length);
 

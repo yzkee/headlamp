@@ -1,11 +1,15 @@
 import helpers from '../helpers';
+import * as isElectron from '../helpers/isElectron';
 import { getCluster, getClusterPrefixedPath } from './cluster';
 
 vi.mock('../helpers', () => ({
   default: {
     getBaseUrl: vi.fn(),
-    isElectron: vi.fn(),
   },
+}));
+
+vi.mock('../helpers/isElectron', () => ({
+  isElectron: vi.fn(),
 }));
 
 describe('getCluster', () => {
@@ -27,7 +31,7 @@ describe('getCluster', () => {
 
   describe('Browser Environment', () => {
     beforeEach(() => {
-      vi.mocked(helpers.isElectron).mockReturnValue(false);
+      vi.mocked(isElectron.isElectron).mockReturnValue(false);
     });
 
     it('should extract cluster name from pathname without base URL', () => {
@@ -61,7 +65,7 @@ describe('getCluster', () => {
 
   describe('Electron Environment', () => {
     beforeEach(() => {
-      vi.mocked(helpers.isElectron).mockReturnValue(true);
+      vi.mocked(isElectron.isElectron).mockReturnValue(true);
     });
 
     it('should extract cluster name from hash', () => {

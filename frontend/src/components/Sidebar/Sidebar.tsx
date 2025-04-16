@@ -9,7 +9,7 @@ import React, { memo, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDispatch } from 'react-redux';
 import { useHistory } from 'react-router-dom';
-import helpers from '../../helpers';
+import { isElectron } from '../../helpers/isElectron';
 import { createRouteURL } from '../../lib/router';
 import { useTypedSelector } from '../../redux/reducers/reducers';
 import { ActionButton } from '../common';
@@ -122,7 +122,7 @@ const DefaultLinkArea = memo((props: { sidebarName: string; isOpen: boolean }) =
         flexDirection={isOpen ? 'row' : 'column'}
         p={1}
       >
-        <Box>{helpers.isElectron() && <AddClusterButton />}</Box>
+        <Box>{isElectron() && <AddClusterButton />}</Box>
         <Box>
           <SidebarToggleButton />
         </Box>

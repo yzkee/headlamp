@@ -1,40 +1,5 @@
 import { Cluster } from '../lib/k8s/cluster';
-
-/**
- * Determines whether app is running in electron environment.
- * Note: The isElectron code (Licence: MIT) is taken from
- *   https://github.com/cheton/is-electron/blob/master/index.js
- */
-function isElectron(): boolean {
-  // Renderer process
-  if (
-    typeof window !== 'undefined' &&
-    typeof window.process === 'object' &&
-    (window.process as any).type === 'renderer'
-  ) {
-    return true;
-  }
-
-  // Main process
-  if (
-    typeof process !== 'undefined' &&
-    typeof process.versions === 'object' &&
-    !!(process.versions as any).electron
-  ) {
-    return true;
-  }
-
-  // Detect the user agent when the `nodeIntegration` option is set to true
-  if (
-    typeof navigator === 'object' &&
-    typeof navigator.userAgent === 'string' &&
-    navigator.userAgent.indexOf('Electron') >= 0
-  ) {
-    return true;
-  }
-
-  return false;
-}
+import { isElectron } from './isElectron';
 
 /** used by isDebugVerbose and debugVerbose */
 const verboseModDebug: string[] = [];
@@ -193,9 +158,7 @@ function isDevMode(): boolean {
  */
 function getAppUrl(): string {
   let url =
-    exportFunctions.isDevMode() || exportFunctions.isElectron()
-      ? 'http://localhost:4466'
-      : window.location.origin;
+    exportFunctions.isDevMode() || isElectron() ? 'http://localhost:4466' : window.location.origin;
   if (exportFunctions.isDockerDesktop()) {
     url = 'http://localhost:64446';
   }
@@ -222,7 +185,7 @@ declare global {
  */
 function getBaseUrl(): string {
   let baseUrl = '';
-  if (exportFunctions.isElectron()) {
+  if (isElectron()) {
     return '';
   }
   if (window?.headlampBaseUrl !== undefined) {

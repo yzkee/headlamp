@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import helpers from '../../helpers';
+import { isElectron } from '../../helpers/isElectron';
 import { useCluster } from '../../lib/k8s';
 import { createRouteURL } from '../../lib/router';
 import { useTypedSelector } from '../../redux/reducers/reducers';
@@ -37,7 +37,7 @@ export const useSidebarItems = (sidebarName: string = DefaultSidebars.IN_CLUSTER
   const customSidebarEntries = useTypedSelector(state => state.sidebar.entries);
   const customSidebarFilters = useTypedSelector(state => state.sidebar.filters);
   const settings = useTypedSelector(state => state.config.settings);
-  const shouldShowHomeItem = helpers.isElectron() || Object.keys(clusters).length !== 1;
+  const shouldShowHomeItem = isElectron() || Object.keys(clusters).length !== 1;
   const cluster = useCluster();
   const { t } = useTranslation();
 
@@ -190,7 +190,7 @@ export const useSidebarItems = (sidebarName: string = DefaultSidebars.IN_CLUSTER
           {
             name: 'portforwards',
             label: t('glossary|Port Forwarding'),
-            hide: !helpers.isElectron(),
+            hide: !isElectron(),
           },
           {
             name: 'NetworkPolicies',

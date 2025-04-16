@@ -6,6 +6,7 @@ import MuiLink from '@mui/material/Link';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import helpers from '../../../helpers';
+import { isElectron } from '../../../helpers/isElectron';
 import { PortForward as PortForwardState } from '../../../lib/k8s/api/v1/portForward';
 import {
   listPortForward,
@@ -137,7 +138,7 @@ function PortForwardContent(props: PortForwardProps) {
     });
   }, []);
 
-  if (!helpers.isElectron()) {
+  if (!isElectron()) {
     return null;
   }
 
@@ -360,7 +361,7 @@ function PortForwardContent(props: PortForwardProps) {
 }
 
 export default function PortForward(props: PortForwardProps) {
-  if (!helpers.isElectron()) return null;
+  if (!isElectron()) return null;
 
   return <PortForwardContent {...props} />;
 }

@@ -18,6 +18,7 @@ import { useTranslation } from 'react-i18next';
 import { generatePath } from 'react-router';
 import { useHistory } from 'react-router-dom';
 import helpers from '../../helpers';
+import { isElectron } from '../../helpers/isElectron';
 import { useCluster, useClustersConf } from '../../lib/k8s';
 import { Cluster } from '../../lib/k8s/cluster';
 import { createRouteURL } from '../../lib/router';
@@ -292,7 +293,7 @@ function ClusterChooserPopup(props: ChooserPopupPros) {
           ))}
         </MenuList>
       </Box>
-      {helpers.isElectron() && (
+      {isElectron() && (
         <>
           <Button
             sx={theme => ({

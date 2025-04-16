@@ -3,6 +3,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { generatePath, useHistory } from 'react-router-dom';
 import helpers from '../../../helpers';
+import { isElectron } from '../../../helpers/isElectron';
 import { Cluster } from '../../../lib/k8s/cluster';
 import { createRouteURL } from '../../../lib/router';
 import { getClusterPrefixedPath } from '../../../lib/util';
@@ -102,7 +103,7 @@ export default function RecentClusters(props: RecentClustersProps) {
           />
         </Grid>
       ))}
-      {helpers.isElectron() && (
+      {isElectron() && (
         <Grid item>
           <SquareButton
             onClick={() => {

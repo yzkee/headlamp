@@ -22,6 +22,7 @@ import { useDispatch } from 'react-redux';
 import { generatePath } from 'react-router';
 import { useHistory } from 'react-router-dom';
 import helpers from '../../helpers';
+import { isElectron } from '../../helpers/isElectron';
 import { useClustersConf } from '../../lib/k8s';
 import { Cluster } from '../../lib/k8s/cluster';
 import { createRouteURL } from '../../lib/router';
@@ -427,7 +428,7 @@ function Chooser(props: ClusterDialogProps) {
                 <DialogContentText>
                   {t('Please make sure you have at least one cluster configured.')}
                 </DialogContentText>
-                {helpers.isElectron() && (
+                {isElectron() && (
                   <DialogContentText>
                     {t('Or try running Headlamp with a different kube config.')}
                   </DialogContentText>
@@ -438,7 +439,7 @@ function Chooser(props: ClusterDialogProps) {
         ) : (
           <ClusterList clusters={clusterList} onButtonClick={handleButtonClick} />
         )}
-        {helpers.isElectron() ? (
+        {isElectron() ? (
           <Box style={{ justifyContent: 'center', display: 'flex' }}>
             <ActionButton
               description={t('Load from a file')}
