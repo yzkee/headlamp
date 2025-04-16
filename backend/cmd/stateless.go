@@ -53,7 +53,7 @@ func (c *HeadlampConfig) setKeyInCache(key string, context kubeconfig.Context) e
 			return err
 		}
 	} else {
-		if err = c.kubeConfigStore.UpdateTTL(key, ContextUpdateChacheTTL); err != nil {
+		if err = c.kubeConfigStore.UpdateTTL(key, ContextUpdateCacheTTL); err != nil {
 			logger.Log(logger.LevelError, map[string]string{"key": key},
 				err, "updating context ttl")
 
