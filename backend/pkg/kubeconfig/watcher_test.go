@@ -25,7 +25,7 @@ func TestWatchAndLoadFiles(t *testing.T) {
 
 	kubeConfigStore := kubeconfig.NewContextStore()
 
-	go kubeconfig.LoadAndWatchFiles(kubeConfigStore, path, kubeconfig.KubeConfig)
+	go kubeconfig.LoadAndWatchFiles(kubeConfigStore, path, kubeconfig.KubeConfig, nil)
 
 	// Test adding a context
 	t.Run("Add context", func(t *testing.T) {

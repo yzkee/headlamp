@@ -376,7 +376,7 @@ func TestInvalidKubeConfig(t *testing.T) {
 		kubeConfigStore:       kubeConfigStore,
 	}
 
-	err = kubeconfig.LoadAndStoreKubeConfigs(kubeConfigStore, absPath, kubeconfig.KubeConfig)
+	err = kubeconfig.LoadAndStoreKubeConfigs(kubeConfigStore, absPath, kubeconfig.KubeConfig, nil)
 	assert.Error(t, err)
 
 	clusters := c.getClusters()

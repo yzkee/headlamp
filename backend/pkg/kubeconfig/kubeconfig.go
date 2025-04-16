@@ -910,26 +910,27 @@ func GetInClusterContext(oidcIssuerURL string,
 	}, nil
 }
 
-// func type for context filter
-// if the func return true, the context will be skipped
-// otherwise the context will be used
+// Func type for context filter, if the func return true,
+// the context will be skipped otherwise the context will be used.
 type shouldBeSkippedFunc = func(kubeContext Context) bool
 
-// AllowAllKubeContext will keep all contexts
+// AllowAllKubeContext will keep all contexts.
 func AllowAllKubeContext(_ Context) bool {
 	return false
 }
 
-// SkipKubeContextInCommaSeperatedString will skip the contexts
+// SkipKubeContextInCommaSeparatedString will skip the contexts
 // whose names are in the given comma-separated string.
 // For example, if pass the "a,b" for blackKubeContextNameStr,
-// the contexts named "a" and "b" will be skipped
-func SkipKubeContextInCommaSeperatedString(blackKubeContextNameStr string) shouldBeSkippedFunc {
+// the contexts named "a" and "b" will be skipped.
+func SkipKubeContextInCommaSeparatedString(blackKubeContextNameStr string) shouldBeSkippedFunc {
 	blackKubeContextNameList := strings.Split(blackKubeContextNameStr, ",")
 	blackKubeContextNameMap := map[string]bool{}
+
 	for _, blackKubeContextName := range blackKubeContextNameList {
 		blackKubeContextNameMap[blackKubeContextName] = true
 	}
+
 	return func(kubeContext Context) bool {
 		return blackKubeContextNameMap[kubeContext.Name]
 	}
@@ -940,7 +941,9 @@ func SkipKubeContextInCommaSeperatedString(blackKubeContextNameStr string) shoul
 // It stores the valid contexts and returns the errors if any.
 // Note: No need to remove contexts from the store, since
 // adding a context with the same name will overwrite the old one.
-func LoadAndStoreKubeConfigs(kubeConfigStore ContextStore, kubeConfigs string, source int, ignoreFunc shouldBeSkippedFunc) error {
+func LoadAndStoreKubeConfigs(kubeConfigStore ContextStore, kubeConfigs string, source int,
+	ignoreFunc shouldBeSkippedFunc,
+) error {
 	var errs []error //nolint:prealloc
 
 	kubeConfigContexts, contextErrors, err := LoadContextsFromMultipleFiles(kubeConfigs, source)
@@ -953,10 +956,12 @@ func LoadAndStoreKubeConfigs(kubeConfigStore ContextStore, kubeConfigs string, s
 	if _ignoreFunc == nil {
 		_ignoreFunc = AllowAllKubeContext
 	}
+
 	for _, kubeConfigContext := range kubeConfigContexts {
 		if _ignoreFunc(kubeConfigContext) {
 			continue
 		}
+
 		kubeConfigContext := kubeConfigContext
 
 		err := kubeConfigStore.AddContext(&kubeConfigContext)
