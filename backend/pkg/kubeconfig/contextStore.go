@@ -91,7 +91,7 @@ func (c *contextStore) RemoveContext(name string) error {
 	return c.cache.Delete(context.Background(), name)
 }
 
-// AddContextWithTTL adds a context to the store with a ttl.
+// AddContextWithKeyAndTTL adds a context to the store with a ttl.
 func (c *contextStore) AddContextWithKeyAndTTL(headlampContext *Context, key string, ttl time.Duration) error {
 	return c.cache.SetWithTTL(context.Background(), key, headlampContext, ttl)
 }

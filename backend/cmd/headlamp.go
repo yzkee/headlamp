@@ -69,7 +69,7 @@ const isWindows = runtime.GOOS == "windows"
 
 const ContextCacheTTL = 5 * time.Minute // minutes
 
-const ContextUpdateChacheTTL = 20 * time.Second // seconds
+const ContextUpdateCacheTTL = 20 * time.Second // seconds
 
 const JWTExpirationTTL = 10 * time.Second // seconds
 
@@ -82,7 +82,7 @@ const (
 
 type clientConfig struct {
 	Clusters                []Cluster `json:"clusters"`
-	IsDyanmicClusterEnabled bool      `json:"isDynamicClusterEnabled"`
+	IsDynamicClusterEnabled bool      `json:"isDynamicClusterEnabled"`
 }
 
 type spaHandler struct {
