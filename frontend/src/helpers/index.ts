@@ -88,16 +88,6 @@ export function debugVerbose(modName: string): void {
   verboseModDebug.push(modName);
 }
 
-export function getFilterValueByNameFromURL(key: string, location: any): string[] {
-  const searchParams = new URLSearchParams(location.search);
-
-  const filterValue = searchParams.get(key);
-  if (!filterValue) {
-    return [];
-  }
-  return filterValue.split(' ');
-}
-
 export function addQuery(
   queryObj: { [key: string]: string },
   queryParamDefaultObj: { [key: string]: string } = {},
