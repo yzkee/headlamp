@@ -1,5 +1,6 @@
 import { Cluster } from '../lib/k8s/cluster';
 import { isElectron } from './isElectron';
+import { getTablesRowsPerPage, setTablesRowsPerPage } from './tablesRowsPerPage';
 
 /** used by isDebugVerbose and debugVerbose */
 const verboseModDebug: string[] = [];
@@ -235,21 +236,6 @@ function getRecentClusters() {
   }
 
   return recentClusters;
-}
-
-const tablesRowsPerPageKey = 'tables_rows_per_page';
-
-function getTablesRowsPerPage(defaultRowsPerPage: number = 5) {
-  const perPageStr = localStorage.getItem(tablesRowsPerPageKey);
-  if (!perPageStr) {
-    return defaultRowsPerPage;
-  }
-
-  return parseInt(perPageStr);
-}
-
-function setTablesRowsPerPage(perPage: number) {
-  localStorage.setItem(tablesRowsPerPageKey, perPage.toString());
 }
 
 /**

@@ -23,7 +23,7 @@ import { MRT_Localization_IT } from 'material-react-table/locales/it';
 import { MRT_Localization_PT } from 'material-react-table/locales/pt';
 import { memo, ReactNode, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import helpers from '../../../helpers';
+import { getTablesRowsPerPage } from '../../../helpers/tablesRowsPerPage';
 import { useURLState } from '../../../lib/util';
 import { useSettings } from '../../App/Settings/hook';
 import Empty from '../EmptyContent';
@@ -167,7 +167,7 @@ export default function Table<RowItem extends Record<string, any>>({
 
   const storeRowsPerPageOptions = useSettings('tableRowsPerPageOptions');
   const rowsPerPageOptions = rowsPerPage || storeRowsPerPageOptions;
-  const defaultRowsPerPage = useMemo(() => helpers.getTablesRowsPerPage(rowsPerPageOptions[0]), []);
+  const defaultRowsPerPage = useMemo(() => getTablesRowsPerPage(rowsPerPageOptions[0]), []);
   const [pageSize, setPageSize] = useURLState(shouldReflectInURL ? 'perPage' : '', {
     defaultValue: defaultRowsPerPage,
     prefix,
