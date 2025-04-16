@@ -1,4 +1,4 @@
-import helpers from '../../helpers';
+import { loadClusterSettings } from '../../helpers/clusterSettings';
 import { getCluster } from '../util';
 import { KubeMetadata } from './KubeMetadata';
 export {
@@ -37,7 +37,7 @@ export function getAllowedNamespaces(cluster: string | null = getCluster()): str
     return [];
   }
 
-  const clusterSettings = helpers.loadClusterSettings(cluster);
+  const clusterSettings = loadClusterSettings(cluster);
   return clusterSettings.allowedNamespaces || [];
 }
 

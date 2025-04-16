@@ -1,4 +1,5 @@
 import { Cluster } from '../lib/k8s/cluster';
+import { loadClusterSettings, storeClusterSettings } from './clusterSettings';
 import { isElectron } from './isElectron';
 import { getTablesRowsPerPage, setTablesRowsPerPage } from './tablesRowsPerPage';
 
@@ -253,27 +254,6 @@ function getVersion() {
  */
 function getProductName(): string | undefined {
   return import.meta.env.REACT_APP_HEADLAMP_PRODUCT_NAME;
-}
-
-export interface ClusterSettings {
-  defaultNamespace?: string;
-  allowedNamespaces?: string[];
-  currentName?: string;
-}
-
-function storeClusterSettings(clusterName: string, settings: ClusterSettings) {
-  if (!clusterName) {
-    return;
-  }
-  localStorage.setItem(`cluster_settings.${clusterName}`, JSON.stringify(settings));
-}
-
-function loadClusterSettings(clusterName: string): ClusterSettings {
-  if (!clusterName) {
-    return {};
-  }
-  const settings = JSON.parse(localStorage.getItem(`cluster_settings.${clusterName}`) || '{}');
-  return settings;
 }
 
 function storeTableSettings(tableId: string, columns: { id?: string; show: boolean }[]) {

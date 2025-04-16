@@ -1,4 +1,5 @@
-import helpers, { getHeadlampAPIHeaders } from '../../../../helpers';
+import { getHeadlampAPIHeaders } from '../../../../helpers';
+import { loadClusterSettings } from '../../../../helpers/clusterSettings';
 import { ConfigState } from '../../../../redux/configSlice';
 import store from '../../../../redux/stores/store';
 import {
@@ -115,7 +116,7 @@ export function getClusterDefaultNamespace(cluster: string, checkSettings?: bool
 
   if (!!cluster) {
     if (includeSettings) {
-      const clusterSettings = helpers.loadClusterSettings(cluster);
+      const clusterSettings = loadClusterSettings(cluster);
       defaultNamespace = clusterSettings?.defaultNamespace || '';
     }
 

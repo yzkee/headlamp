@@ -15,7 +15,11 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDispatch } from 'react-redux';
 import { useHistory, useLocation } from 'react-router-dom';
-import helpers, { ClusterSettings } from '../../../helpers';
+import {
+  ClusterSettings,
+  loadClusterSettings,
+  storeClusterSettings,
+} from '../../../helpers/clusterSettings';
 import { isElectron } from '../../../helpers/isElectron';
 import { useCluster, useClustersConf } from '../../../lib/k8s';
 import { deleteCluster, parseKubeConfig, renameCluster } from '../../../lib/k8s/apiProxy';
@@ -161,7 +165,7 @@ export default function SettingsCluster() {
   }, [cluster, clusterConf]);
 
   React.useEffect(() => {
-    setClusterSettings(!!cluster ? helpers.loadClusterSettings(cluster || '') : null);
+    setClusterSettings(!!cluster ? loadClusterSettings(cluster || '') : null);
   }, [cluster]);
 
   React.useEffect(() => {
@@ -183,7 +187,7 @@ export default function SettingsCluster() {
 
     // Avoid re-initializing settings as {} just because the cluster is not yet set.
     if (clusterSettings !== null) {
-      helpers.storeClusterSettings(cluster || '', clusterSettings);
+      storeClusterSettings(cluster || '', clusterSettings);
     }
   }, [cluster, clusterSettings]);
 
