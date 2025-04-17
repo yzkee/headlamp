@@ -32,14 +32,18 @@ const uniqueString = () => {
   return `${timestamp}-${randomNum}`;
 };
 
+const maxNameLength = 63;
+
 function SpawnJobDialog(props: { cronJob: CronJob; onClose: () => void }) {
   const { cronJob, onClose } = props;
   const { namespace } = useParams<{ namespace: string }>();
   const { t } = useTranslation(['translation']);
   const dispatch: AppDispatch = useDispatch();
 
+  const suffix = `-manual-spawn-${uniqueString()}`;
+
   const [jobName, setJobName] = useState(
-    () => `${cronJob?.metadata?.name}-manual-spawn-${uniqueString()}`
+    () => `${cronJob?.metadata?.name.substring(0, maxNameLength - suffix.length)}${suffix}`
   );
 
   function handleSpawn() {
