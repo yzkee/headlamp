@@ -8,12 +8,6 @@ import { isElectron } from './isElectron';
 import { getRecentClusters, setRecentCluster } from './recentClusters';
 import { getTablesRowsPerPage, setTablesRowsPerPage } from './tablesRowsPerPage';
 
-declare global {
-  interface Window {
-    Buffer: typeof Buffer;
-  }
-}
-
 const exportFunctions = {
   getBaseUrl,
   isDevMode,
