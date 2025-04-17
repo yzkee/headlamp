@@ -1,4 +1,5 @@
 import helpers from './index';
+import * as isDevMode from './isDevMode';
 import * as isElectron from './isElectron';
 
 describe('getAppUrl', () => {
@@ -8,23 +9,23 @@ describe('getAppUrl', () => {
   const windowSpy = vi.spyOn<any, any>(window, 'window', 'get');
 
   test('dev mode', () => {
-    vi.spyOn(helpers, 'isDevMode').mockImplementation(() => true);
+    vi.spyOn(isDevMode, 'isDevMode').mockImplementation(() => true);
     vi.spyOn(isElectron, 'isElectron').mockImplementation(() => false);
     expect(helpers.getAppUrl()).toBe('http://localhost:4466/');
   });
   test('dev mode and isElectron', () => {
-    vi.spyOn(helpers, 'isDevMode').mockImplementation(() => true);
+    vi.spyOn(isDevMode, 'isDevMode').mockImplementation(() => true);
     vi.spyOn(isElectron, 'isElectron').mockImplementation(() => true);
     expect(helpers.getAppUrl()).toBe('http://localhost:4466/');
   });
   test('isElectron, not dev mode', () => {
-    vi.spyOn(helpers, 'isDevMode').mockImplementation(() => false);
+    vi.spyOn(isDevMode, 'isDevMode').mockImplementation(() => false);
     vi.spyOn(isElectron, 'isElectron').mockImplementation(() => true);
     expect(helpers.getAppUrl()).toBe('http://localhost:4466/');
   });
 
   test('base-url is set through headlampBaseUrl variable', () => {
-    vi.spyOn(helpers, 'isDevMode').mockImplementation(() => true);
+    vi.spyOn(isDevMode, 'isDevMode').mockImplementation(() => true);
     vi.spyOn(isElectron, 'isElectron').mockImplementation(() => false);
 
     windowSpy.mockImplementation(() => ({
@@ -34,7 +35,7 @@ describe('getAppUrl', () => {
   });
 
   test('isElectron does not use a base-url set', () => {
-    vi.spyOn(helpers, 'isDevMode').mockImplementation(() => false);
+    vi.spyOn(isDevMode, 'isDevMode').mockImplementation(() => false);
     vi.spyOn(isElectron, 'isElectron').mockImplementation(() => true);
 
     windowSpy.mockImplementation(() => ({
@@ -44,7 +45,7 @@ describe('getAppUrl', () => {
   });
 
   test('base-url is used without dev mode and without isElectron, uses window.location.origin', () => {
-    vi.spyOn(helpers, 'isDevMode').mockImplementation(() => false);
+    vi.spyOn(isDevMode, 'isDevMode').mockImplementation(() => false);
     vi.spyOn(isElectron, 'isElectron').mockImplementation(() => false);
 
     windowSpy.mockImplementation(() => ({
@@ -58,7 +59,7 @@ describe('getAppUrl', () => {
 
   test('When headlampBaseUrl is set to "." it uses no base-url', () => {
     // This can happen with the Create React App build process which optimizes the "./" to "."
-    vi.spyOn(helpers, 'isDevMode').mockImplementation(() => false);
+    vi.spyOn(isDevMode, 'isDevMode').mockImplementation(() => false);
     vi.spyOn(isElectron, 'isElectron').mockImplementation(() => false);
 
     windowSpy.mockImplementation(() => ({

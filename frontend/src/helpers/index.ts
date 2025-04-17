@@ -1,5 +1,6 @@
 import { Cluster } from '../lib/k8s/cluster';
 import { loadClusterSettings, storeClusterSettings } from './clusterSettings';
+import { isDevMode } from './isDevMode';
 import { isDockerDesktop } from './isDockerDesktop';
 import { isElectron } from './isElectron';
 import { getTablesRowsPerPage, setTablesRowsPerPage } from './tablesRowsPerPage';
@@ -89,13 +90,6 @@ export function debugVerbose(modName: string): void {
 }
 
 /**
- * @returns true if the app is in development mode.
- */
-function isDevMode(): boolean {
-  return import.meta.env.DEV;
-}
-
-/**
  * @returns URL depending on dev-mode/electron/docker desktop, base-url, and window.location.origin.
  *
  * @example isDevMode | isElectron returns 'http://localhost:4466/'
@@ -107,8 +101,7 @@ function isDevMode(): boolean {
  *
  */
 function getAppUrl(): string {
-  let url =
-    exportFunctions.isDevMode() || isElectron() ? 'http://localhost:4466' : window.location.origin;
+  let url = isDevMode() || isElectron() ? 'http://localhost:4466' : window.location.origin;
   if (isDockerDesktop()) {
     url = 'http://localhost:64446';
   }
