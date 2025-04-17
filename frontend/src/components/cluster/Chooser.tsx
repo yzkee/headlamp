@@ -21,8 +21,8 @@ import { useTranslation } from 'react-i18next';
 import { useDispatch } from 'react-redux';
 import { generatePath } from 'react-router';
 import { useHistory } from 'react-router-dom';
-import helpers from '../../helpers';
 import { isElectron } from '../../helpers/isElectron';
+import { getRecentClusters, setRecentCluster } from '../../helpers/recentClusters';
 import { useClustersConf } from '../../lib/k8s';
 import { Cluster } from '../../lib/k8s/cluster';
 import { createRouteURL } from '../../lib/router';
@@ -164,7 +164,7 @@ function ClusterList(props: ClusterListProps) {
   const maxRecentClusters = 3;
   // We slice it here for the maximum recent clusters just for extra safety, since this
   // is an entry point to the rest of the functionality
-  const recentClusterNames = helpers.getRecentClusters().slice(0, maxRecentClusters);
+  const recentClusterNames = getRecentClusters().slice(0, maxRecentClusters);
 
   let recentClusters: Cluster[] = [];
 
@@ -370,7 +370,7 @@ function Chooser(props: ClusterDialogProps) {
 
   function handleButtonClick(cluster: Cluster) {
     if (cluster.name !== getCluster()) {
-      helpers.setRecentCluster(cluster);
+      setRecentCluster(cluster);
       history.push({
         pathname: generatePath(getClusterPrefixedPath(), {
           cluster: cluster.name,

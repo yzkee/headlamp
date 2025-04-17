@@ -2,8 +2,8 @@ import Grid from '@mui/material/Grid';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { generatePath, useHistory } from 'react-router-dom';
-import helpers from '../../../helpers';
 import { isElectron } from '../../../helpers/isElectron';
+import { getRecentClusters, setRecentCluster } from '../../../helpers/recentClusters';
 import { getClusterPrefixedPath } from '../../../lib/cluster';
 import { Cluster } from '../../../lib/k8s/cluster';
 import { createRouteURL } from '../../../lib/router';
@@ -54,7 +54,7 @@ export default function RecentClusters(props: RecentClustersProps) {
   const maxRecentClusters = 3;
   // We slice it here for the maximum recent clusters just for extra safety, since this
   // is an entry point to the rest of the functionality
-  const recentClusterNames = helpers.getRecentClusters().slice(0, maxRecentClusters);
+  const recentClusterNames = getRecentClusters().slice(0, maxRecentClusters);
 
   let recentClusters: Cluster[] = [];
 
@@ -78,7 +78,7 @@ export default function RecentClusters(props: RecentClustersProps) {
   }
 
   function onClusterButtonClicked(cluster: Cluster) {
-    helpers.setRecentCluster(cluster);
+    setRecentCluster(cluster);
     history.push({
       pathname: generatePath(getClusterPrefixedPath(), {
         cluster: cluster.name,
