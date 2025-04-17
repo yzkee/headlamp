@@ -96,6 +96,12 @@ function mergeClusterConfigs(
   return mergedClusters;
 }
 
+declare global {
+  interface Window {
+    clusterConfigFetchHandler: number;
+  }
+}
+
 export default function Layout({}: LayoutProps) {
   const arePluginsLoaded = useTypedSelector(state => state.plugins.loaded);
   const dispatch = useDispatch();

@@ -11,7 +11,6 @@ import { getTablesRowsPerPage, setTablesRowsPerPage } from './tablesRowsPerPage'
 declare global {
   interface Window {
     Buffer: typeof Buffer;
-    clusterConfigFetchHandler: number;
   }
 }
 
