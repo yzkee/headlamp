@@ -7,6 +7,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { isDockerDesktop } from '../../../helpers/isDockerDesktop';
 import { isElectron } from '../../../helpers/isElectron';
+import { getCluster } from '../../../lib/cluster';
 import { PortForward as PortForwardState } from '../../../lib/k8s/api/v1/portForward';
 import {
   listPortForward,
@@ -17,7 +18,6 @@ import { KubeContainer } from '../../../lib/k8s/cluster';
 import { KubeObjectInterface } from '../../../lib/k8s/KubeObject';
 import Pod from '../../../lib/k8s/pod';
 import Service from '../../../lib/k8s/service';
-import { getCluster } from '../../../lib/util';
 import ActionButton from '../ActionButton';
 export { type PortForward as PortForwardState } from '../../../lib/k8s/api/v1/portForward';
 

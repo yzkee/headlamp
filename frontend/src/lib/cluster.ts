@@ -29,3 +29,14 @@ export function getCluster(): string | null {
   });
   return (!!clusterURLMatch && clusterURLMatch.params.cluster) || null;
 }
+
+/**
+ * Gets clusters.
+ *
+ * @param returnWhenNoClusters return this value when no clusters are found.
+ * @returns the cluster group from the URL.
+ */
+export function getClusterGroup(returnWhenNoClusters: string[] = []): string[] {
+  const clusterFromURL = getCluster();
+  return clusterFromURL?.split('+') || returnWhenNoClusters;
+}

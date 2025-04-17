@@ -4,9 +4,9 @@ import { useTranslation } from 'react-i18next';
 import { generatePath, useHistory } from 'react-router-dom';
 import helpers from '../../../helpers';
 import { isElectron } from '../../../helpers/isElectron';
+import { getClusterPrefixedPath } from '../../../lib/cluster';
 import { Cluster } from '../../../lib/k8s/cluster';
 import { createRouteURL } from '../../../lib/router';
-import { getClusterPrefixedPath } from '../../../lib/util';
 import SquareButton from './SquareButton';
 
 interface ClusterButtonProps extends React.PropsWithChildren<{}> {

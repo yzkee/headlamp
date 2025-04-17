@@ -94,13 +94,13 @@ import WorkloadOverview from '../components/workload/Overview';
 import { isElectron } from '../helpers/isElectron';
 import LocaleSelect from '../i18n/LocaleSelect/LocaleSelect';
 import store from '../redux/stores/store';
+import { getCluster, getClusterPrefixedPath } from './cluster';
 import { useCluster } from './k8s';
 import DaemonSet from './k8s/daemonSet';
 import Deployment from './k8s/deployment';
 import Job from './k8s/job';
 import ReplicaSet from './k8s/replicaSet';
 import StatefulSet from './k8s/statefulSet';
-import { getCluster, getClusterPrefixedPath } from './util';
 
 export interface Route {
   /** Any valid URL path or array of paths that path-to-regexp@^1.7.0 understands. */

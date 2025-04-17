@@ -7,7 +7,7 @@ import {
   findKubeconfigByClusterName,
   storeStatelessClusterKubeconfig,
 } from '../../../../stateless';
-import { getCluster, getClusterGroup } from '../../../util';
+import { getCluster, getClusterGroup } from '../../../cluster';
 import { ClusterRequest, clusterRequest, post, request } from './clusterRequests';
 import { JSON_HEADERS } from './constants';
 

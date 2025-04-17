@@ -3,7 +3,7 @@ import React, { useMemo } from 'react';
 import { matchPath, useHistory } from 'react-router-dom';
 import { ConfigState } from '../../redux/configSlice';
 import { useTypedSelector } from '../../redux/reducers/reducers';
-import { getCluster, getClusterGroup, getClusterPrefixedPath } from '../util';
+import { getCluster, getClusterGroup, getClusterPrefixedPath } from '../cluster';
 import { ApiError, clusterRequest } from './apiProxy';
 import { Cluster, LabelSelector, StringDict } from './cluster';
 import ClusterRole from './clusterRole';
