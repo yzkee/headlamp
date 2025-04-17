@@ -390,8 +390,8 @@ export default function Table<RowItem extends Record<string, any>>({
             {headerGroups[0].headers.map(header => (
               <MemoHeadCell
                 key={header.id}
-                header={header}
-                table={table}
+                header={header as MRT_Header<Record<string, any>>}
+                table={table as MRT_TableInstance<Record<string, any>>}
                 isFiltered={header.column.getIsFiltered()}
                 sorting={header.column.getIsSorted()}
                 showColumnFilters={table.getState().showColumnFilters}
@@ -404,8 +404,8 @@ export default function Table<RowItem extends Record<string, any>>({
           {rows.map(row => (
             <Row
               key={row.id}
-              cells={row.getVisibleCells()}
-              table={table}
+              cells={row.getVisibleCells() as MRT_Cell<Record<string, any>, unknown>[]}
+              table={table as MRT_TableInstance<Record<string, any>>}
               isSelected={row.getIsSelected()}
             />
           ))}
@@ -417,12 +417,12 @@ export default function Table<RowItem extends Record<string, any>>({
 }
 
 const MemoHeadCell = memo(
-  ({
+  <RowItem extends Record<string, any>>({
     header,
     table,
   }: {
-    table: MRT_TableInstance<any | null>;
-    header: MRT_Header<any>;
+    table: MRT_TableInstance<RowItem>;
+    header: MRT_Header<RowItem>;
     sorting: string | false;
     isFiltered: boolean;
     selected: number;
@@ -447,20 +447,20 @@ const MemoHeadCell = memo(
 );
 
 const Row = memo(
-  ({
+  <RowItem extends Record<string, any>>({
     cells,
     table,
     isSelected,
   }: {
-    table: MRT_TableInstance<any>;
-    cells: MRT_Cell<any, unknown>[];
+    table: MRT_TableInstance<RowItem>;
+    cells: MRT_Cell<RowItem, unknown>[];
     isSelected: boolean;
   }) => (
     <StyledRow data-selected={isSelected}>
       {cells.map(cell => (
         <MemoCell
-          cell={cell}
-          table={table}
+          cell={cell as MRT_Cell<Record<string, any>, unknown>}
+          table={table as MRT_TableInstance<Record<string, any>>}
           key={cell.id}
           isRowSelected={cell.row.getIsSelected()}
         />
@@ -470,7 +470,14 @@ const Row = memo(
 );
 
 const MemoCell = memo(
-  ({ cell, table }: { cell: MRT_Cell<any, unknown>; table: any; isRowSelected: boolean }) => {
+  <RowItem extends Record<string, any>>({
+    cell,
+    table,
+  }: {
+    cell: MRT_Cell<RowItem, unknown>;
+    table: MRT_TableInstance<RowItem>;
+    isRowSelected: boolean;
+  }) => {
     const column = cell.column.columnDef as TableColumn<any, unknown>;
     return (
       <MRT_TableBodyCell
