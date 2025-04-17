@@ -14,7 +14,7 @@ import React, { memo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDispatch } from 'react-redux';
 import { useHistory, useLocation } from 'react-router-dom';
-import helpers from '../../helpers';
+import { getProductName, getVersion } from '../../helpers/getProductInfo';
 import { getToken, setToken } from '../../lib/auth';
 import { useCluster, useClustersConf } from '../../lib/k8s';
 import { createRouteURL } from '../../lib/router';
@@ -296,7 +296,7 @@ export const PureTopBar = memo(
             <Icon icon="mdi:information-outline" />
           </ListItemIcon>
           <ListItemText>
-            {helpers.getProductName()} {helpers.getVersion()['VERSION']}
+            {getProductName()} {getVersion()['VERSION']}
           </ListItemText>
         </MenuItem>
       </Menu>

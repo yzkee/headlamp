@@ -1,4 +1,4 @@
-import helpers from '../helpers';
+import { getProductName, getVersion } from '../helpers/getProductInfo';
 import { isElectron } from '../helpers/isElectron';
 /**
  * The lib.ts file should carry the bits to be used by plugins whereas
@@ -161,7 +161,7 @@ export abstract class Headlamp {
    * @returns the version of Headlamp.
    */
   getVersion() {
-    const version = helpers.getVersion();
+    const version = getVersion();
     return { VERSION: version.VERSION || '', GIT_VERSION: version.GIT_VERSION || '' };
   }
 
@@ -171,7 +171,7 @@ export abstract class Headlamp {
    * @returns the name of the product.
    */
   getProductName() {
-    return helpers.getProductName() || '';
+    return getProductName() || '';
   }
 }
 
