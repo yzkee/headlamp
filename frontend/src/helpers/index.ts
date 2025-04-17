@@ -1,5 +1,6 @@
 import { Cluster } from '../lib/k8s/cluster';
 import { loadClusterSettings, storeClusterSettings } from './clusterSettings';
+import { getBaseUrl } from './getBaseUrl';
 import { isDevMode } from './isDevMode';
 import { isDockerDesktop } from './isDockerDesktop';
 import { isElectron } from './isElectron';
@@ -106,7 +107,7 @@ function getAppUrl(): string {
     url = 'http://localhost:64446';
   }
 
-  const baseUrl = exportFunctions.getBaseUrl();
+  const baseUrl = getBaseUrl();
   url += baseUrl ? baseUrl + '/' : '/';
 
   return url;
@@ -114,32 +115,9 @@ function getAppUrl(): string {
 
 declare global {
   interface Window {
-    headlampBaseUrl?: string;
     Buffer: typeof Buffer;
     clusterConfigFetchHandler: number;
   }
-}
-
-/**
- * @returns the baseUrl for the app based on window.headlampBaseUrl or import.meta.env.PUBLIC_URL
- *
- * This could be either '' meaning /, or something like '/headlamp'.
- */
-function getBaseUrl(): string {
-  let baseUrl = '';
-  if (isElectron()) {
-    return '';
-  }
-  if (window?.headlampBaseUrl !== undefined) {
-    baseUrl = window.headlampBaseUrl;
-  } else {
-    baseUrl = import.meta.env.PUBLIC_URL ? import.meta.env.PUBLIC_URL : '';
-  }
-
-  if (baseUrl === './' || baseUrl === '.' || baseUrl === '/') {
-    baseUrl = '';
-  }
-  return baseUrl;
 }
 
 const recentClustersStorageKey = 'recent_clusters';

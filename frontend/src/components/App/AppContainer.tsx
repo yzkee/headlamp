@@ -2,7 +2,8 @@ import { GlobalStyles } from '@mui/material';
 import { SnackbarProvider } from 'notistack';
 import React from 'react';
 import { BrowserRouter, HashRouter } from 'react-router-dom';
-import helpers, { setBackendToken } from '../../helpers';
+import { setBackendToken } from '../../helpers';
+import { getBaseUrl } from '../../helpers/getBaseUrl';
 import { isElectron } from '../../helpers/isElectron';
 import Plugins from '../../plugin/Plugins';
 import ReleaseNotes from '../common/ReleaseNotes/ReleaseNotes';
@@ -19,7 +20,7 @@ export default function AppContainer() {
     isElectron() ? (
       <HashRouter>{children}</HashRouter>
     ) : (
-      <BrowserRouter basename={helpers.getBaseUrl()}>{children}</BrowserRouter>
+      <BrowserRouter basename={getBaseUrl()}>{children}</BrowserRouter>
     );
 
   return (

@@ -1,11 +1,9 @@
-import helpers from '../helpers';
+import * as getBaseUrl from '../helpers/getBaseUrl';
 import * as isElectron from '../helpers/isElectron';
 import { getCluster, getClusterPrefixedPath } from './cluster';
 
-vi.mock('../helpers', () => ({
-  default: {
-    getBaseUrl: vi.fn(),
-  },
+vi.mock('../helpers/getBaseUrl', () => ({
+  getBaseUrl: vi.fn(),
 }));
 
 vi.mock('../helpers/isElectron', () => ({
@@ -35,28 +33,28 @@ describe('getCluster', () => {
     });
 
     it('should extract cluster name from pathname without base URL', () => {
-      vi.mocked(helpers.getBaseUrl).mockReturnValue('');
+      vi.mocked(getBaseUrl.getBaseUrl).mockReturnValue('');
       window.location.pathname = '/c/test-cluster/workloads';
 
       expect(getCluster()).toBe('test-cluster');
     });
 
     it('should extract cluster name from pathname with base URL', () => {
-      vi.mocked(helpers.getBaseUrl).mockReturnValue('/base');
+      vi.mocked(getBaseUrl.getBaseUrl).mockReturnValue('/base');
       window.location.pathname = '/base/c/test-cluster/workloads';
 
       expect(getCluster()).toBe('test-cluster');
     });
 
     it('should return null for non-cluster path', () => {
-      vi.mocked(helpers.getBaseUrl).mockReturnValue('');
+      vi.mocked(getBaseUrl.getBaseUrl).mockReturnValue('');
       window.location.pathname = '/workloads';
 
       expect(getCluster()).toBeNull();
     });
 
     it('should handle trailing slashes correctly', () => {
-      vi.mocked(helpers.getBaseUrl).mockReturnValue('');
+      vi.mocked(getBaseUrl.getBaseUrl).mockReturnValue('');
       window.location.pathname = '/c/test-cluster/';
 
       expect(getCluster()).toBe('test-cluster');
