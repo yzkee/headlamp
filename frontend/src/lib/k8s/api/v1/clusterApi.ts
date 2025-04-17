@@ -1,5 +1,5 @@
-import { getHeadlampAPIHeaders } from '../../../../helpers';
 import { loadClusterSettings } from '../../../../helpers/clusterSettings';
+import { getHeadlampAPIHeaders } from '../../../../helpers/getHeadlampAPIHeaders';
 import { ConfigState } from '../../../../redux/configSlice';
 import store from '../../../../redux/stores/store';
 import {

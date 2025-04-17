@@ -21,7 +21,7 @@ import { GraphSource } from '../components/resourceMap/graph/graphModel';
 import { graphViewSlice, IconDefinition } from '../components/resourceMap/graphViewSlice';
 import { DefaultSidebars, SidebarEntryProps } from '../components/Sidebar';
 import { setSidebarItem, setSidebarItemFilter } from '../components/Sidebar/sidebarSlice';
-import { getHeadlampAPIHeaders } from '../helpers';
+import { getHeadlampAPIHeaders } from '../helpers/getHeadlampAPIHeaders';
 import { KubeObject } from '../lib/k8s/KubeObject';
 import { Route } from '../lib/router';
 import {
