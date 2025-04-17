@@ -1,4 +1,4 @@
-import helpers from './index';
+import * as getAppUrl from './getAppUrl';
 import * as isDevMode from './isDevMode';
 import * as isElectron from './isElectron';
 
@@ -11,17 +11,17 @@ describe('getAppUrl', () => {
   test('dev mode', () => {
     vi.spyOn(isDevMode, 'isDevMode').mockImplementation(() => true);
     vi.spyOn(isElectron, 'isElectron').mockImplementation(() => false);
-    expect(helpers.getAppUrl()).toBe('http://localhost:4466/');
+    expect(getAppUrl.getAppUrl()).toBe('http://localhost:4466/');
   });
   test('dev mode and isElectron', () => {
     vi.spyOn(isDevMode, 'isDevMode').mockImplementation(() => true);
     vi.spyOn(isElectron, 'isElectron').mockImplementation(() => true);
-    expect(helpers.getAppUrl()).toBe('http://localhost:4466/');
+    expect(getAppUrl.getAppUrl()).toBe('http://localhost:4466/');
   });
   test('isElectron, not dev mode', () => {
     vi.spyOn(isDevMode, 'isDevMode').mockImplementation(() => false);
     vi.spyOn(isElectron, 'isElectron').mockImplementation(() => true);
-    expect(helpers.getAppUrl()).toBe('http://localhost:4466/');
+    expect(getAppUrl.getAppUrl()).toBe('http://localhost:4466/');
   });
 
   test('base-url is set through headlampBaseUrl variable', () => {
@@ -31,7 +31,7 @@ describe('getAppUrl', () => {
     windowSpy.mockImplementation(() => ({
       headlampBaseUrl: '/headlamp',
     }));
-    expect(helpers.getAppUrl()).toBe('http://localhost:4466/headlamp/');
+    expect(getAppUrl.getAppUrl()).toBe('http://localhost:4466/headlamp/');
   });
 
   test('isElectron does not use a base-url set', () => {
@@ -41,7 +41,7 @@ describe('getAppUrl', () => {
     windowSpy.mockImplementation(() => ({
       headlampBaseUrl: '/headlamp',
     }));
-    expect(helpers.getAppUrl()).toBe('http://localhost:4466/');
+    expect(getAppUrl.getAppUrl()).toBe('http://localhost:4466/');
   });
 
   test('base-url is used without dev mode and without isElectron, uses window.location.origin', () => {
@@ -54,7 +54,7 @@ describe('getAppUrl', () => {
         origin: 'http://example.com:4466',
       },
     }));
-    expect(helpers.getAppUrl()).toBe('http://example.com:4466/headlamp/');
+    expect(getAppUrl.getAppUrl()).toBe('http://example.com:4466/headlamp/');
   });
 
   test('When headlampBaseUrl is set to "." it uses no base-url', () => {
@@ -68,6 +68,6 @@ describe('getAppUrl', () => {
         origin: 'http://example.com:4466',
       },
     }));
-    expect(helpers.getAppUrl()).toBe('http://example.com:4466/');
+    expect(getAppUrl.getAppUrl()).toBe('http://example.com:4466/');
   });
 });
