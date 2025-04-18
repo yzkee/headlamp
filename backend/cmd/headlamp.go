@@ -49,6 +49,7 @@ type HeadlampConfig struct {
 	enableDynamicClusters bool
 	port                  uint
 	kubeConfigPath        string
+	skippedKubeContexts   string
 	staticDir             string
 	pluginDir             string
 	staticPluginDir       string
@@ -355,13 +356,15 @@ func createHeadlampHandler(config *HeadlampConfig) http.Handler {
 
 	plugins.PopulatePluginsCache(config.staticPluginDir, config.pluginDir, config.cache)
 
+	skipFunc := kubeconfig.SkipKubeContextInCommaSeparatedString(config.skippedKubeContexts)
+
 	if !config.useInCluster {
 		// in-cluster mode is unlikely to want reloading plugins.
 		pluginEventChan := make(chan string)
 		go plugins.Watch(config.pluginDir, pluginEventChan)
 		go plugins.HandlePluginEvents(config.staticPluginDir, config.pluginDir, pluginEventChan, config.cache)
 		// in-cluster mode is unlikely to want reloading kubeconfig.
-		go kubeconfig.LoadAndWatchFiles(config.kubeConfigStore, kubeConfigPath, kubeconfig.KubeConfig)
+		go kubeconfig.LoadAndWatchFiles(config.kubeConfigStore, kubeConfigPath, kubeconfig.KubeConfig, skipFunc)
 	}
 
 	// In-cluster
@@ -403,7 +406,7 @@ func createHeadlampHandler(config *HeadlampConfig) http.Handler {
 	fmt.Println("  API Routers:")
 
 	// load kubeConfig clusters
-	err := kubeconfig.LoadAndStoreKubeConfigs(config.kubeConfigStore, kubeConfigPath, kubeconfig.KubeConfig)
+	err := kubeconfig.LoadAndStoreKubeConfigs(config.kubeConfigStore, kubeConfigPath, kubeconfig.KubeConfig, skipFunc)
 	if err != nil {
 		logger.Log(logger.LevelError, nil, err, "loading kubeconfig")
 	}
@@ -414,7 +417,8 @@ func createHeadlampHandler(config *HeadlampConfig) http.Handler {
 		logger.Log(logger.LevelError, nil, err, "getting default kubeconfig persistence file")
 	}
 
-	err = kubeconfig.LoadAndStoreKubeConfigs(config.kubeConfigStore, kubeConfigPersistenceFile, kubeconfig.DynamicCluster)
+	err = kubeconfig.LoadAndStoreKubeConfigs(config.kubeConfigStore, kubeConfigPersistenceFile,
+		kubeconfig.DynamicCluster, skipFunc)
 	if err != nil {
 		logger.Log(logger.LevelError, nil, err, "loading dynamic kubeconfig")
 	}

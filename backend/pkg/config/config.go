@@ -28,6 +28,7 @@ type Config struct {
 	ListenAddr            string `koanf:"listen-addr"`
 	Port                  uint   `koanf:"port"`
 	KubeConfigPath        string `koanf:"kubeconfig"`
+	SkippedKubeContexts   string `koanf:"skipped-kube-contexts"`
 	StaticDir             string `koanf:"html-static-dir"`
 	PluginsDir            string `koanf:"plugins-dir"`
 	BaseURL               string `koanf:"base-url"`
@@ -156,6 +157,7 @@ func flagset() *flag.FlagSet {
 	f.Bool("enable-dynamic-clusters", false, "Enable dynamic clusters, which stores stateless clusters in the frontend.")
 
 	f.String("kubeconfig", "", "Absolute path to the kubeconfig file")
+	f.String("skipped-kube-contexts", "", "Context name which should be ignored in kubeconfig file")
 	f.String("html-static-dir", "", "Static HTML directory to serve")
 	f.String("plugins-dir", defaultPluginDir(), "Specify the plugins directory to build the backend with")
 	f.String("base-url", "", "Base URL path. eg. /headlamp")
