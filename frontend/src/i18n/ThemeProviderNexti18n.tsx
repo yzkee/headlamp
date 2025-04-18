@@ -15,7 +15,11 @@ function getLocale(locale: string): typeof enUS {
     fr: frFR,
     it: itIT,
     ko: koKR,
-    jp: jaJP,
+    'zh-tw': zhTW,
+    ja: jaJP,
+  };
+  type LocalesType = 'en' | 'pt' | 'es' | 'ta' | 'de' | 'hi' | 'fr' | 'it' | 'zh-tw' | 'ja' | 'ko';
+  return locale in LOCALES ? LOCALES[locale as LocalesType] : LOCALES['en'];
 }
 
 /** Like a ThemeProvider but uses reacti18next for the language selection
