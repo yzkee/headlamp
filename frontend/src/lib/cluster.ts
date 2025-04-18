@@ -1,5 +1,6 @@
 import { matchPath } from 'react-router';
-import helpers from '../helpers';
+import { getBaseUrl } from '../helpers/getBaseUrl';
+import { isElectron } from '../helpers/isElectron';
 
 /**
  * @returns A path prefixed with cluster path, and the given path.
@@ -18,8 +19,8 @@ export function getClusterPrefixedPath(path?: string | null) {
  * @returns The current cluster name, or null if not in a cluster context.
  */
 export function getCluster(): string | null {
-  const prefix = helpers.getBaseUrl();
-  const urlPath = helpers.isElectron()
+  const prefix = getBaseUrl();
+  const urlPath = isElectron()
     ? window.location.hash.substring(1)
     : window.location.pathname.slice(prefix.length);
 
@@ -27,4 +28,15 @@ export function getCluster(): string | null {
     path: getClusterPrefixedPath(),
   });
   return (!!clusterURLMatch && clusterURLMatch.params.cluster) || null;
+}
+
+/**
+ * Gets clusters.
+ *
+ * @param returnWhenNoClusters return this value when no clusters are found.
+ * @returns the cluster group from the URL.
+ */
+export function getClusterGroup(returnWhenNoClusters: string[] = []): string[] {
+  const clusterFromURL = getCluster();
+  return clusterFromURL?.split('+') || returnWhenNoClusters;
 }

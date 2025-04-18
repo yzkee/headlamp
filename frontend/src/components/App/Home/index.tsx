@@ -12,7 +12,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDispatch } from 'react-redux';
 import { useHistory } from 'react-router-dom';
-import helpers from '../../../helpers';
+import { isElectron } from '../../../helpers/isElectron';
 import { useClustersConf, useClustersVersion } from '../../../lib/k8s';
 import { ApiError, deleteCluster } from '../../../lib/k8s/apiProxy';
 import { Cluster } from '../../../lib/k8s/cluster';
@@ -100,7 +100,7 @@ function ContextMenu({ cluster }: ContextMenuProps) {
         >
           <ListItemText>{t('translation|Settings')}</ListItemText>
         </MenuItem>
-        {helpers.isElectron() && cluster.meta_data?.source === 'dynamic_cluster' && (
+        {isElectron() && cluster.meta_data?.source === 'dynamic_cluster' && (
           <MenuItem
             onClick={() => {
               setOpenConfirmDialog('deleteDynamic');
@@ -197,7 +197,7 @@ export default function Home() {
   const history = useHistory();
   const clusters = useClustersConf() || {};
 
-  if (!helpers.isElectron() && Object.keys(clusters).length === 1) {
+  if (!isElectron() && Object.keys(clusters).length === 1) {
     history.push(createRouteURL('cluster', { cluster: Object.keys(clusters)[0] }));
     return null;
   }

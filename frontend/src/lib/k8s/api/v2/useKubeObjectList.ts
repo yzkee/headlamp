@@ -1,6 +1,5 @@
 import { QueryObserverOptions, useQueries, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { getWebsocketMultiplexerEnabled } from '../../../../helpers';
 import { KubeObject, KubeObjectClass } from '../../KubeObject';
 import { QueryParameters } from '../v1/queryParameters';
 import { ApiError } from './ApiError';
@@ -10,6 +9,15 @@ import { KubeList, KubeListUpdateEvent } from './KubeList';
 import { KubeObjectEndpoint } from './KubeObjectEndpoint';
 import { makeUrl } from './makeUrl';
 import { BASE_WS_URL, useWebSockets, WebSocketManager } from './webSocket';
+
+/**
+ * @returns true if the websocket multiplexer is enabled.
+ * defaults to true. This is a feature flag to enable the websocket multiplexer.
+ */
+export function getWebsocketMultiplexerEnabled(): boolean {
+  // TODO Reenable after #2805 and #2970 are fixed
+  return import.meta.env.REACT_APP_ENABLE_WEBSOCKET_MULTIPLEXER === 'true';
+}
 
 /**
  * Object representing a List of Kube object

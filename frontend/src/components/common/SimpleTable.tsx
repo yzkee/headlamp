@@ -9,7 +9,7 @@ import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import helpers from '../../helpers';
+import { getTablesRowsPerPage, setTablesRowsPerPage } from '../../helpers/tablesRowsPerPage';
 import { useURLState } from '../../lib/util';
 import { useSettings } from '../App/Settings/hook';
 import Empty from './EmptyContent';
@@ -143,10 +143,7 @@ export default function SimpleTable(props: SimpleTableProps) {
   const [displayData, setDisplayData] = React.useState(data);
   const storeRowsPerPageOptions = useSettings('tableRowsPerPageOptions');
   const rowsPerPageOptions = props.rowsPerPage || storeRowsPerPageOptions;
-  const defaultRowsPerPage = React.useMemo(
-    () => helpers.getTablesRowsPerPage(rowsPerPageOptions[0]),
-    []
-  );
+  const defaultRowsPerPage = React.useMemo(() => getTablesRowsPerPage(rowsPerPageOptions[0]), []);
   const [rowsPerPage, setRowsPerPage] = useURLState(shouldReflectInURL ? 'perPage' : '', {
     defaultValue: defaultRowsPerPage,
     prefix,
@@ -193,7 +190,7 @@ export default function SimpleTable(props: SimpleTableProps) {
     event: React.ChangeEvent<HTMLTextAreaElement> | React.ChangeEvent<HTMLInputElement>
   ) {
     const numRows = +event.target.value;
-    helpers.setTablesRowsPerPage(numRows);
+    setTablesRowsPerPage(numRows);
     setRowsPerPage(numRows);
     setPage(0);
   }

@@ -1,7 +1,7 @@
 import { JSONPath } from 'jsonpath-plus';
 import { cloneDeep, unset } from 'lodash';
 import React, { useMemo } from 'react';
-import exportFunctions from '../../helpers';
+import { loadClusterSettings } from '../../helpers/clusterSettings';
 import { getCluster } from '../cluster';
 import { createRouteURL } from '../router';
 import { timeAgo } from '../util';
@@ -18,7 +18,7 @@ function getAllowedNamespaces(cluster: string | null = getCluster()): string[] {
     return [];
   }
 
-  const clusterSettings = exportFunctions.loadClusterSettings(cluster);
+  const clusterSettings = loadClusterSettings(cluster);
   return clusterSettings.allowedNamespaces || [];
 }
 

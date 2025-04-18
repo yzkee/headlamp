@@ -3,9 +3,9 @@ import List from '@mui/material/List';
 import ListItem, { ListItemProps } from '@mui/material/ListItem';
 import React, { memo } from 'react';
 import { generatePath } from 'react-router';
+import { getClusterPrefixedPath } from '../../lib/cluster';
 import { useCluster } from '../../lib/k8s';
 import { createRouteURL, getRoute } from '../../lib/router';
-import { getClusterPrefixedPath } from '../../lib/util';
 import ListItemLink from './ListItemLink';
 import { SidebarEntry } from './sidebarSlice';
 

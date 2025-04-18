@@ -3,7 +3,6 @@ import { useTheme } from '@mui/material/styles';
 import { MRT_FilterFns, MRT_Row, MRT_SortingFn, MRT_TableInstance } from 'material-react-table';
 import { ComponentProps, ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import helpers from '../../../helpers';
 import { useClusterGroup } from '../../../lib/k8s';
 import { ApiError } from '../../../lib/k8s/apiProxy';
 import { KubeObject } from '../../../lib/k8s/KubeObject';
@@ -163,6 +162,44 @@ function TableFromResourceClass<KubeClass extends KubeObjectClass>(
 }
 
 /**
+ * Store the table settings in local storage.
+ *
+ * @param tableId - The ID of the table.
+ * @param columns - The columns to store.
+ * @returns void
+ */
+function storeTableSettings(tableId: string, columns: { id?: string; show: boolean }[]) {
+  if (!tableId) {
+    console.debug('storeTableSettings: tableId is empty!', new Error().stack);
+    return;
+  }
+
+  const columnsWithIds = columns.map((c, i) => ({ id: i.toString(), ...c }));
+  // Delete the entry if there are no settings to store.
+  if (columnsWithIds.length === 0) {
+    localStorage.removeItem(`table_settings.${tableId}`);
+    return;
+  }
+  localStorage.setItem(`table_settings.${tableId}`, JSON.stringify(columnsWithIds));
+}
+
+/**
+ * Load the table settings from local storage for a given table ID.
+ *
+ * @param tableId - The ID of the table.
+ * @returns The table settings for the given table ID.
+ */
+function loadTableSettings(tableId: string): { id: string; show: boolean }[] {
+  if (!tableId) {
+    console.debug('loadTableSettings: tableId is empty!', new Error().stack);
+    return [];
+  }
+
+  const settings = JSON.parse(localStorage.getItem(`table_settings.${tableId}`) || '[]');
+  return settings;
+}
+
+/**
  * Here we figure out which columns are visible and not visible
  * We can control it using show property in the columns prop {@link ResourceTableColumn}
  * And when user manually changes visibility it is saved to localStorage
@@ -181,7 +218,7 @@ function initColumnVisibilityState(columns: ResourceTableProps<any>['columns'], 
 
   // Load and apply persisted settings from local storage
   if (tableId) {
-    const localTableSettins = helpers.loadTableSettings(tableId);
+    const localTableSettins = loadTableSettings(tableId);
     localTableSettins.forEach(({ id, show }) => (visibility[id] = show));
   }
 
@@ -262,7 +299,7 @@ function ResourceTableContent<RowItem extends KubeObject>(props: ResourceTablePr
   );
 
   const [tableSettings] = useState<{ id: string; show: boolean }[]>(
-    !!id ? helpers.loadTableSettings(id) : []
+    !!id ? loadTableSettings(id) : []
   );
 
   const [allColumns, sort] = useMemo(() => {
@@ -483,7 +520,7 @@ function ResourceTableContent<RowItem extends KubeObject>(props: ResourceTablePr
           id,
           show: (show ?? true) as boolean,
         }));
-        helpers.storeTableSettings(id, colsToStore);
+        storeTableSettings(id, colsToStore);
       }
 
       return newCols;

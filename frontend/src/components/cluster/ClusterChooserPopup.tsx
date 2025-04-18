@@ -17,7 +17,8 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { generatePath } from 'react-router';
 import { useHistory } from 'react-router-dom';
-import helpers from '../../helpers';
+import { isElectron } from '../../helpers/isElectron';
+import { getRecentClusters, setRecentCluster } from '../../helpers/recentClusters';
 import { useCluster, useClustersConf } from '../../lib/k8s';
 import { Cluster } from '../../lib/k8s/cluster';
 import { createRouteURL } from '../../lib/router';
@@ -91,7 +92,7 @@ function ClusterChooserPopup(props: ChooserPopupPros) {
       allClusters = allClusters.filter(cluster => cluster.name.includes(filter));
     }
 
-    const recentClustersNames = !!filter ? [] : helpers.getRecentClusters();
+    const recentClustersNames = !!filter ? [] : getRecentClusters();
 
     const clustersToShow: Cluster[] = [];
     const recentClusters: Cluster[] = [];
@@ -140,7 +141,7 @@ function ClusterChooserPopup(props: ChooserPopupPros) {
     handleClose();
 
     if (cluster.name !== getCluster()) {
-      helpers.setRecentCluster(cluster);
+      setRecentCluster(cluster);
       history.push({
         pathname: generatePath(getClusterPrefixedPath(), {
           cluster: cluster.name,
@@ -292,7 +293,7 @@ function ClusterChooserPopup(props: ChooserPopupPros) {
           ))}
         </MenuList>
       </Box>
-      {helpers.isElectron() && (
+      {isElectron() && (
         <>
           <Button
             sx={theme => ({

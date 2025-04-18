@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useDispatch } from 'react-redux';
 import { Redirect, Route, RouteProps, Switch, useHistory } from 'react-router-dom';
 import { getToken } from '../../lib/auth';
+import { getCluster, getClusterGroup } from '../../lib/cluster';
 import { useClustersConf } from '../../lib/k8s';
 import {
   createRouteURL,
@@ -12,7 +13,6 @@ import {
   NotFoundRoute,
   Route as RouteType,
 } from '../../lib/router';
-import { getCluster, getClusterGroup } from '../../lib/util';
 import { setHideAppBar, setIsFullWidth } from '../../redux/actions/actions';
 import { useTypedSelector } from '../../redux/reducers/reducers';
 import ErrorBoundary from '../common/ErrorBoundary';
