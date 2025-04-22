@@ -463,6 +463,7 @@ const Row = memo(
           table={table as MRT_TableInstance<Record<string, any>>}
           key={cell.id}
           isRowSelected={cell.row.getIsSelected()}
+          canSelect={cell.row.getCanSelect()}
         />
       ))}
     </StyledRow>
@@ -477,6 +478,7 @@ const MemoCell = memo(
     cell: MRT_Cell<RowItem, unknown>;
     table: MRT_TableInstance<RowItem>;
     isRowSelected: boolean;
+    canSelect?: boolean;
   }) => {
     const column = cell.column.columnDef as TableColumn<any, unknown>;
     return (
@@ -501,6 +503,6 @@ const MemoCell = memo(
   (a, b) =>
     a.cell.getValue() === b.cell.getValue() &&
     (a.cell.column.id === 'mrt-row-select' && b.cell.column.id === 'mrt-row-select'
-      ? a.isRowSelected === b.isRowSelected
+      ? a.canSelect === b.canSelect && a.isRowSelected === b.isRowSelected
       : true)
 );
