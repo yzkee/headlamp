@@ -9,6 +9,8 @@ export class HeadlampPage {
   }
 
   async authenticate(token?: string) {
+    await this.page.waitForSelector('h1:has-text("Authentication")');
+
     // Check to see if already authenticated
     if (await this.page.isVisible('button:has-text("Authenticate")')) {
       this.hasToken(token || '');
@@ -22,16 +24,10 @@ export class HeadlampPage {
         this.page.click('button:has-text("Authenticate")'),
       ]);
     }
-
-    await this.page.waitForLoadState('load');
   }
 
   async navigateToCluster(name: string, token?: string) {
-    // Since we are using multi cluster structure we need to have a full reset navigation
-    await this.page.goto(`${this.testURL}`);
-    await this.page.waitForLoadState('load');
-    await this.page.getByRole('link', { name: name, exact: true }).click();
-    await this.page.waitForLoadState('load');
+    await this.navigateTopage(`/c/${name}`);
     await this.authenticate(token);
   }
 
@@ -79,16 +75,11 @@ export class HeadlampPage {
 
   async logout() {
     // Click on the account button to open the user menu
-    const userButton = await this.page.waitForSelector('[data-testid="user-account-button"]', {
-      state: 'visible',
-    });
-
-    await userButton.click();
+    await this.page.click('button[aria-label="Account of current user"]');
 
     // Wait for the logout option to be visible and click on it
-    await this.page.waitForSelector('[data-testid="logout-menu-item"]');
-    await this.page.click('[data-testid="logout-menu-item"]');
-
+    await this.page.waitForSelector('a.MuiMenuItem-root:has-text("Log out")');
+    await this.page.click('a.MuiMenuItem-root:has-text("Log out")');
     await this.page.waitForLoadState('load');
 
     // Expects the URL to contain c/test/token

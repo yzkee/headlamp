@@ -269,7 +269,6 @@ export const PureTopBar = memo(
             <Icon icon="mdi:logout" />
           </ListItemIcon>
           <ListItemText
-            data-testid="logout-menu-item"
             primary={t('Log out')}
             secondary={hasToken ? null : t('(No token set up)')}
           />
@@ -329,7 +328,6 @@ export const PureTopBar = memo(
         action: !!isClusterContext && (
           <MenuItem>
             <IconButton
-              data-testid="user-account-button"
               aria-label={t('Account of current user')}
               aria-controls={userMenuId}
               aria-haspopup="true"
@@ -388,7 +386,6 @@ export const PureTopBar = memo(
         id: DefaultAppBarAction.USER,
         action: !!isClusterContext && (
           <IconButton
-            data-testid="user-account-button"
             aria-label={t('Account of current user')}
             aria-controls={userMenuId}
             aria-haspopup="true"
