@@ -38,14 +38,14 @@ const headlampClassicLightTheme: AppTheme = {
 export const darkTheme: AppTheme = {
   name: 'dark',
   base: 'dark',
-  primary: '#1b1a19',
-  secondary: '#333333',
+  primary: '#ffffff',
+  secondary: '#1b1a19',
   text: {
     primary: '#faf9f8',
   },
   background: {
-    default: '#414141',
-    surface: '#414141',
+    default: '#292827',
+    surface: '#313131',
     muted: '#333333',
   },
   navbar: {
@@ -53,7 +53,7 @@ export const darkTheme: AppTheme = {
     color: '#faf9f8',
   },
   sidebar: {
-    background: '#313131',
+    background: '#252423',
     color: '#cdcdcd',
     selectedBackground: '#f2e600',
     selectedColor: '#f2e600',

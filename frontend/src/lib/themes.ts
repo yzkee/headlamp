@@ -76,7 +76,6 @@ export function createMuiTheme(currentTheme: AppTheme) {
             main: pink.A400,
             dark: pink.A700,
           },
-      primaryColor: '#000',
       success: {
         light: '#f8fff0',
         main: green['800'],
@@ -275,17 +274,14 @@ export function createMuiTheme(currentTheme: AppTheme) {
           primary: currentTheme.text?.primary ?? '#fff',
         },
         primary: {
-          contrastText: '#FFF',
           main: currentTheme.primary ?? '#4B99EE',
         },
         secondary: {
           main: currentTheme.secondary ?? commonRules.palette.secondary.main,
-          contrastText: '#FFF',
         },
         squareButton: {
           background: '#424242',
         },
-        primaryColor: '#fff',
         chartStyles: {
           defaultFillColor: 'rgba(20, 20, 20, 0.1)',
           fillColor: '#929191',
