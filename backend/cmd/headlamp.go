@@ -1209,8 +1209,15 @@ func processTokenProtocol(r *http.Request, protocol, tokenPrefix string) {
 	}
 
 	// Try to decode token from base64
-	if decodedBytes, err := base64.URLEncoding.DecodeString(token); err == nil {
+	decodedBytes, err := base64.URLEncoding.DecodeString(token)
+	if err == nil {
 		token = string(decodedBytes)
+	} else {
+		// Account for the possibility of tokens without base64 padding
+		decodedBytes, err := base64.RawStdEncoding.DecodeString(token)
+		if err == nil {
+			token = string(decodedBytes)
+		}
 	}
 
 	r.Header.Set("Authorization", "Bearer "+token)

@@ -1064,6 +1064,7 @@ func TestHandleClusterHelm(t *testing.T) {
 	}
 }
 
+//nolint:funlen
 func TestProcessWebSocketProtocolHeader(t *testing.T) {
 	tests := []struct {
 		name                   string
@@ -1089,6 +1090,14 @@ func TestProcessWebSocketProtocolHeader(t *testing.T) {
 			name: "Header with single token protocol",
 			initialHeader: http.Header{
 				"Sec-Websocket-Protocol": []string{"base64url.bearer.authorization.k8s.io.dGVzdC10b2tlbg=="}, // "test-token"
+			},
+			expectedAuthHeader:     "Bearer test-token",
+			expectedProtocolHeader: "",
+		},
+		{
+			name: "Header with single token protocol and raw base64 encoding",
+			initialHeader: http.Header{
+				"Sec-Websocket-Protocol": []string{"base64url.bearer.authorization.k8s.io.dGVzdC10b2tlbg"}, // "test-token"
 			},
 			expectedAuthHeader:     "Bearer test-token",
 			expectedProtocolHeader: "",
