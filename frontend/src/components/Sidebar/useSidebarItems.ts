@@ -2,7 +2,7 @@ import _ from 'lodash';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { isElectron } from '../../helpers/isElectron';
-import { useCluster } from '../../lib/k8s';
+import { useSelectedClusters } from '../../lib/k8s';
 import { createRouteURL } from '../../lib/router';
 import { useTypedSelector } from '../../redux/reducers/reducers';
 import { DefaultSidebars, SidebarItemProps } from '.';
@@ -34,11 +34,11 @@ const sortSidebarItems = (items: SidebarItemProps[]): SidebarItemProps[] => {
 
 export const useSidebarItems = (sidebarName: string = DefaultSidebars.IN_CLUSTER) => {
   const clusters = useTypedSelector(state => state.config.clusters) ?? {};
+  const settings = useTypedSelector(state => state.config.settings);
   const customSidebarEntries = useTypedSelector(state => state.sidebar.entries);
   const customSidebarFilters = useTypedSelector(state => state.sidebar.filters);
-  const settings = useTypedSelector(state => state.config.settings);
   const shouldShowHomeItem = isElectron() || Object.keys(clusters).length !== 1;
-  const cluster = useCluster();
+  const selectedClusters = useSelectedClusters();
   const { t } = useTranslation();
 
   const sidebars = useMemo(() => {
@@ -93,8 +93,8 @@ export const useSidebarItems = (sidebarName: string = DefaultSidebars.IN_CLUSTER
       },
       {
         name: 'cluster',
-        label: t('glossary|Cluster'),
-        subtitle: cluster || undefined,
+        label: selectedClusters.length ? t('Clusters') : t('glossary|Cluster'),
+        subtitle: selectedClusters.join('\n') || undefined,
         icon: 'mdi:hexagon-multiple-outline',
         subList: [
           {
@@ -369,7 +369,13 @@ export const useSidebarItems = (sidebarName: string = DefaultSidebars.IN_CLUSTER
     }
 
     return sidebars;
-  }, [customSidebarEntries, shouldShowHomeItem, Object.keys(clusters).join(','), cluster, t]);
+  }, [
+    customSidebarEntries,
+    shouldShowHomeItem,
+    Object.keys(clusters).join(','),
+    selectedClusters.join(','),
+    t,
+  ]);
 
   const unsortedItems =
     sidebars[sidebarName === '' ? DefaultSidebars.IN_CLUSTER : sidebarName] ?? [];

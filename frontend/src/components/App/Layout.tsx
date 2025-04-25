@@ -6,7 +6,8 @@ import { styled } from '@mui/material/styles';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDispatch } from 'react-redux';
-import { getCluster, getClusterGroup } from '../../lib/cluster';
+import { getCluster } from '../../lib/cluster';
+import { getSelectedClusters } from '../../lib/cluster';
 import { useClustersConf } from '../../lib/k8s';
 import { request } from '../../lib/k8s/apiProxy';
 import { Cluster } from '../../lib/k8s/cluster';
@@ -186,7 +187,7 @@ export default function Layout({}: LayoutProps) {
       });
   };
 
-  const urlClusters = getClusterGroup();
+  const urlClusters = getSelectedClusters();
   const clustersNotInURL =
     allClusters && urlClusters.length !== 0
       ? urlClusters.filter(clusterName => !Object.keys(allClusters).includes(clusterName))
