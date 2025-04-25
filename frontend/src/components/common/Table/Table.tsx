@@ -381,7 +381,8 @@ export default function Table<RowItem extends Record<string, any>>({
           borderColor: theme.palette.tables.head.borderColor,
           borderRadius: 1,
           borderBottom: 'none',
-          overflow: 'hidden',
+          overflowX: 'auto',
+          width: '100%',
           gridTemplateColumns,
         }}
       >
