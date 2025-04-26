@@ -98,6 +98,9 @@ function getContainerDisplayStatus(container: KubeContainerStatus) {
   } else if (state.terminated) {
     color = 'green';
     label = 'Terminated';
+    if (state.terminated.reason === 'Error') {
+      color = 'red';
+    }
     if (state.terminated.reason) {
       tooltipLines.push(`Reason: ${state.terminated.reason}`);
     }
