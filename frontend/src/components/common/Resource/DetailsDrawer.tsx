@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-import { Box, Drawer, useMediaQuery, useTheme } from '@mui/material';
-import React from 'react';
+import { Box, useMediaQuery, useTheme } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { useDispatch } from 'react-redux';
 import { useLocation } from 'react-router';
@@ -48,49 +47,47 @@ export default function DetailsDrawer() {
     handleCloseDrawerReset();
   }
 
-  if (!selectedResource || isSmallScreen) {
+  if (!selectedResource || isSmallScreen || !isDetailDrawerEnabled) {
     return null;
   }
 
   return (
-    isDetailDrawerEnabled && (
-      <Drawer
-        variant="persistent"
-        anchor="right"
-        open
-        onClose={closeDrawer}
-        PaperProps={{
-          sx: {
-            marginTop: '64px',
-            boxShadow: '-5px 0 20px rgba(0,0,0,0.08)',
-            borderRadius: '10px',
-            width: '45vw',
-          },
+    <Box
+      sx={{
+        position: 'absolute',
+        backgroundColor: 'background.paper',
+        width: '60vw',
+        right: 0,
+        height: '100%',
+        overflowY: 'auto',
+        boxShadow: '-5px 0 20px rgba(0,0,0,0.08)',
+        borderRadius: '10px 0 0 10px',
+        zIndex: 1,
+        border: '1px solid',
+        borderColor: theme.palette.divider,
+      }}
+    >
+      <Box
+        sx={{
+          display: 'flex',
+          padding: '1rem',
+          justifyContent: 'right',
         }}
       >
-        {/* Note: the top margin is needed to not clip into the topbar */}
-        <Box
-          sx={{
-            display: 'flex',
-            padding: '1rem',
-            justifyContent: 'right',
-          }}
-        >
-          <ActionButton onClick={() => closeDrawer()} icon="mdi:close" description={t('Close')} />
-        </Box>
-        <Box>
-          {selectedResource && (
-            <KubeObjectDetails
-              resource={{
-                kind: selectedResource.kind,
-                metadata: selectedResource.metadata,
-                cluster: selectedResource.cluster,
-              }}
-              customResourceDefinition={selectedResource.customResourceDefinition}
-            />
-          )}
-        </Box>
-      </Drawer>
-    )
+        <ActionButton onClick={() => closeDrawer()} icon="mdi:close" description={t('Close')} />
+      </Box>
+      <Box>
+        {selectedResource && (
+          <KubeObjectDetails
+            resource={{
+              kind: selectedResource.kind,
+              metadata: selectedResource.metadata,
+              cluster: selectedResource.cluster,
+            }}
+            customResourceDefinition={selectedResource.customResourceDefinition}
+          />
+        )}
+      </Box>
+    </Box>
   );
 }
