@@ -234,51 +234,55 @@ export default function Layout({}: LayoutProps) {
       <VersionDialog />
       <CssBaseline enableColorScheme />
       <ActionsNotifier />
-      <Box
-        sx={{
-          display: 'flex',
-          overflow: 'auto',
-          flexDirection: 'column',
-          height: '100dvh',
-        }}
-      >
-        <TopBar />
+      <Box sx={{ display: 'flex', height: '100dvh' }}>
         <Box
           sx={{
             display: 'flex',
-            overflow: 'hidden',
+            overflow: 'auto',
+            flexDirection: 'column',
+            flexGrow: 1,
           }}
         >
-          <Sidebar />
-          <Main
-            id="main"
+          <TopBar />
+          <Box
             sx={{
+              display: 'flex',
+              overflow: 'hidden',
               flexGrow: 1,
-              marginLeft: 'initial',
-              overflow: 'auto',
+              position: 'relative',
             }}
           >
-            {clustersNotInURL.slice(0, MAXIMUM_NUM_ALERTS).map(clusterName => (
-              <ClusterNotFoundPopup key={clusterName} cluster={clusterName} />
-            ))}
-            <AlertNotification />
-            <Box>
-              <Div />
-              <Container {...containerProps}>
-                <NavigationTabs />
-                {arePluginsLoaded && (
-                  <RouteSwitcher
-                    requiresToken={() => {
-                      const clusterName = getCluster() || '';
-                      const cluster = clusters ? clusters[clusterName] : undefined;
-                      return cluster?.useToken === undefined || cluster?.useToken;
-                    }}
-                  />
-                )}
-              </Container>
-            </Box>
-          </Main>
-          <DetailsDrawer />
+            <Sidebar />
+            <Main
+              id="main"
+              sx={{
+                flexGrow: 1,
+                marginLeft: 'initial',
+                overflow: 'auto',
+              }}
+            >
+              {clustersNotInURL.slice(0, MAXIMUM_NUM_ALERTS).map(clusterName => (
+                <ClusterNotFoundPopup key={clusterName} cluster={clusterName} />
+              ))}
+              <AlertNotification />
+              <Box>
+                <Div />
+                <Container {...containerProps}>
+                  <NavigationTabs />
+                  {arePluginsLoaded && (
+                    <RouteSwitcher
+                      requiresToken={() => {
+                        const clusterName = getCluster() || '';
+                        const cluster = clusters ? clusters[clusterName] : undefined;
+                        return cluster?.useToken === undefined || cluster?.useToken;
+                      }}
+                    />
+                  )}
+                </Container>
+              </Box>
+            </Main>
+            <DetailsDrawer />
+          </Box>
         </Box>
       </Box>
     </>
