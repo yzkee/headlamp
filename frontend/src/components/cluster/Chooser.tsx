@@ -43,8 +43,8 @@ import { useClustersConf } from '../../lib/k8s';
 import { Cluster } from '../../lib/k8s/cluster';
 import { createRouteURL } from '../../lib/router';
 import { getCluster, getClusterPrefixedPath } from '../../lib/util';
-import { setVersionDialogOpen } from '../../redux/actions/actions';
 import { useTypedSelector } from '../../redux/reducers/reducers';
+import { uiSlice } from '../../redux/uiSlice';
 import { AppLogo } from '../App/AppLogo';
 import ActionButton from '../common/ActionButton';
 import { DialogTitle } from '../common/Dialog';
@@ -321,7 +321,7 @@ export function ClusterDialog(props: ClusterDialogProps) {
               aria-label={t('Show build information')}
               onClick={() => {
                 handleClose();
-                dispatch(setVersionDialogOpen(true));
+                dispatch(uiSlice.actions.setVersionDialogOpen(true));
               }}
               size="small"
             >

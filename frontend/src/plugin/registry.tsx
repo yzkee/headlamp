@@ -55,7 +55,6 @@ import {
   setAppBarActionsProcessor,
   setDetailsViewHeaderAction,
 } from '../redux/actionButtonsSlice';
-import { setClusterChooserButtonComponent, setFunctionsToOverride } from '../redux/actions/actions';
 import {
   CallbackAction,
   CallbackActionOptions,
@@ -92,6 +91,7 @@ import {
 import { addOverviewChartsProcessor, OverviewChartsProcessor } from '../redux/overviewChartsSlice';
 import { setRoute, setRouteFilter } from '../redux/routesSlice';
 import store from '../redux/stores/store';
+import { uiSlice } from '../redux/uiSlice';
 import {
   PluginSettingsComponentType,
   PluginSettingsDetailsProps,
@@ -607,7 +607,7 @@ export function registerAppLogo(logo: AppLogoType) {
  *
  */
 export function registerClusterChooser(chooser: ClusterChooserType) {
-  store.dispatch(setClusterChooserButtonComponent(chooser));
+  store.dispatch(uiSlice.actions.setClusterChooserButton(chooser));
 }
 
 /**
@@ -625,7 +625,7 @@ export function registerClusterChooser(chooser: ClusterChooserType) {
 export function registerSetTokenFunction(
   override: (cluster: string, token: string | null) => void
 ) {
-  store.dispatch(setFunctionsToOverride({ setToken: override }));
+  store.dispatch(uiSlice.actions.setFunctionsToOverride({ setToken: override }));
 }
 
 /**
@@ -641,7 +641,7 @@ export function registerSetTokenFunction(
  * ```
  */
 export function registerGetTokenFunction(override: (cluster: string) => string | undefined) {
-  store.dispatch(setFunctionsToOverride({ getToken: override }));
+  store.dispatch(uiSlice.actions.setFunctionsToOverride({ getToken: override }));
 }
 
 /**
