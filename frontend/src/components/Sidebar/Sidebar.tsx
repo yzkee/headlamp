@@ -306,11 +306,6 @@ export const PureSidebar = memo(
 
     const contents = (
       <>
-        <Box
-          sx={theme => ({
-            ...theme.mixins.toolbar,
-          })}
-        />
         <Grid
           ref={listContainerRef}
           sx={{
@@ -379,15 +374,22 @@ export const PureSidebar = memo(
       <Box component="nav" aria-label={t('translation|Navigation')}>
         <Drawer
           variant={isTemporaryDrawer ? 'temporary' : 'permanent'}
+          PaperProps={{
+            sx: {
+              position: 'initial',
+            },
+          }}
           sx={theme => {
             const drawer = {
               width: drawerWidth,
               flexShrink: 0,
+              height: '100%',
               background: theme.palette.sidebar.background,
               color: theme.palette.sidebar.color,
             };
 
             const drawerOpen = {
+              zIndex: 1300,
               width: drawerWidth,
               transition: theme.transitions.create('width', {
                 easing: theme.transitions.easing.sharp,
