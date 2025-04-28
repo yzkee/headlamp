@@ -91,7 +91,7 @@ import {
 import { addOverviewChartsProcessor, OverviewChartsProcessor } from '../redux/overviewChartsSlice';
 import { setRoute, setRouteFilter } from '../redux/routesSlice';
 import store from '../redux/stores/store';
-import { uiSlice } from '../redux/uiSlice';
+import { UIPanel, uiSlice } from '../redux/uiSlice';
 import {
   PluginSettingsComponentType,
   PluginSettingsDetailsProps,
@@ -945,6 +945,25 @@ export function clusterAction(
   actionOptions: CallbackActionOptions = {}
 ) {
   store.dispatch(sendClusterAction(callback, actionOptions));
+}
+
+/**
+ * Registers a UI panel in the application's UI.
+ *
+ * See {@link UIPanel} for more details on Panel definition
+ *
+ * @param panel - The UI panel configuration object to be registered
+ * @example
+ * ```tsx
+ * registerUIPanel({
+ *   id: 'my-panel',
+ *   location: 'right'
+ *   component: () => <div style={{ width: '100px', flexShrink: 0 }}>Hello world</div>,
+ * });
+ * ```
+ */
+export function registerUIPanel(panel: UIPanel) {
+  store.dispatch(uiSlice.actions.addUIPanel(panel));
 }
 
 export {
