@@ -21,6 +21,7 @@ import { MRT_Localization_ES } from 'material-react-table/locales/es';
 import { MRT_Localization_FR } from 'material-react-table/locales/fr';
 import { MRT_Localization_IT } from 'material-react-table/locales/it';
 import { MRT_Localization_PT } from 'material-react-table/locales/pt';
+import { MRT_Localization_KO } from 'material-react-table/locales/ko';
 import { memo, ReactNode, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getTablesRowsPerPage } from '../../../helpers/tablesRowsPerPage';
@@ -132,6 +133,7 @@ const tableLocalizationMap: Record<string, MRT_Localization> = {
   fr: MRT_Localization_FR,
   it: MRT_Localization_IT,
   pt: MRT_Localization_PT,
+  ko: MRT_Localization_KO,
 };
 
 const StyledHeadRow = styled('tr')(({ theme }) => ({

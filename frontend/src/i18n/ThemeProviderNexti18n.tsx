@@ -1,4 +1,4 @@
-import { deDE, enUS, esES, frFR, hiIN, itIT, ptPT, zhTW } from '@mui/material/locale';
+import { deDE, enUS, esES, frFR, hiIN, itIT, ptPT, zhTW, koKR  } from '@mui/material/locale';
 import { createTheme, StyledEngineProvider, Theme, ThemeProvider } from '@mui/material/styles';
 import React, { ReactNode, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -14,9 +14,10 @@ function getLocale(locale: string): typeof enUS {
     hi: hiIN,
     fr: frFR,
     it: itIT,
+    ko: koKR,
     'zh-tw': zhTW,
   };
-  type LocalesType = 'en' | 'pt' | 'es' | 'ta' | 'de' | 'hi' | 'fr' | 'it' | 'zh-tw';
+  type LocalesType = 'en' | 'pt' | 'es' | 'ta' | 'de' | 'hi' | 'fr' | 'it' | 'zh-tw' | 'ko';
   return locale in LOCALES ? LOCALES[locale as LocalesType] : LOCALES['en'];
 }
 
