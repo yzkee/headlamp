@@ -31,6 +31,7 @@ import { setConfig } from '../../redux/configSlice';
 import { ConfigState } from '../../redux/configSlice';
 import { useTypedSelector } from '../../redux/reducers/reducers';
 import store from '../../redux/stores/store';
+import { useUIPanelsGroupedBySide } from '../../redux/uiSlice';
 import { fetchStatelessClusterKubeConfigs, isEqualClusterConfigs } from '../../stateless/';
 import ActionsNotifier from '../common/ActionsNotifier';
 import AlertNotification from '../common/AlertNotification';
@@ -213,6 +214,8 @@ export default function Layout({}: LayoutProps) {
     : ({ maxWidth: 'xl' } as const);
   const MAXIMUM_NUM_ALERTS = 2;
 
+  const panels = useUIPanelsGroupedBySide();
+
   return (
     <>
       <Link
@@ -235,6 +238,9 @@ export default function Layout({}: LayoutProps) {
       <CssBaseline enableColorScheme />
       <ActionsNotifier />
       <Box sx={{ display: 'flex', height: '100dvh' }}>
+        {panels.left.map(it => (
+          <it.component key={it.id} />
+        ))}
         <Box
           sx={{
             display: 'flex',
@@ -243,6 +249,9 @@ export default function Layout({}: LayoutProps) {
             flexGrow: 1,
           }}
         >
+          {panels.top.map(it => (
+            <it.component key={it.id} />
+          ))}
           <TopBar />
           <Box
             sx={{
@@ -283,7 +292,13 @@ export default function Layout({}: LayoutProps) {
             </Main>
             <DetailsDrawer />
           </Box>
+          {panels.bottom.map(it => (
+            <it.component key={it.id} />
+          ))}
         </Box>
+        {panels.right.map(it => (
+          <it.component key={it.id} />
+        ))}
       </Box>
     </>
   );
