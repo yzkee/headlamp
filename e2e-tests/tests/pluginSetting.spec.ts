@@ -35,6 +35,8 @@ test('plugin settings page should have a table', async () => {
 
   await headlampPage.navigateTopage('/settings/plugins', /Plugins/);
   await headlampPage.tableHasHeaders('table', expectedHeaders);
+  // @todo: there be a11y dragons on settings page.
+  // await headlampPage.a11y();
 });
 
 test('pod counter plugin should have setting option', async () => {
@@ -44,4 +46,6 @@ test('pod counter plugin should have setting option', async () => {
   await headlampPage.clickOnPlugin(pluginName);
   await headlampPage.hasTitleContaining(/Plugin Details/);
   await headlampPage.checkPageContent('Custom Error Message');
+  // @todo: there be a11y dragons on settings page.
+  // await headlampPage.a11y();
 });

@@ -13,11 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+import { AxeBuilder } from '@axe-core/playwright';
 import { expect, Page } from '@playwright/test';
 
 export class NamespacesPage {
   constructor(private page: Page) {}
+
+  async a11y() {
+    const axeBuilder = new AxeBuilder({ page: this.page });
+    const accessibilityResults = await axeBuilder.analyze();
+    expect(accessibilityResults.violations).toStrictEqual([]);
+  }
 
   async navigateToNamespaces() {
     await this.page.click('a span:has-text("Cluster")');
@@ -62,6 +68,8 @@ export class NamespacesPage {
     await page.getByRole('button', { name: 'Apply' }).click();
 
     await page.waitForSelector(`text=Applied ${name}`);
+
+    await this.a11y();
   }
 
   async deleteNamespace(name) {
@@ -83,5 +91,7 @@ export class NamespacesPage {
     await page.waitForSelector(`text=Are you sure you want to delete item ${name}?`);
     await page.click('button:has-text("Yes")');
     await page.waitForSelector(`text=Deleted item ${name}`);
+
+    await this.a11y();
   }
 }
