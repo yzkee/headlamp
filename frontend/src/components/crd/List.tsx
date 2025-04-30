@@ -58,6 +58,7 @@ export default function CustomResourceDefinitionList() {
               params={{
                 crd: crd.metadata.name,
               }}
+              activeCluster={crd.cluster}
             >
               {crd.spec.names.kind}
             </Link>
@@ -72,6 +73,7 @@ export default function CustomResourceDefinitionList() {
               params={{
                 name: crd.metadata.name,
               }}
+              activeCluster={crd.cluster}
             >
               {crd.metadata.name}
             </Link>

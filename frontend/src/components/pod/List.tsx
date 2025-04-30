@@ -276,7 +276,12 @@ export function PodListRenderer(props: PodListProps) {
           getValue: pod => pod?.spec?.nodeName,
           render: pod =>
             pod?.spec?.nodeName && (
-              <Link routeName="node" params={{ name: pod.spec.nodeName }} tooltip>
+              <Link
+                routeName="node"
+                params={{ name: pod.spec.nodeName }}
+                activeCluster={pod.cluster}
+                tooltip
+              >
                 {pod.spec.nodeName}
               </Link>
             ),
@@ -287,7 +292,12 @@ export function PodListRenderer(props: PodListProps) {
           getValue: pod => pod?.status?.nominatedNodeName,
           render: pod =>
             !!pod?.status?.nominatedNodeName && (
-              <Link routeName="node" params={{ name: pod?.status?.nominatedNodeName }} tooltip>
+              <Link
+                routeName="node"
+                params={{ name: pod?.status?.nominatedNodeName }}
+                activeCluster={pod.cluster}
+                tooltip
+              >
                 {pod?.status?.nominatedNodeName}
               </Link>
             ),

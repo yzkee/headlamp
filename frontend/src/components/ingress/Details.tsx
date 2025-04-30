@@ -239,7 +239,11 @@ export default function IngressDetails(props: {
           {
             name: t('Class Name'),
             value: ingress.spec?.ingressClassName ? (
-              <Link routeName="ingressclass" params={{ name: ingress.spec?.ingressClassName }}>
+              <Link
+                routeName="ingressclass"
+                params={{ name: ingress.spec?.ingressClassName }}
+                activeCluster={ingress.cluster}
+              >
                 {ingress.spec?.ingressClassName}
               </Link>
             ) : null,

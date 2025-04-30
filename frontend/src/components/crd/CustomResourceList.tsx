@@ -70,6 +70,7 @@ function CustomResourceLink(props: {
         crd: crd.metadata.name,
         namespace: resource.metadata.namespace || '-',
       }}
+      activeCluster={resource.cluster}
       {...otherProps}
     >
       {resource.metadata.name}
@@ -97,7 +98,7 @@ function CustomResourceListRenderer(props: CustomResourceListProps) {
         ]}
         actions={[
           <Box mr={2}>
-            <Link routeName="crd" params={{ name: crd.metadata.name }}>
+            <Link routeName="crd" params={{ name: crd.metadata.name }} activeCluster={crd.cluster}>
               {t('glossary|CRD: {{ crdName }}', { crdName: crd.metadata.name })}
             </Link>
           </Box>,

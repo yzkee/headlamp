@@ -66,6 +66,7 @@ export default function CustomResourceDefinitionDetails(props: { name?: string }
                   params={{
                     crd: item.metadata.name,
                   }}
+                  activeCluster={item.cluster}
                 >
                   {item.spec.names.kind}
                 </Link>

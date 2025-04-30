@@ -58,7 +58,12 @@ export default function VolumeDetails(props: { name?: string; cluster?: string }
           {
             name: t('Storage Class'),
             value: (
-              <Link routeName="storageClass" params={{ name: item.spec!.storageClassName }} tooltip>
+              <Link
+                routeName="storageClass"
+                params={{ name: item.spec!.storageClassName }}
+                activeCluster={item.cluster}
+                tooltip
+              >
                 {item.spec!.storageClassName}
               </Link>
             ),

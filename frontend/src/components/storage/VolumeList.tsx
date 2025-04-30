@@ -43,7 +43,12 @@ export default function VolumeList() {
               return '';
             }
             return (
-              <Link routeName="storageClass" params={{ name }} tooltip>
+              <Link
+                routeName="storageClass"
+                params={{ name }}
+                activeCluster={volume.cluster}
+                tooltip
+              >
                 {name}
               </Link>
             );
@@ -90,6 +95,7 @@ export default function VolumeList() {
               <Link
                 routeName="persistentVolumeClaim"
                 params={{ name: claim, namespace: claimNamespace }}
+                activeCluster={volume.cluster}
                 tooltip
               >
                 {claim}
