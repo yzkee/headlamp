@@ -15,6 +15,7 @@
  */
 
 /// <reference types="node" />
+import { AxeBuilder } from '@axe-core/playwright';
 import { expect, Page } from '@playwright/test';
 
 export class HeadlampPage {
@@ -22,6 +23,12 @@ export class HeadlampPage {
 
   constructor(private page: Page) {
     this.testURL = process.env.HEADLAMP_TEST_URL || '/';
+  }
+
+  async a11y() {
+    const axeBuilder = new AxeBuilder({ page: this.page });
+    const accessibilityResults = await axeBuilder.analyze();
+    expect(accessibilityResults.violations).toStrictEqual([]);
   }
 
   async authenticate(token?: string) {
@@ -84,6 +91,7 @@ export class HeadlampPage {
     await this.page.goto(`${this.testURL}${path}`, {
       waitUntil: 'networkidle',
     });
+    await this.page.waitForLoadState('load');
     if (title) {
       await this.hasTitleContaining(title);
     }

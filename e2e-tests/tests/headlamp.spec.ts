@@ -57,6 +57,7 @@ test('service page should have headlamp service', async () => {
 
   // Check if there is text "headlamp" on the page
   await headlampPage.checkPageContent('headlamp');
+  await headlampPage.a11y();
 });
 
 test('headlamp service page should contain port', async () => {
@@ -66,6 +67,7 @@ test('headlamp service page should contain port', async () => {
 
   // Check if there is text "TCP" on the page
   await headlampPage.checkPageContent('TCP');
+  await headlampPage.a11y();
 });
 
 test('main page should have Security tab', async () => {
@@ -78,6 +80,7 @@ test('Service account tab should have headlamp-admin', async () => {
 
   // Check if there is text "headlamp-admin" on the page
   await headlampPage.checkPageContent('headlamp-admin');
+  await headlampPage.a11y();
 });
 
 test('Logout the user', async () => {
@@ -94,9 +97,11 @@ test('pagination goes to next page', async () => {
 
   // Check if there is text "Rows per page" on the page
   await headlampPage.checkPageContent('Rows per page');
+  await headlampPage.a11y();
 
   // Check working of pagination
   await headlampPage.checkRows();
+  await headlampPage.a11y();
 });
 
 // --- Headlamp tests end --- //
