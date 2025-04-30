@@ -18,7 +18,7 @@ import { JSONPath } from 'jsonpath-plus';
 import { cloneDeep, unset } from 'lodash';
 import React, { useMemo } from 'react';
 import { loadClusterSettings } from '../../helpers/clusterSettings';
-import { getCluster, getSelectedClusters } from '../cluster';
+import { formatClusterPathParam, getCluster, getSelectedClusters } from '../cluster';
 import { createRouteURL } from '../router';
 import { timeAgo } from '../util';
 import { useConnectApi, useSelectedClusters } from '.';
@@ -140,17 +140,12 @@ export class KubeObject<T extends KubeObjectInterface | KubeEvent = any> {
   getDetailsLink() {
     const selectedClusters = getSelectedClusters();
 
-    let cluster = this.cluster;
-    if (selectedClusters.length > 1) {
-      const sortedClusters = selectedClusters.filter(it => it !== this.cluster);
-      sortedClusters.unshift(this.cluster);
-      cluster = sortedClusters.join('+');
-    }
+    const cluster = formatClusterPathParam(selectedClusters, this.cluster);
 
     const params = {
       namespace: this.getNamespace(),
       name: this.getName(),
-      cluster: cluster,
+      cluster,
     };
     const link = createRouteURL(this.detailsRoute, params);
     return link;
