@@ -20,6 +20,7 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { useTranslation } from 'react-i18next';
 import { generatePath, useHistory } from 'react-router-dom';
+import { formatClusterPathParam } from '../../../lib/cluster';
 import { useClustersConf, useClustersVersion } from '../../../lib/k8s';
 import { ApiError } from '../../../lib/k8s/apiProxy';
 import { Cluster } from '../../../lib/k8s/cluster';
@@ -189,10 +190,9 @@ export default function ClusterTable({
           onClick={() => {
             history.push({
               pathname: generatePath(getClusterPrefixedPath(), {
-                cluster: table
-                  .getSelectedRowModel()
-                  .rows.map(it => it.original.name)
-                  .join('+'),
+                cluster: formatClusterPathParam(
+                  table.getSelectedRowModel().rows.map(it => it.original.name)
+                ),
               }),
             });
           }}
