@@ -152,6 +152,7 @@ export default function ClusterTable({
           accessorFn: ({ name }) => versions[name]?.gitVersion || '⋯',
         },
         {
+          id: 'actions',
           header: '',
           muiTableBodyCellProps: {
             align: 'right',
