@@ -18,7 +18,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import { Meta, StoryFn } from '@storybook/react';
 import { initialState as CONFIG_INITIAL_STATE } from '../../../../redux/configSlice';
 import { initialState as FILTER_INITIAL_STATE } from '../../../../redux/filterSlice';
-import { INITIAL_STATE as UI_INITIAL_STATE } from '../../../../redux/reducers/ui';
+import { uiSlice } from '../../../../redux/uiSlice';
 import { TestContext } from '../../../../test';
 import { loadNotifications, Notification, storeNotifications } from '../notificationsSlice';
 import NotificationList from './List';
@@ -48,7 +48,7 @@ const store = configureStore({
     state = {
       filter: { ...FILTER_INITIAL_STATE },
       config: { ...CONFIG_INITIAL_STATE },
-      ui: { ...UI_INITIAL_STATE },
+      ui: { ...uiSlice.getInitialState() },
     }
   ) => state,
   preloadedState: {
@@ -70,7 +70,7 @@ const store = configureStore({
     },
     filter: { ...FILTER_INITIAL_STATE },
     ui: {
-      ...UI_INITIAL_STATE,
+      ...uiSlice.getInitialState(),
     },
     notifications: {
       notifications: loadNotifications(),

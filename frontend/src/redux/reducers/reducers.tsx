@@ -29,15 +29,15 @@ import filterReducer from '../filterSlice';
 import eventCallbackReducer from '../headlampEventSlice';
 import overviewChartsReducer from '../overviewChartsSlice';
 import routesReducer from '../routesSlice';
+import { uiSlice } from '../uiSlice';
 import resourceTableReducer from './../../components/common/Resource/resourceTableSlice';
 import detailsViewSectionReducer from './../../components/DetailsViewSection/detailsViewSectionSlice';
 import sidebarReducer from './../../components/Sidebar/sidebarSlice';
 import pluginConfigReducer from './../../plugin/pluginConfigSlice';
-import uiReducer from './ui';
 
 const reducers = combineReducers({
   filter: filterReducer,
-  ui: uiReducer,
+  ui: uiSlice.reducer,
   clusterAction: clusterAction,
   config: configReducer,
   plugins: pluginsReducer,

@@ -16134,5 +16134,6 @@
   "registerSetTokenFunction": [Function],
   "registerSidebarEntry": [Function],
   "registerSidebarEntryFilter": [Function],
+  "registerUIPanel": [Function],
   "runCommand": [Function],
 }
