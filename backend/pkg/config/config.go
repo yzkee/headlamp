@@ -20,30 +20,34 @@ import (
 const defaultPort = 4466
 
 type Config struct {
-	InCluster             bool   `koanf:"in-cluster"`
-	DevMode               bool   `koanf:"dev"`
-	InsecureSsl           bool   `koanf:"insecure-ssl"`
-	EnableHelm            bool   `koanf:"enable-helm"`
-	EnableDynamicClusters bool   `koanf:"enable-dynamic-clusters"`
-	ListenAddr            string `koanf:"listen-addr"`
-	WatchPluginsChanges   bool   `koanf:"watch-plugins-changes"`
-	Port                  uint   `koanf:"port"`
-	KubeConfigPath        string `koanf:"kubeconfig"`
-	SkippedKubeContexts   string `koanf:"skipped-kube-contexts"`
-	StaticDir             string `koanf:"html-static-dir"`
-	PluginsDir            string `koanf:"plugins-dir"`
-	BaseURL               string `koanf:"base-url"`
-	ProxyURLs             string `koanf:"proxy-urls"`
-	OidcClientID          string `koanf:"oidc-client-id"`
-	OidcClientSecret      string `koanf:"oidc-client-secret"`
-	OidcIdpIssuerURL      string `koanf:"oidc-idp-issuer-url"`
-	OidcScopes            string `koanf:"oidc-scopes"`
+	InCluster                 bool   `koanf:"in-cluster"`
+	DevMode                   bool   `koanf:"dev"`
+	InsecureSsl               bool   `koanf:"insecure-ssl"`
+	EnableHelm                bool   `koanf:"enable-helm"`
+	EnableDynamicClusters     bool   `koanf:"enable-dynamic-clusters"`
+	ListenAddr                string `koanf:"listen-addr"`
+	WatchPluginsChanges       bool   `koanf:"watch-plugins-changes"`
+	Port                      uint   `koanf:"port"`
+	KubeConfigPath            string `koanf:"kubeconfig"`
+	SkippedKubeContexts       string `koanf:"skipped-kube-contexts"`
+	StaticDir                 string `koanf:"html-static-dir"`
+	PluginsDir                string `koanf:"plugins-dir"`
+	BaseURL                   string `koanf:"base-url"`
+	ProxyURLs                 string `koanf:"proxy-urls"`
+	OidcClientID              string `koanf:"oidc-client-id"`
+	OidcValidatorClientID     string `koanf:"oidc-validator-client-id"`
+	OidcClientSecret          string `koanf:"oidc-client-secret"`
+	OidcIdpIssuerURL          string `koanf:"oidc-idp-issuer-url"`
+	OidcValidatorIdpIssuerURL string `koanf:"oidc-validator-idp-issuer-url"`
+	OidcScopes                string `koanf:"oidc-scopes"`
+	OidcUseAccessToken        bool   `koanf:"oidc-use-access-token"`
 }
 
 func (c *Config) Validate() error {
-	if !c.InCluster && (c.OidcClientID != "" || c.OidcClientSecret != "" || c.OidcIdpIssuerURL != "") {
-		return errors.New(`oidc-client-id, oidc-client-secret, oidc-idp-issuer-url flags
-		are only meant to be used in inCluster mode`)
+	if !c.InCluster && (c.OidcClientID != "" || c.OidcClientSecret != "" || c.OidcIdpIssuerURL != "" ||
+		c.OidcValidatorClientID != "" || c.OidcValidatorIdpIssuerURL != "") {
+		return errors.New(`oidc-client-id, oidc-client-secret, oidc-idp-issuer-url, oidc-validator-client-id, 
+		oidc-validator-idp-issuer-url, flags are only meant to be used in inCluster mode`)
 	}
 
 	if c.BaseURL != "" && !strings.HasPrefix(c.BaseURL, "/") {
@@ -183,9 +187,12 @@ func flagset() *flag.FlagSet {
 
 	f.String("oidc-client-id", "", "ClientID for OIDC")
 	f.String("oidc-client-secret", "", "ClientSecret for OIDC")
+	f.String("oidc-validator-client-id", "", "Override ClientID for OIDC during validation")
 	f.String("oidc-idp-issuer-url", "", "Identity provider issuer URL for OIDC")
+	f.String("oidc-validator-idp-issuer-url", "", "Override Identity provider issuer URL for OIDC during validation")
 	f.String("oidc-scopes", "profile,email",
 		"A comma separated list of scopes needed from the OIDC provider")
+	f.Bool("oidc-use-access-token", false, "Setup oidc to pass through the access_token instead of the default id_token")
 
 	return f
 }
