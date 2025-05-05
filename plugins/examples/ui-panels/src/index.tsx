@@ -9,6 +9,7 @@ registerUIPanel({
   side: 'top',
   component: () => (
     <div
+      role="region"
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -28,6 +29,7 @@ registerUIPanel({
   side: 'bottom',
   component: () => (
     <div
+      role="region"
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -47,6 +49,7 @@ registerUIPanel({
   side: 'left',
   component: () => (
     <div
+      role="region"
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -66,6 +69,7 @@ registerUIPanel({
   side: 'right',
   component: () => (
     <div
+      role="region"
       style={{
         display: 'flex',
         alignItems: 'center',
