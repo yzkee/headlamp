@@ -10,6 +10,7 @@ registerUIPanel({
   component: () => (
     <div
       role="region"
+      aria-label="top panel"
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -30,6 +31,7 @@ registerUIPanel({
   component: () => (
     <div
       role="region"
+      aria-label="bottom panel"
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -50,6 +52,7 @@ registerUIPanel({
   component: () => (
     <div
       role="region"
+      aria-label="left panel"
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -70,6 +73,7 @@ registerUIPanel({
   component: () => (
     <div
       role="region"
+      aria-label="right panel"
       style={{
         display: 'flex',
         alignItems: 'center',
