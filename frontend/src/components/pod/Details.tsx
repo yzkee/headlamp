@@ -495,7 +495,11 @@ export default function PodDetails(props: PodDetailsProps) {
           {
             name: t('Node'),
             value: item.spec.nodeName ? (
-              <Link routeName="node" params={{ name: item.spec.nodeName }}>
+              <Link
+                routeName="node"
+                params={{ name: item.spec.nodeName }}
+                activeCluster={item.cluster}
+              >
                 {item.spec.nodeName}
               </Link>
             ) : (
@@ -512,6 +516,7 @@ export default function PodDetails(props: PodDetailsProps) {
                     namespace: item.metadata.namespace,
                     name: item.spec.serviceAccountName || item.spec.serviceAccount,
                   }}
+                  activeCluster={item.cluster}
                 >
                   {item.spec.serviceAccountName || item.spec.serviceAccount}
                 </Link>

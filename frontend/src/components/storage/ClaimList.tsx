@@ -41,7 +41,12 @@ export default function VolumeClaimList() {
               return '';
             }
             return (
-              <Link routeName="storageClass" params={{ name }} tooltip>
+              <Link
+                routeName="storageClass"
+                params={{ name }}
+                activeCluster={volumeClaim.cluster}
+                tooltip
+              >
                 {name}
               </Link>
             );
@@ -74,7 +79,12 @@ export default function VolumeClaimList() {
               return '';
             }
             return (
-              <Link routeName="persistentVolume" params={{ name }} tooltip>
+              <Link
+                routeName="persistentVolume"
+                params={{ name }}
+                activeCluster={volumeClaim.cluster}
+                tooltip
+              >
                 {name}
               </Link>
             );

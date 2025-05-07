@@ -162,6 +162,7 @@ function CustomResourceDetailsRenderer(props: CustomResourceDetailsRendererProps
                 params={{
                   name: crd.metadata.name,
                 }}
+                activeCluster={crd.cluster}
               >
                 {crd.metadata.name}
               </Link>

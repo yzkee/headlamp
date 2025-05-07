@@ -86,6 +86,7 @@ export default function WebhookConfigurationDetails(props: WebhookConfigurationD
                                   name: webhook.clientConfig?.service?.name,
                                   namespace: webhook.clientConfig?.service?.namespace,
                                 }}
+                                activeCluster={item.cluster}
                               >
                                 {t('translation|Service: {{namespace}}/{{name}}', {
                                   namespace: webhook.clientConfig?.service?.namespace,

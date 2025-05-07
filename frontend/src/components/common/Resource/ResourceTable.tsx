@@ -414,7 +414,13 @@ function ResourceTableContent<RowItem extends KubeObject>(props: ResourceTablePr
               filterVariant: 'multi-select',
               Cell: ({ row }: { row: MRT_Row<RowItem> }) =>
                 row.original?.getNamespace() ? (
-                  <Link routeName="namespace" params={{ name: row.original.getNamespace() }}>
+                  <Link
+                    routeName="namespace"
+                    params={{
+                      name: row.original.getNamespace(),
+                    }}
+                    activeCluster={row.original.cluster}
+                  >
                     {row.original.getNamespace()}
                   </Link>
                 ) : (
