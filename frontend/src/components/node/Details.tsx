@@ -38,6 +38,7 @@ import { ConditionsSection, DetailsGrid, OwnedPodsSection } from '../common/Reso
 import AuthVisible from '../common/Resource/AuthVisible';
 import { SectionBox } from '../common/SectionBox';
 import { NameValueTable } from '../common/SimpleTable';
+import { NodeShellAction } from './NodeShellAction';
 import { NodeTaintsLabel } from './utils';
 
 function NodeConditionsLabel(props: { node: Node }) {
@@ -242,6 +243,10 @@ export default function NodeDetails(props: { name?: string; cluster?: string }) 
                   />
                 </AuthVisible>
               ),
+            },
+            {
+              id: DefaultHeaderAction.NODE_SHELL,
+              action: <NodeShellAction item={item} />,
             },
           ];
         }}
