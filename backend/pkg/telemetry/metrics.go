@@ -26,6 +26,8 @@ type Metrics struct {
 	PluginDeleteCount metric.Int64Counter
 	// ErrorCounter counts application errors by category
 	ErrorCounter metric.Int64Counter
+	// KubeconfigRefreshCounter tracks the number of kubeconfig refresh operations
+	KubeconfigRefreshCounter metric.Int64Counter
 }
 
 // NewMetrics creates and registers a set of common application metrics.

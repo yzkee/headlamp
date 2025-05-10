@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	cfg "github.com/kubernetes-sigs/headlamp/backend/pkg/config"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
@@ -21,36 +22,10 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
 )
 
-// Config defines the configuration options for telemetry initialization.
-// It controls how tracing and metrics are collected and where they are exported.
-type Config struct {
-	// ServiceName is the name of the service being monitored (required)
-	ServiceName string
-	// ServiceVersion is the version of the service being monitored
-	ServiceVersion string
-	// TracingEnabled determines if distributed tracing is enabled
-	TracingEnabled bool
-	// MetricsEnabled determines if metrics collection is enabled
-	MetricsEnabled bool
-	// JaegerEndpoint is the endpoint for Jaeger tracing backend
-	// Setting this will also set OTLPEndpoint if it's not already set
-	JaegerEndpoint string
-	// OTLPEndpoint is the endpoint for OTLP-compatible tracing backends
-	OTLPEndpoint string
-	// UseOTLPHTTP determines whether to use HTTP (true) or gRPC (false) for OTLP export
-	UseOTLPHTTP bool
-	// StdoutTraceEnabled enables logging of traces to stdout (useful for debugging)
-	StdoutTraceEnabled bool
-	// PrometheusPort is the port where Prometheus metrics will be exposed
-	PrometheusPort int
-	// SamplingRate controls the fraction of traces that are sampled
-	SamplingRate float64
-}
-
 // Telemetry is the main struct that manages the lifecycle of telemetry components.
 // It holds the trace and meter providers and provides methods for shutdown.
 type Telemetry struct {
-	config         Config
+	config         cfg.Config
 	tracerProvider *trace.TracerProvider
 	meterProvider  *metric.MeterProvider
 	shutdown       func(context.Context) error
@@ -60,7 +35,7 @@ type Telemetry struct {
 // It sets up tracing and metrics collection according to the config.
 // Returns a configured Telemetry instance and any error encountered during initialization.
 // If initialization fails, all resources are properly cleaned up.
-func NewTelemetry(cfg Config) (*Telemetry, error) {
+func NewTelemetry(cfg cfg.Config) (*Telemetry, error) {
 	if cfg.ServiceName == "" {
 		return nil, fmt.Errorf("service name cannot be empty")
 	}
@@ -75,14 +50,14 @@ func NewTelemetry(cfg Config) (*Telemetry, error) {
 	}
 
 	// Initialize trace provider if tracing is enabled
-	if cfg.TracingEnabled {
+	if *cfg.TracingEnabled {
 		if err := setupTracing(t, res, cfg); err != nil {
 			return nil, fmt.Errorf("failed to setup tracing %w", err)
 		}
 	}
 
 	// Initialize metrics provider if metrics are enabled
-	if cfg.MetricsEnabled && cfg.PrometheusPort > 0 {
+	if *cfg.MetricsEnabled {
 		if err := setupMetrics(t, res); err != nil {
 			// Clean up trace provider if metrics setup fails
 			if t.tracerProvider != nil {
@@ -94,8 +69,6 @@ func NewTelemetry(cfg Config) (*Telemetry, error) {
 
 			return nil, fmt.Errorf("failed to setup metrics: %w", err)
 		}
-	} else if cfg.MetricsEnabled && cfg.PrometheusPort <= 0 {
-		return nil, fmt.Errorf("metrics enabled but invalid Prometheus port: %d", cfg.PrometheusPort)
 	}
 
 	setupShutdownFunction(t)
@@ -106,7 +79,7 @@ func NewTelemetry(cfg Config) (*Telemetry, error) {
 // createResource creates an OpenTelemetry resource with service information.
 // The resource contains identifying information about the service being monitored,
 // including its name, version, and deployment environment.
-func createResource(cfg Config) (*resource.Resource, error) {
+func createResource(cfg cfg.Config) (*resource.Resource, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -114,7 +87,7 @@ func createResource(cfg Config) (*resource.Resource, error) {
 		ctx,
 		resource.WithAttributes(
 			semconv.ServiceName(cfg.ServiceName),
-			semconv.ServiceVersion(cfg.ServiceVersion),
+			semconv.ServiceVersion(*cfg.ServiceVersion),
 			attribute.String("environment", "production"),
 		),
 	)
@@ -152,13 +125,13 @@ func setupMetrics(t *Telemetry, res *resource.Resource) error {
 // It creates the appropriate exporter based on configuration,
 // sets up a tracer provider with the configured sampling rate,
 // and registers it with the global OpenTelemetry instance.
-func setupTracing(t *Telemetry, res *resource.Resource, cfg Config) error {
+func setupTracing(t *Telemetry, res *resource.Resource, cfg cfg.Config) error {
 	exporter, err := createTracingExporter(cfg)
 	if err != nil {
 		return err
 	}
 
-	sampler := createSampler(cfg.SamplingRate)
+	sampler := createSampler(*cfg.SamplingRate)
 
 	tp := trace.NewTracerProvider(
 		trace.WithSampler(sampler),
@@ -201,19 +174,19 @@ func createSampler(samplingRate float64) trace.Sampler {
 }
 
 // createTracingExporter creates a span exporter based on cfg.
-func createTracingExporter(cfg Config) (trace.SpanExporter, error) {
+func createTracingExporter(cfg cfg.Config) (trace.SpanExporter, error) {
 	enabledExporters := 0
 
 	var enabledTypes []string
 
-	if cfg.StdoutTraceEnabled {
+	if *cfg.StdoutTraceEnabled {
 		enabledExporters++
 
 		enabledTypes = append(enabledTypes, "stdout")
 	}
 
-	isJaegerConfigured := cfg.JaegerEndpoint != ""
-	isOTLPConfigured := cfg.OTLPEndpoint != ""
+	isJaegerConfigured := *cfg.JaegerEndpoint != ""
+	isOTLPConfigured := *cfg.OTLPEndpoint != ""
 
 	if isJaegerConfigured {
 		enabledExporters++
@@ -221,7 +194,6 @@ func createTracingExporter(cfg Config) (trace.SpanExporter, error) {
 		enabledTypes = append(enabledTypes, "Jaeger")
 
 		if !isOTLPConfigured {
-			cfg.OTLPEndpoint = "localhost:4317"
 			isOTLPConfigured = true
 		}
 	}
@@ -237,7 +209,7 @@ func createTracingExporter(cfg Config) (trace.SpanExporter, error) {
 			strings.Join(enabledTypes, ", "), enabledTypes[0])
 	}
 
-	if cfg.StdoutTraceEnabled {
+	if *cfg.StdoutTraceEnabled {
 		exporter, err := createStdoutExporter()
 		if err != nil {
 			return nil, fmt.Errorf("failed to create stdout exporter: %w", err)
@@ -250,7 +222,7 @@ func createTracingExporter(cfg Config) (trace.SpanExporter, error) {
 		exporter, err := createOTLPExporter(cfg)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create OTLP exporter with endpoint %s: %w",
-				cfg.OTLPEndpoint, err)
+				*cfg.OTLPEndpoint, err)
 		}
 
 		return exporter, nil
@@ -267,17 +239,17 @@ func createTracingExporter(cfg Config) (trace.SpanExporter, error) {
 // createOTLPExporter creates an OpenTelemetry Protocol (OTLP) exporter
 // that can send traces to compatible backends like Jaeger, etc
 // OTLP-compatible systems. It supports both HTTP and gRPC transport protocols.
-func createOTLPExporter(cfg Config) (trace.SpanExporter, error) {
+func createOTLPExporter(cfg cfg.Config) (trace.SpanExporter, error) {
 	var client otlptrace.Client
 
-	if cfg.UseOTLPHTTP {
+	if *cfg.UseOTLPHTTP {
 		client = otlptracehttp.NewClient(
-			otlptracehttp.WithEndpoint(cfg.OTLPEndpoint),
+			otlptracehttp.WithEndpoint(*cfg.OTLPEndpoint),
 			otlptracehttp.WithInsecure(),
 		)
 	} else {
 		client = otlptracegrpc.NewClient(
-			otlptracegrpc.WithEndpoint(cfg.OTLPEndpoint),
+			otlptracegrpc.WithEndpoint(*cfg.OTLPEndpoint),
 			otlptracegrpc.WithInsecure(),
 		)
 	}
@@ -332,20 +304,4 @@ func (t *Telemetry) Shutdown(ctx context.Context) error {
 	}
 
 	return nil
-}
-
-// DefaultConfig provides a reasonable default configuration for telemetry.
-// It enables both tracing and metrics with 100% sampling rate and
-// configures exporters to local endpoints for development use.
-func DefaultConfig() Config {
-	return Config{
-		ServiceName:        "headlamp",
-		ServiceVersion:     "0.30.0",
-		TracingEnabled:     true,
-		MetricsEnabled:     true,
-		OTLPEndpoint:       "localhost:4317",
-		StdoutTraceEnabled: false,
-		PrometheusPort:     9090,
-		SamplingRate:       1.0,
-	}
 }
