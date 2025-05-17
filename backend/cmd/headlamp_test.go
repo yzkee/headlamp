@@ -627,10 +627,12 @@ func TestHandleClusterAPI_XForwardedHost(t *testing.T) {
 	cache := cache.New[interface{}]()
 
 	c := HeadlampConfig{
-		useInCluster:    false,
-		kubeConfigPath:  config.GetDefaultKubeConfigPath(),
-		cache:           cache,
-		kubeConfigStore: kubeConfigStore,
+		useInCluster:     false,
+		kubeConfigPath:   config.GetDefaultKubeConfigPath(),
+		cache:            cache,
+		kubeConfigStore:  kubeConfigStore,
+		telemetryConfig:  GetDefaultTestTelemetryConfig(),
+		telemetryHandler: &telemetry.RequestHandler{},
 	}
 
 	handler := createHeadlampHandler(&c)
