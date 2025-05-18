@@ -737,7 +737,7 @@ func runClusterRenameTests(
 
 // TestRenameCluster checks the cluster rename functionality.
 // note: needed to split into multiple parts for linter.
-func TestRenameCluster(t *testing.T) {
+func TestRenameCluster(t *testing.T) { //nolint:funlen
 	kubeConfigByte, err := os.ReadFile("./headlamp_testdata/kubeconfig")
 	require.NoError(t, err)
 
