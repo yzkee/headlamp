@@ -32,6 +32,12 @@ import React, { ReactNode, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Loader } from '../components/common';
 
+/**
+ * Returns the Material-UI locale object for a given language code.
+ *
+ * @param locale - The language code to retrieve the locale for.
+ * @returns A Material-UI locale object, defaults to enUS if locale is unsupported.
+ */
 function getLocale(locale: string): typeof enUS {
   const LOCALES = {
     en: enUS,
@@ -64,11 +70,18 @@ function getLocale(locale: string): typeof enUS {
 }
 
 interface ThemeProviderNexti18nProps {
+  /** The Material-UI theme to apply. */
   theme: Theme;
+  /** The child components to render within the theme provider. */
   children: ReactNode;
 }
-/** Like a ThemeProvider but uses reacti18next for the language selection
- *  Because Material UI is localized as well.
+
+/**
+ * A ThemeProvider that integrates with react-i18next for language selection,
+ * applying Material-UI localization based on the selected language.
+ *
+ * @param props - The properties to configure the ThemeProviderNexti18n component.
+ * @returns A themed container with localized child components.
  */
 const ThemeProviderNexti18n: React.FunctionComponent<ThemeProviderNexti18nProps> = props => {
   const { i18n, ready: isI18nReady } = useTranslation(['translation', 'glossary'], {
@@ -76,6 +89,11 @@ const ThemeProviderNexti18n: React.FunctionComponent<ThemeProviderNexti18nProps>
   });
   const [lang, setLang] = useState(i18n.language);
 
+  /**
+   * Updates the document language and direction based on the selected language.
+   *
+   * @param lng - The new language code.
+   */
   function changeLang(lng: string) {
     if (lng) {
       document.documentElement.lang = lng;
@@ -84,6 +102,9 @@ const ThemeProviderNexti18n: React.FunctionComponent<ThemeProviderNexti18nProps>
     }
   }
 
+  /**
+   * Sets up language change listeners and initializes the document language.
+   */
   useEffect(() => {
     i18n.on('languageChanged', changeLang);
     if (i18n.language) {
