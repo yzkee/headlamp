@@ -85,6 +85,7 @@
   "Cluster Settings": "クラスター設定",
   "There seem to be no clusters configured…": "設定されたクラスターがないようです...",
   "Cluster {{ clusterName }} does not exist. Please select a valid cluster:": "クラスター {{ clusterName }} は存在しません。有効なクラスターを選択してください:",
+  "Original name: {{ originalName }}": "",
   "Go to cluster": "クラスターに移動",
   "The current name of the cluster. You can define a custom name.": "クラスターの現在の名前。カスタム名を定義できます。",
   "Change name": "名前の変更",
