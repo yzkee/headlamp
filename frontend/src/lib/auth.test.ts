@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import { beforeEach,describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as storeModule from '../redux/stores/store';
-import { deleteTokens, getToken, getUserInfo, hasToken, logout,setToken } from './auth';
+import { deleteTokens, getToken, getUserInfo, hasToken, logout, setToken } from './auth';
 
 vi.spyOn(storeModule.default, 'getState').mockImplementation(() => {
   return {
