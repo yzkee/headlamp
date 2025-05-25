@@ -49,7 +49,7 @@ import { makePodStatusLabel } from './List';
 const PaddedFormControlLabel = styled(FormControlLabel)(({ theme }) => ({
   margin: 0,
   paddingTop: theme.spacing(2),
-  paddingRight: theme.spacing(2),
+  paddingRight: theme.spacing(1),
 }));
 
 interface PodLogViewerProps extends Omit<LogViewerProps, 'logs'> {
@@ -286,7 +286,7 @@ export function PodLogViewer(props: PodLogViewerProps) {
           }
         >
           <PaddedFormControlLabel
-            label={t('translation|Show previous')}
+            label={t('translation|Previous')}
             disabled={!hasContainerRestarted()}
             control={
               <Switch
@@ -295,6 +295,7 @@ export function PodLogViewer(props: PodLogViewerProps) {
                 name="checkPrevious"
                 color="primary"
                 size="small"
+                sx={{ transform: 'scale(0.8)' }}
               />
             }
           />
@@ -308,6 +309,7 @@ export function PodLogViewer(props: PodLogViewerProps) {
               name="checkTimestamps"
               color="primary"
               size="small"
+              sx={{ transform: 'scale(0.8)' }}
             />
           }
         />,
@@ -320,6 +322,7 @@ export function PodLogViewer(props: PodLogViewerProps) {
               name="follow"
               color="primary"
               size="small"
+              sx={{ transform: 'scale(0.8)' }}
             />
           }
         />,
