@@ -18,17 +18,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as storeModule from '../redux/stores/store';
 import { deleteTokens, getToken, getUserInfo, hasToken, logout, setToken } from './auth';
 
-vi.spyOn(storeModule.default, 'getState').mockImplementation(() => {
-  return {
-    ui: {
-      functionsToOverride: {
-        getToken: vi.fn().mockReturnValue('mock.token'),
-        setToken: vi.fn(),
-      },
-    },
-  } as unknown as ReturnType<typeof storeModule.default.getState>;
-});
-
 const validToken =
   'header.' + btoa(JSON.stringify({ username: 'john', email: 'john@example.com' })) + '.signature';
 
