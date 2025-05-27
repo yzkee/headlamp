@@ -37,6 +37,7 @@ import (
 	"github.com/kubernetes-sigs/headlamp/backend/pkg/cache"
 	"github.com/kubernetes-sigs/headlamp/backend/pkg/config"
 	"github.com/kubernetes-sigs/headlamp/backend/pkg/kubeconfig"
+	"github.com/kubernetes-sigs/headlamp/backend/pkg/telemetry"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"k8s.io/client-go/tools/clientcmd"
@@ -256,6 +257,8 @@ func TestDynamicClusters(t *testing.T) {
 				enableDynamicClusters: true,
 				cache:                 cache,
 				kubeConfigStore:       kubeConfigStore,
+				telemetryConfig:       GetDefaultTestTelemetryConfig(),
+				telemetryHandler:      &telemetry.RequestHandler{},
 			}
 			handler := createHeadlampHandler(&c)
 
@@ -343,6 +346,8 @@ func TestDynamicClustersKubeConfig(t *testing.T) {
 		enableDynamicClusters: true,
 		cache:                 cache,
 		kubeConfigStore:       kubeConfigStore,
+		telemetryConfig:       GetDefaultTestTelemetryConfig(),
+		telemetryHandler:      &telemetry.RequestHandler{},
 	}
 	handler := createHeadlampHandler(&c)
 
@@ -499,7 +504,7 @@ func TestExternalProxy(t *testing.T) {
 	}
 }
 
-func TestDrainAndCordonNode(t *testing.T) {
+func TestDrainAndCordonNode(t *testing.T) { //nolint:funlen
 	type test struct {
 		handler http.Handler
 	}
@@ -509,10 +514,12 @@ func TestDrainAndCordonNode(t *testing.T) {
 	tests := []test{
 		{
 			handler: createHeadlampHandler(&HeadlampConfig{
-				useInCluster:    false,
-				kubeConfigPath:  config.GetDefaultKubeConfigPath(),
-				cache:           cache,
-				kubeConfigStore: kubeConfigStore,
+				useInCluster:     false,
+				kubeConfigPath:   config.GetDefaultKubeConfigPath(),
+				cache:            cache,
+				kubeConfigStore:  kubeConfigStore,
+				telemetryConfig:  GetDefaultTestTelemetryConfig(),
+				telemetryHandler: &telemetry.RequestHandler{},
 			}),
 		},
 	}
@@ -626,10 +633,12 @@ func TestHandleClusterAPI_XForwardedHost(t *testing.T) {
 	cache := cache.New[interface{}]()
 
 	c := HeadlampConfig{
-		useInCluster:    false,
-		kubeConfigPath:  config.GetDefaultKubeConfigPath(),
-		cache:           cache,
-		kubeConfigStore: kubeConfigStore,
+		useInCluster:     false,
+		kubeConfigPath:   config.GetDefaultKubeConfigPath(),
+		cache:            cache,
+		kubeConfigStore:  kubeConfigStore,
+		telemetryConfig:  GetDefaultTestTelemetryConfig(),
+		telemetryHandler: &telemetry.RequestHandler{},
 	}
 
 	handler := createHeadlampHandler(&c)
@@ -728,7 +737,7 @@ func runClusterRenameTests(
 
 // TestRenameCluster checks the cluster rename functionality.
 // note: needed to split into multiple parts for linter.
-func TestRenameCluster(t *testing.T) {
+func TestRenameCluster(t *testing.T) { //nolint:funlen
 	kubeConfigByte, err := os.ReadFile("./headlamp_testdata/kubeconfig")
 	require.NoError(t, err)
 
@@ -745,6 +754,8 @@ func TestRenameCluster(t *testing.T) {
 		enableDynamicClusters: true,
 		cache:                 cache,
 		kubeConfigStore:       kubeConfigStore,
+		telemetryConfig:       GetDefaultTestTelemetryConfig(),
+		telemetryHandler:      &telemetry.RequestHandler{},
 	}
 	handler := createHeadlampHandler(&c)
 
@@ -997,7 +1008,8 @@ func TestIsTokenAboutToExpire(t *testing.T) {
 
 func TestOIDCTokenRefreshMiddleware(t *testing.T) {
 	config := &HeadlampConfig{
-		cache: cache.New[interface{}](),
+		cache:            cache.New[interface{}](),
+		telemetryHandler: &telemetry.RequestHandler{},
 	}
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -1031,6 +1043,7 @@ func TestStartHeadlampServer(t *testing.T) {
 		cache:           cache.New[interface{}](),
 		kubeConfigStore: kubeconfig.NewContextStore(),
 		pluginDir:       tempDir,
+		telemetryConfig: GetDefaultTestTelemetryConfig(),
 	}
 
 	// Use a channel to signal when the server is ready
@@ -1080,8 +1093,10 @@ func TestHandleClusterHelm(t *testing.T) {
 	defer os.Unsetenv("HEADLAMP_BACKEND_TOKEN")
 
 	config := &HeadlampConfig{
-		cache:           cache.New[interface{}](),
-		kubeConfigStore: kubeconfig.NewContextStore(),
+		cache:            cache.New[interface{}](),
+		kubeConfigStore:  kubeconfig.NewContextStore(),
+		telemetryConfig:  GetDefaultTestTelemetryConfig(),
+		telemetryHandler: &telemetry.RequestHandler{},
 	}
 
 	// Add a mock context to the kubeConfigStore
@@ -1158,6 +1173,21 @@ func TestHandleClusterHelm(t *testing.T) {
 
 			assert.Equal(t, tc.expectedStatus, w.Code)
 		})
+	}
+}
+
+// GetDefaultTestTelemetryConfig returns a default telemetry configuration for testing purposes.
+func GetDefaultTestTelemetryConfig() config.Config {
+	return config.Config{
+		ServiceName:        "headlamp-test",
+		ServiceVersion:     &[]string{"0.30.0"}[0],
+		TracingEnabled:     &[]bool{false}[0],
+		MetricsEnabled:     &[]bool{false}[0],
+		JaegerEndpoint:     &[]string{""}[0],
+		OTLPEndpoint:       &[]string{""}[0],
+		UseOTLPHTTP:        &[]bool{false}[0],
+		StdoutTraceEnabled: &[]bool{false}[0],
+		SamplingRate:       &[]float64{0}[0],
 	}
 }
 
