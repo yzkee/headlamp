@@ -48,7 +48,7 @@ jobs:
       env:
         APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
         APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-    - name: Build App Mac
+    - name: Build Signed App Mac
       if: ${{ inputs.signBinaries }}
       env:
         # This will trigger codesign. See app/mac/scripts/codeSign.js
@@ -59,6 +59,10 @@ jobs:
           echo "Error: Mac codesign failed"
           exit 1
         fi
+    - name: Build Unsigned App Mac
+      if: ${{ ! inputs.signBinaries }}
+      run: |
+        make app-mac
     - name: Early staple (only if we are not notarizing the app)
       if: ${{ ! inputs.signBinaries }}
       run: |
