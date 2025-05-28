@@ -63,10 +63,6 @@ jobs:
       if: ${{ ! inputs.signBinaries }}
       run: |
         make app-mac
-    - name: Early staple (only if we are not notarizing the app)
-      if: ${{ ! inputs.signBinaries }}
-      run: |
-        xcrun stapler staple ./app/dist/Headlamp*.dmg
     - name: Upload artifact
       uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
       with:
