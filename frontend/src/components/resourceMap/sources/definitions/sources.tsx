@@ -85,7 +85,7 @@ const generateCRSources = (crds: CRD[]): GraphSource[] => {
   return finalSources;
 };
 
-export function getAllSources(): GraphSource[] {
+export function useGetAllSources(): GraphSource[] {
   const { items: CustomResourceDefinition } = CRD.useList({ namespace: useNamespaces() });
 
   const sources = [

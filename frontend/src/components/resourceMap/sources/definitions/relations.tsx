@@ -203,7 +203,7 @@ const pvcToPods = makeRelation(PersistentVolumeClaim, Pod, (pvc, pod) =>
 const podToOwner = makeOwnerRelation(Pod);
 const repliaceSetToOwner = makeOwnerRelation(ReplicaSet);
 
-const getCRToOwnerRelations = () => {
+const useGetCRToOwnerRelations = () => {
   const namespace = useNamespaces();
   const { items: crds } = CustomResourceDefinition.useList({ namespace });
 
@@ -221,8 +221,7 @@ const jobToCronJob = makeRelation(Job, CronJob, (job, cronJob) =>
   job.metadata.ownerReferences?.find(owner => owner.uid === cronJob.metadata.uid)
 );
 
-
-export function getAllRelations(): Relation[] {
+export function useGetAllRelations(): Relation[] {
   const staticRelations = [
     configMapUsedInPods,
     configMapUsedInJobs,
@@ -247,7 +246,7 @@ export function getAllRelations(): Relation[] {
     jobToCronJob,
   ];
 
-  const crdRelations = getCRToOwnerRelations();
+  const crdRelations = useGetCRToOwnerRelations();
 
   return [...staticRelations, ...crdRelations];
 }

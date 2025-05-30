@@ -57,8 +57,8 @@ import { forEachNode, GraphEdge, GraphNode, GraphSource, Relation } from './grap
 import { GraphControlButton } from './GraphControls';
 import { GraphRenderer } from './GraphRenderer';
 import { SelectionBreadcrumbs } from './SelectionBreadcrumbs';
-import { getAllRelations } from './sources/definitions/relations';
-import { getAllSources } from './sources/definitions/sources';
+import { useGetAllRelations } from './sources/definitions/relations';
+import { useGetAllSources } from './sources/definitions/sources';
 import { GraphSourceManager, useSources } from './sources/GraphSources';
 import { GraphSourcesView } from './sources/GraphSourcesView';
 import { useGraphViewport } from './useGraphViewport';
@@ -125,7 +125,7 @@ const ChipGroup = styled(Box)({
 function GraphViewContent({
   height,
   defaultNodeSelection,
-  defaultSources = getAllSources(),
+  defaultSources = useGetAllSources(),
   defaultFilters = defaultFiltersValue,
 }: GraphViewContentProps) {
   const { t } = useTranslation();
@@ -456,8 +456,8 @@ function CustomThemeProvider({ children }: { children: ReactNode }) {
  * @returns
  */
 export function GraphView(props: GraphViewContentProps) {
-  const propsSources = props.defaultSources ?? getAllSources();
-  const propsRelations = props.defaultRelations ?? getAllRelations();
+  const propsSources = props.defaultSources ?? useGetAllSources();
+  const propsRelations = props.defaultRelations ?? useGetAllRelations();
 
   // Load plugin defined sources
   const pluginGraphSources = useTypedSelector(state => state.graphView.graphSources);
