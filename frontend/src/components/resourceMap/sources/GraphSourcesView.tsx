@@ -62,8 +62,6 @@ function GraphSourceView({
   source,
   sourceData,
   selection,
-  activeItemIds,
-  toggleActiveItemIds,
   toggleSelection,
 }: {
   /** Source definition */
@@ -72,11 +70,9 @@ function GraphSourceView({
   sourceData: SourceData;
   /** Set of selected source ids */
   selection: Set<string>;
-  /** Active (expanded) source */
-  activeItemIds: string[];
   toggleSelection: (source: GraphSource) => void;
-  toggleActiveItemIds: (add: boolean, id: string) => void;
 }) {
+  const [isActive, setIsActive] = useState(false);
   const hasChildren = 'sources' in source;
   const isSelected = (source: GraphSource): boolean =>
     'sources' in source ? source.sources.every(s => isSelected(s)) : selection.has(source.id);
@@ -128,18 +124,16 @@ function GraphSourceView({
     );
   }
 
-  const isActive = activeItemIds.includes(source.id);
-
   return (
     <Node>
       <NodeHeader
         role="button"
         tabIndex={0}
-        onClick={() => toggleActiveItemIds(!isActive, source.id)}
+        onClick={() => setIsActive(!isActive)}
         onKeyDown={e => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            toggleActiveItemIds(!isActive, source.id);
+            setIsActive(!isActive);
           }
         }}
       >
@@ -154,7 +148,7 @@ function GraphSourceView({
       </NodeHeader>
 
       <Stack ml={3}>
-        {activeItemIds.includes(source.id) &&
+        {isActive &&
           source.sources?.map(source => (
             <GraphSourceView
               source={source}
@@ -162,8 +156,6 @@ function GraphSourceView({
               toggleSelection={toggleSelection}
               key={source.id}
               sourceData={sourceData}
-              activeItemIds={activeItemIds}
-              toggleActiveItemIds={toggleActiveItemIds}
             />
           ))}
       </Stack>
@@ -185,7 +177,6 @@ export interface GraphSourcesViewProps {
 export const GraphSourcesView = memo(
   ({ sources, sourceData, selectedSources, toggleSource }: GraphSourcesViewProps) => {
     const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-    const [activeItemIds, toggleActiveItemIds] = useState<string[]>([]);
 
     const selected = sources.filter(source => {
       const isSelected = selectedSources.has(source.id);
@@ -239,22 +230,6 @@ export const GraphSourcesView = memo(
                 toggleSelection={toggleSource}
                 key={index}
                 sourceData={sourceData}
-                activeItemIds={activeItemIds}
-                toggleActiveItemIds={(add, id) => {
-                  let clone: string[] = [];
-
-                  for (const activeItemId of activeItemIds) {
-                    clone.push(activeItemId);
-                  }
-
-                  if (add) {
-                    clone.push(id);
-                  } else {
-                    const firstIdx = clone.indexOf(id);
-                    clone = clone.slice(0, firstIdx);
-                  }
-                  toggleActiveItemIds(clone);
-                }}
               />
             ))}
           </Box>
