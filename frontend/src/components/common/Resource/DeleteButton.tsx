@@ -147,6 +147,8 @@ export default function DeleteButton(props: DeleteButtonProps) {
           </Grid>
         }
         handleClose={() => setOpenAlert(false)}
+        cancelLabel={t('Cancel')}
+        confirmLabel={settingsObj.useEvict && item.kind === 'Pod' ? t('Evict') : t('Delete')}
         onConfirm={() => {
           deleteFunc();
           dispatchDeleteEvent({
