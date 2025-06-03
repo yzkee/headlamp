@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
+import Checkbox from '@mui/material/Checkbox';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Grid from '@mui/material/Grid';
-import Switch from '@mui/material/Switch';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDispatch } from 'react-redux';
@@ -130,10 +130,11 @@ export default function DeleteButton(props: DeleteButtonProps) {
                   })}
             </Grid>
             {(!settingsObj.useEvict || item.kind !== 'Pod') && (
-              <Grid item>
+              <Grid item sx={{ mt: 1 }}>
                 <FormControlLabel
                   control={
-                    <Switch
+                    <Checkbox
+                      size="small"
                       checked={forceDelete}
                       onChange={() => setForceDelete(!forceDelete)}
                       name="forceDelete"
