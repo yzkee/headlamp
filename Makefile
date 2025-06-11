@@ -117,6 +117,19 @@ else
 	@cmd /c "set HEADLAMP_BACKEND_TOKEN=headlamp&& set HEADLAMP_CONFIG_METRICS_ENABLED=true&& set HEADLAMP_CONFIG_ENABLE_HELM=true&& set HEADLAMP_CONFIG_ENABLE_DYNAMIC_CLUSTERS=true&& backend\headlamp-server -dev -proxy-urls https://artifacthub.io/* -listen-addr=localhost"
 endif
 
+run-backend-with-traces:
+	@echo "**** Running backend with distributed tracing enabled ****"
+ifeq ($(UNIXSHELL),true)
+	HEADLAMP_BACKEND_TOKEN=headlamp \
+    HEADLAMP_CONFIG_TRACING_ENABLED=true \
+    HEADLAMP_CONFIG_ENABLE_HELM=true \
+    HEADLAMP_CONFIG_ENABLE_DYNAMIC_CLUSTERS=true \
+    ./backend/headlamp-server -dev -proxy-urls https://artifacthub.io/* -listen-addr=localhost
+else
+	@echo "**** Running on Windows without bash or zsh. ****"
+	@cmd /c "set HEADLAMP_BACKEND_TOKEN=headlamp&& set HEADLAMP_CONFIG_TRACING_ENABLED=true&& set HEADLAMP_CONFIG_ENABLE_HELM=true&& set HEADLAMP_CONFIG_ENABLE_DYNAMIC_CLUSTERS=true&& backend\headlamp-server -dev -proxy-urls https://artifacthub.io/* -listen-addr=localhost"
+endif
+
 run-frontend:
 ifeq ($(UNIXSHELL),true)
 	cd frontend && nice -16 npm start
