@@ -106,6 +106,8 @@ const ContextUpdateCacheTTL = 20 * time.Second // seconds
 
 const JWTExpirationTTL = 10 * time.Second // seconds
 
+const kubeConfigSource = "kubeconfig" // source for kubeconfig contexts
+
 const (
 	// TokenCacheFileMode is the file mode for token cache files.
 	TokenCacheFileMode = 0o600 // octal
@@ -1908,35 +1910,57 @@ func (c *HeadlampConfig) deleteCluster(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	kubeConfigPersistenceFile, err := defaultHeadlampKubeConfigFile()
-	if err != nil {
-		c.handleError(w, ctx, span, err, "failed to get kubeconfig persistence file", http.StatusInternalServerError)
+	c.handleDeleteCluster(w, r, ctx, span, name)
 
-		return
-	}
+	c.getConfig(w, r)
+}
 
-	logger.Log(logger.LevelInfo, map[string]string{
-		"cluster":                   name,
-		"kubeConfigPersistenceFile": kubeConfigPersistenceFile,
-	},
-		nil, "Removing cluster from kubeconfig")
-
-	err = kubeconfig.RemoveContextFromFile(name, kubeConfigPersistenceFile)
-	if err != nil {
-		c.handleError(w, ctx, span, err, "failed to remove cluster from kubeconfig", http.StatusInternalServerError)
-
+// handleDeleteCluster handles the deletion of a cluster.
+func (c *HeadlampConfig) handleDeleteCluster(
+	w http.ResponseWriter,
+	r *http.Request,
+	ctx context.Context,
+	span trace.Span,
+	name string,
+) {
+	removeKubeConfig := r.URL.Query().Get("removeKubeConfig") == "true"
+	if removeKubeConfig {
+		c.handleRemoveKubeConfig(w, r, ctx, span, name)
 		return
 	}
 
 	logger.Log(logger.LevelInfo, map[string]string{"cluster": name, "proxy": name},
 		nil, "removed cluster successfully")
+}
 
-	c.getConfig(w, r)
+// handleRemoveKubeConfig removes the cluster from the kubeconfig file.
+func (c *HeadlampConfig) handleRemoveKubeConfig(
+	w http.ResponseWriter,
+	r *http.Request,
+	ctx context.Context,
+	span trace.Span,
+	name string,
+) {
+	configPath := r.URL.Query().Get("configPath")
+	originalName := r.URL.Query().Get("originalName")
+	clusterID := r.URL.Query().Get("clusterID")
+
+	var configName string
+
+	if originalName != "" && clusterID != "" {
+		configName = originalName
+	} else {
+		configName = name
+	}
+
+	if err := kubeconfig.RemoveContextFromFile(configName, configPath); err != nil {
+		c.handleError(w, ctx, span, err, "failed to remove cluster from kubeconfig", http.StatusInternalServerError)
+	}
 }
 
 // Get path of kubeconfig we load headlamp with from source.
 func (c *HeadlampConfig) getKubeConfigPath(source string) (string, error) {
-	if source == "kubeconfig" {
+	if source == kubeConfigSource {
 		return c.kubeConfigPath, nil
 	}
 
