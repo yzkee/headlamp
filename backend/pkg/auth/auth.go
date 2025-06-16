@@ -15,3 +15,23 @@ limitations under the License.
 */
 
 package auth
+
+import (
+	"encoding/base64"
+	"encoding/json"
+)
+
+// DecodeBase64JSON decodes a base64 URL-encoded JSON string into a map.
+func DecodeBase64JSON(base64JSON string) (map[string]interface{}, error) {
+	payloadBytes, err := base64.RawURLEncoding.DecodeString(base64JSON)
+	if err != nil {
+		return nil, err
+	}
+
+	var payloadMap map[string]interface{}
+	if err := json.Unmarshal(payloadBytes, &payloadMap); err != nil {
+		return nil, err
+	}
+
+	return payloadMap, nil
+}
