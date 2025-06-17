@@ -42,6 +42,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/kubernetes-sigs/headlamp/backend/pkg/auth"
 	"github.com/kubernetes-sigs/headlamp/backend/pkg/cache"
 	cfg "github.com/kubernetes-sigs/headlamp/backend/pkg/config"
 	"github.com/kubernetes-sigs/headlamp/backend/pkg/helm"
@@ -876,20 +877,6 @@ func parseClusterAndToken(r *http.Request) (string, string) {
 	return cluster, token
 }
 
-func decodePayload(payload string) (map[string]interface{}, error) {
-	payloadBytes, err := base64.RawURLEncoding.DecodeString(payload)
-	if err != nil {
-		return nil, err
-	}
-
-	var payloadMap map[string]interface{}
-	if err := json.Unmarshal(payloadBytes, &payloadMap); err != nil {
-		return nil, err
-	}
-
-	return payloadMap, nil
-}
-
 func getExpiryTime(payload map[string]interface{}) (time.Time, error) {
 	exp, ok := payload["exp"].(float64)
 	if !ok {
@@ -907,7 +894,7 @@ func isTokenAboutToExpire(token string) bool {
 		return false
 	}
 
-	payload, err := decodePayload(parts[1])
+	payload, err := auth.DecodeBase64JSON(parts[1])
 	if err != nil {
 		logger.Log(logger.LevelError, nil, err, "failed to decode payload")
 		return false
