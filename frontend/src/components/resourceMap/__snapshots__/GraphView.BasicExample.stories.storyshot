@@ -225,7 +225,7 @@
             <svg
               class="react-flow__background"
               data-testid="rf__background"
-              style="color: rgba(0, 0, 0, 0.12); position: absolute; width: 100%; height: 100%; top: 0px; left: 0px;"
+              style="position: absolute; width: 100%; height: 100%; top: 0px; left: 0px; --xy-background-pattern-color-props: rgba(0, 0, 0, 0.12);"
             >
               <pattern
                 height="20"
@@ -238,9 +238,9 @@
               >
                 <circle
                   class="react-flow__background-pattern dots"
-                  cx="0.5"
-                  cy="0.5"
-                  r="0.5"
+                  cx="1"
+                  cy="1"
+                  r="1"
                 />
               </pattern>
               <rect
