@@ -16,7 +16,8 @@
 
 import { Edge, EdgeMarker, Node } from '@xyflow/react';
 import { ElkExtendedEdge, ElkNode } from 'elkjs';
-import ELK from 'elkjs';
+import ELK, { type ELK as ELKInterface } from 'elkjs/lib/elk-api';
+import elkWorker from 'elkjs/lib/elk-worker.min.js?url';
 import { forEachNode, getNodeWeight, GraphNode } from './graphModel';
 
 type ElkNodeWithData = Omit<ElkNode, 'edges'> & {
@@ -30,9 +31,15 @@ type ElkEdgeWithData = ElkExtendedEdge & {
   data: any;
 };
 
-const elk = new ELK({
-  defaultLayoutOptions: {},
-});
+let elk: ELKInterface | undefined;
+try {
+  elk = new ELK({
+    defaultLayoutOptions: {},
+    workerUrl: elkWorker,
+  });
+} catch (e) {
+  console.error('Failed to create ELK instance', e);
+}
 
 const layoutOptions = {
   nodeSize: {
@@ -226,6 +233,8 @@ function convertToReactFlowGraph(elkGraph: ElkNodeWithData) {
  */
 export const applyGraphLayout = (graph: GraphNode, aspectRatio: number) => {
   const elkGraph = convertToElkNode(graph, aspectRatio);
+
+  if (!elk) return Promise.resolve({ nodes: [], edges: [] });
 
   return elk
     .layout(elkGraph, {
