@@ -148,7 +148,7 @@ run-only-app:
 frontend-lint:
 	cd frontend && npm run lint -- --max-warnings 0 && npm run format-check
 
-frontend-fixlint:
+frontend-lint-fix:
 	cd frontend && npm run lint -- --fix && npm run format
 
 .PHONY: frontend-tsc
