@@ -163,6 +163,12 @@ frontend-i18n-check:
 frontend-test:
 	cd frontend && npm run test -- --coverage
 
+.PHONY: lint
+lint: backend-lint frontend-lint
+
+.PHONY: lint-fix
+lint-fix: backend-lint-fix frontend-lint-fix
+
 plugins-test:
 	cd plugins/headlamp-plugin && npm install && ./test-headlamp-plugin.js
 	cd plugins/headlamp-plugin && ./test-plugins-examples.sh
