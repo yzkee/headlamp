@@ -205,6 +205,12 @@ export function PercentageBar(props: PercentageBarProps) {
     return dataItems;
   }
 
+  const barBackground =
+    theme.palette.mode === 'dark' ? theme.palette.grey[800] : theme.palette.grey[300];
+
+  const barColor =
+    theme.palette.mode === 'dark' ? theme.palette.primary.light : theme.palette.primary.main;
+
   return (
     <StyledResponsiveContainer width="95%" height={20}>
       <StyledBarChart layout="vertical" maxBarSize={5} data={[formatData()]}>
@@ -217,10 +223,10 @@ export function PercentageBar(props: PercentageBarProps) {
               key={index}
               dataKey={item.name}
               stackId="1"
-              fill={item.fill || theme.palette.primary.main}
+              fill={item.fill || barColor}
               layout="vertical"
               radius={theme.shape.borderRadius}
-              background={{ fill: theme.palette.grey['300'] }}
+              background={{ fill: barBackground }}
             />
           );
         })}
