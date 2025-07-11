@@ -590,7 +590,6 @@ export default function PodDetails(props: PodDetailsProps) {
               <AuthVisible item={item} authVerb="get" subresource="log">
                 <ActionButton
                   description={t('Show Logs')}
-                  aria-label={t('logs')}
                   icon="mdi:file-document-box-outline"
                   onClick={() => {
                     Activity.launch({
@@ -620,7 +619,6 @@ export default function PodDetails(props: PodDetailsProps) {
               <AuthVisible item={item} authVerb="create" subresource="exec">
                 <ActionButton
                   description={t('Terminal / Exec')}
-                  aria-label={t('terminal')}
                   icon="mdi:console"
                   onClick={() => {
                     Activity.launch({
@@ -651,7 +649,6 @@ export default function PodDetails(props: PodDetailsProps) {
               <AuthVisible item={item} authVerb="get" subresource="attach">
                 <ActionButton
                   description={t('Attach')}
-                  aria-label={t('attach')}
                   icon="mdi:connection"
                   onClick={() => {
                     dispatchHeadlampEvent({
