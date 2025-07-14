@@ -264,6 +264,7 @@
           </dd>
           <dt
             class="MuiGrid-root MuiGrid-item MuiGrid-grid-xs-12 MuiGrid-grid-sm-4 css-1iczkge-MuiGrid-root"
+            id="timezone-label"
           >
             Timezone to display for dates
           </dt>
@@ -287,6 +288,7 @@
                       aria-describedby="cluster-selector-autocomplete-helper-text"
                       aria-expanded="false"
                       aria-invalid="false"
+                      aria-labelledby="timezone-label"
                       autocapitalize="none"
                       autocomplete="off"
                       class="MuiInputBase-input MuiOutlinedInput-input MuiInputBase-inputSizeSmall MuiInputBase-inputAdornedEnd MuiAutocomplete-input MuiAutocomplete-inputFocused css-19qh8xo-MuiInputBase-input-MuiOutlinedInput-input"
