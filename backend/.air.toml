@@ -1,0 +1,37 @@
+
+root = "."
+tmp_dir = "bin"
+
+[build]
+  cmd = "go build -o ./bin/headlamp-server ./cmd"
+  bin = "bin/headlamp-server"
+  full_bin = ""
+  include_ext = ["go"]
+  exclude_dir = [ "bin"]
+  include_dir = []
+  exclude_file = []
+  delay = 1000
+  stop_on_error = true
+  log = "air_errors.log"
+
+
+[log]
+  time = false
+
+[color]
+  main = "magenta"
+  watcher = "cyan"
+  build = "yellow"
+  runner = "green"
+
+[env]
+  HEADLAMP_BACKEND_TOKEN = "headlamp"
+  HEADLAMP_CONFIG_ENABLE_HELM = "true"
+  HEADLAMP_CONFIG_ENABLE_DYNAMIC_CLUSTERS = "true"
+
+[run]
+  args = ["-dev", "-proxy-urls", "https://artifacthub.io/*", "-listen-addr=localhost"]
+
+[misc]
+  clean_on_exit = true 
+
