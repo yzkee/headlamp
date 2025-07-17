@@ -160,6 +160,7 @@
     "@headlamp-k8s/eslint-config": "^0.6.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.14.0",
+    "@types/semver": "^7.7.0",
     "electron": "^31.2.0",
     "electron-builder": "^24.13.3",
     "i18next-parser": "^9.0.0",
