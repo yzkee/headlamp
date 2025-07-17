@@ -22,7 +22,8 @@
     "prod-deps": "mkdirp prod_deps && cd ./prod_deps && copyfiles -f ../package.json ../package-lock.json . && npm i --only=prod && cd .. && npx --no-install shx rm -rf ./prod_deps/node_modules/.bin",
     "start": "node scripts/start.js",
     "test": "npm run compile-tests && jest electron --testMatch \"**/electron/**/*.test.ts\"",
-    "compile-tests": "babel electron --out-dir electron/ --extensions .ts"
+    "compile-tests": "babel electron --out-dir electron/ --extensions .ts",
+    "tsc": "tsc"
   },
   "build": {
     "appId": "com.microsoft.Headlamp",
