@@ -53,9 +53,6 @@ import windowSize from './windowSize';
 
 dotenv.config({ path: path.join(process.resourcesPath, '.env') });
 
-const pathInfoDebug = false;
-let pathInfo;
-
 const isDev = process.env.ELECTRON_DEV || false;
 let frontendPath = '';
 
@@ -1240,14 +1237,6 @@ function startElecron() {
       loadFullMenu = true;
       console.info('Plugins are loaded. Loading full menu.');
       setMenu(mainWindow, currentMenu);
-
-      if (pathInfoDebug && mainWindow) {
-        dialog.showMessageBoxSync(mainWindow, {
-          type: 'info',
-          title: 'Path debug info',
-          message: JSON.stringify(pathInfo),
-        });
-      }
     });
 
     ipcMain.on('setMenu', (event: IpcMainEvent, menus: any) => {
