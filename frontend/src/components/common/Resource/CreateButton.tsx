@@ -54,8 +54,9 @@ export default function CreateButton(props: CreateButtonProps) {
   }, [clusters]);
 
   const openActivity = () => {
+    const id = 'create-button';
     Activity.launch({
-      id: 'create-button',
+      id: id,
       title: t('translation|Create / Apply'),
       icon: <Icon icon="mdi:pencil" />,
       content: (
@@ -63,7 +64,7 @@ export default function CreateButton(props: CreateButtonProps) {
           item={itemRef.current}
           open
           noDialog
-          onClose={() => {}}
+          onClose={() => Activity.close(id)}
           setOpen={() => {}}
           saveLabel={t('translation|Apply')}
           errorMessage={errorMessage}

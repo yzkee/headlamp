@@ -306,13 +306,20 @@ function ViewYaml({ item }: { item: KubeObject }) {
         variant="contained"
         color="secondary"
         onClick={() => {
+          const id = 'view-yaml-' + item.metadata.uid;
           Activity.launch({
-            id: 'view-yaml-' + item.metadata.uid,
+            id,
             location: 'full',
             icon: <KubeIcon kind={item.kind} />,
             title: item.kind + ': ' + item.metadata.name,
             content: (
-              <EditorDialog noDialog open item={item.jsonData} onClose={() => {}} onSave={null} />
+              <EditorDialog
+                noDialog
+                open
+                item={item.jsonData}
+                onClose={() => Activity.close(id)}
+                onSave={null}
+              />
             ),
           });
         }}
