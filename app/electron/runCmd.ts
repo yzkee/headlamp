@@ -68,7 +68,7 @@ const SETTINGS_PATH = path.join(app?.getPath('userData') || 'testing', 'settings
  * If the settings file does not exist, an empty object is returned.
  * @returns The settings object.
  */
-function loadSettings() {
+function loadSettings(): Record<string, any> {
   try {
     const data = fs.readFileSync(SETTINGS_PATH, 'utf-8');
     return JSON.parse(data);
@@ -81,7 +81,7 @@ function loadSettings() {
  * Saves the user settings.
  * @param settings - The settings object to save.
  */
-function saveSettings(settings) {
+function saveSettings(settings: Record<string, any>) {
   fs.writeFileSync(SETTINGS_PATH, JSON.stringify(settings), 'utf-8');
 }
 
