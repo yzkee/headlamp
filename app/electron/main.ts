@@ -1301,8 +1301,11 @@ function startElecron() {
               runningHeadlamp.forEach(pid => {
                 try {
                   killProcess(pid);
-                } catch (e) {
-                  console.log(`Failed to quit headlamp-servere:`, e.message);
+                } catch (e: unknown) {
+                  const message = e instanceof Error ? e.message : String(e);
+                  console.error(
+                    `Failed to kill headlamp-server process with PID ${pid}: ${message}`
+                  );
                   shouldWaitForKill = false;
                 }
               });
