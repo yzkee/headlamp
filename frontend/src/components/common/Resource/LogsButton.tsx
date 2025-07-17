@@ -25,7 +25,7 @@ import { styled } from '@mui/material/styles';
 import Switch from '@mui/material/Switch';
 import { Terminal as XTerminal } from '@xterm/xterm';
 import { useSnackbar } from 'notistack';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { clusterFetch } from '../../../lib/k8s/api/v2/fetch';
 import { KubeContainerStatus } from '../../../lib/k8s/cluster';
@@ -51,8 +51,7 @@ const PaddedFormControlLabel = styled(FormControlLabel)(({ theme }) => ({
   paddingRight: theme.spacing(2),
 }));
 
-export function LogsButton({ item }: LogsButtonProps) {
-  const [showLogs, setShowLogs] = useState(false);
+function LogsButtonContent({ item }: LogsButtonProps) {
   const [pods, setPods] = useState<Pod[]>([]);
   const [selectedPodIndex, setSelectedPodIndex] = useState<number | 'all'>('all');
   const [selectedContainer, setSelectedContainer] = useState('');
@@ -143,7 +142,7 @@ export function LogsButton({ item }: LogsButtonProps) {
   }
 
   // Handler for initial logs button click
-  async function handleClick() {
+  async function onMount() {
     if (item instanceof Deployment || item instanceof ReplicaSet || item instanceof DaemonSet) {
       try {
         const fetchedPods = await getRelatedPods();
@@ -151,39 +150,12 @@ export function LogsButton({ item }: LogsButtonProps) {
           setPods(fetchedPods);
           setSelectedPodIndex('all');
           setSelectedContainer(fetchedPods[0].spec.containers[0].name);
-          setShowLogs(true);
         } else {
           enqueueSnackbar(t('translation|No pods found for this workload'), {
             variant: 'warning',
             autoHideDuration: 3000,
           });
         }
-
-        Activity.launch({
-          id: 'logs-' + item.metadata.uid,
-          title: 'Logs: ' + item.metadata.name,
-          icon: <Icon icon="mdi:file-document-box-outline" width="100%" height="100%" />,
-          cluster: item.cluster,
-          location: 'full',
-          content: (
-            <LogViewer
-              noDialog
-              title={item?.getName() || ''}
-              downloadName={`${item?.getName()}_${
-                selectedPodIndex === 'all'
-                  ? 'all_pods'
-                  : pods[selectedPodIndex as number]?.getName()
-              }`}
-              open={showLogs}
-              onClose={handleClose}
-              logs={logs.logs}
-              topActions={topActions}
-              xtermRef={xtermRef}
-              handleReconnect={handleReconnect}
-              showReconnectButton={showReconnectButton}
-            />
-          ),
-        });
       } catch (error) {
         console.error('Error fetching pods:', error);
         enqueueSnackbar(
@@ -199,14 +171,9 @@ export function LogsButton({ item }: LogsButtonProps) {
     }
   }
 
-  // Handler for closing the logs viewer
-  function handleClose() {
-    setShowLogs(false);
-    setPods([]);
-    setSelectedPodIndex('all');
-    setSelectedContainer('');
-    setLogs({ logs: [], lastLineShown: -1 });
-  }
+  useEffect(() => {
+    onMount();
+  }, []);
 
   // Get containers for the selected pod
   const containers = React.useMemo(() => {
@@ -307,7 +274,7 @@ export function LogsButton({ item }: LogsButtonProps) {
     let cleanup: (() => void) | null = null;
     let isSubscribed = true;
 
-    if (showLogs && selectedContainer) {
+    if (selectedContainer) {
       clearLogs();
       setAllPodLogs({}); // Clear aggregated logs when switching pods
 
@@ -392,24 +359,14 @@ export function LogsButton({ item }: LogsButtonProps) {
         cleanup();
       }
     };
-  }, [
-    selectedPodIndex,
-    selectedContainer,
-    showLogs,
-    lines,
-    showTimestamps,
-    follow,
-    clearLogs,
-    t,
-    pods,
-  ]);
+  }, [selectedPodIndex, selectedContainer, lines, showTimestamps, follow, clearLogs, t, pods]);
 
   // Effect to process logs when allPodLogs changes - only for "All Pods" mode
   React.useEffect(() => {
-    if (selectedPodIndex === 'all' && showLogs && Object.keys(allPodLogs).length > 0) {
+    if (selectedPodIndex === 'all' && Object.keys(allPodLogs).length > 0) {
       processAllLogs();
     }
-  }, [allPodLogs, selectedPodIndex, showLogs, processAllLogs]);
+  }, [allPodLogs, selectedPodIndex, processAllLogs]);
 
   const topActions = [
     <Box
@@ -516,12 +473,45 @@ export function LogsButton({ item }: LogsButtonProps) {
   ];
 
   return (
+    <LogViewer
+      noDialog
+      title={item?.getName() || ''}
+      downloadName={`${item?.getName()}_${
+        selectedPodIndex === 'all' ? 'all_pods' : pods[selectedPodIndex as number]?.getName()
+      }`}
+      open
+      onClose={() => {}}
+      logs={logs.logs}
+      topActions={topActions}
+      xtermRef={xtermRef}
+      handleReconnect={handleReconnect}
+      showReconnectButton={showReconnectButton}
+    />
+  );
+}
+
+export function LogsButton({ item }: LogsButtonProps) {
+  const { t } = useTranslation();
+
+  const onClick = () => {
+    if (!item) return;
+    Activity.launch({
+      id: 'logs-' + item.metadata.uid,
+      title: 'Logs: ' + item.metadata.name,
+      icon: <Icon icon="mdi:file-document-box-outline" width="100%" height="100%" />,
+      cluster: item.cluster,
+      location: 'full',
+      content: <LogsButtonContent item={item} />,
+    });
+  };
+
+  return (
     <>
       {/* Show logs button for supported workload types */}
       {(item instanceof Deployment || item instanceof ReplicaSet || item instanceof DaemonSet) && (
         <ActionButton
           icon="mdi:file-document-box-outline"
-          onClick={handleClick}
+          onClick={onClick}
           description={t('translation|Show logs')}
         />
       )}
