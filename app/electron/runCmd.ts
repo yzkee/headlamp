@@ -61,7 +61,7 @@ function confirmCommandDialog(command: string, mainWindow: BrowserWindow): boole
   return resp === 0;
 }
 
-const SETTINGS_PATH = path.join(app.getPath('userData'), 'settings.json');
+const SETTINGS_PATH = path.join(app?.getPath('userData') || 'testing', 'settings.json');
 
 /**
  * Loads the user settings.
