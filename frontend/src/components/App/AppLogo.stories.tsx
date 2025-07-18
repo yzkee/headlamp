@@ -27,7 +27,7 @@ const getMockState = (themeName: 'light' | 'dark' = 'light', loaded = true, logo
     name: themeName,
     palette: {
       navbar: {
-        background: '#fff', // or a valid color string
+        background: '#fff',
       },
     },
   },
