@@ -40,7 +40,7 @@ import React, {
 } from 'react';
 import { createPortal } from 'react-dom';
 import { useHotkeys } from 'react-hotkeys-hook';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 import { useTypedSelector } from '../../redux/hooks';
 import store from '../../redux/stores/store';
 
@@ -157,6 +157,9 @@ export const activitySlice = createSlice({
         window.dispatchEvent(new Event('resize'));
       }, 200);
     },
+    reset() {
+      return initialState;
+    },
   },
 });
 
@@ -174,6 +177,9 @@ export const Activity = {
   /** Update existing activity with a partial changes */
   update(id: string, diff: Partial<Activity>) {
     store.dispatch(activitySlice.actions.update({ ...diff, id }));
+  },
+  reset() {
+    store.dispatch(activitySlice.actions.reset());
   },
 };
 
@@ -854,6 +860,34 @@ export const ActivitiesRenderer = React.memo(function ActivitiesRenderer() {
           }}
         />
       ))}
+      {isOverview && (
+        <Box
+          sx={{
+            zIndex: 1,
+            gridColumn: '2/3',
+            gridRow: '1/2',
+            display: 'flex',
+            alignItems: 'flex-end',
+            justifyContent: 'center',
+          }}
+        >
+          <Button
+            size="large"
+            variant="contained"
+            startIcon={<Icon icon="mdi:close-box-multiple-outline" />}
+            onClick={() => {
+              Activity.reset();
+              setIsOverview(false);
+            }}
+            sx={{
+              margin: 5,
+              lineHeight: 1,
+            }}
+          >
+            <Trans>Close All</Trans>
+          </Button>
+        </Box>
+      )}
       <ActivityBar setIsOverview={setIsOverview} />
     </>
   );
