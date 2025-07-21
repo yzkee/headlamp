@@ -914,7 +914,8 @@ export const ActivityBar = React.memo(function ({
               justifyContent: 'start',
             }}
             onClick={() => {
-              Activity.update(it.id, { minimized: false });
+              // Minimize or show Activity, unless it's not active then bring it to front
+              Activity.update(it.id, { minimized: it.id !== lastElement ? false : !it.minimized });
             }}
             onMouseDown={e => {
               if (e.button === 1) {
