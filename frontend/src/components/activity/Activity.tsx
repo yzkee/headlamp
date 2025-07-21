@@ -214,7 +214,7 @@ export function SingleActivityRenderer({
   /** Click event callback */
   onClick: React.PointerEventHandler<HTMLDivElement>;
 }) {
-  const { id, minimized, location, content, title, hideTitleInHeader, icon } = activity;
+  const { id, minimized, location, content, title, hideTitleInHeader, icon, cluster } = activity;
   const { t } = useTranslation();
   const activityElementRef = useRef<HTMLDivElement>(null);
   const containerElementRef = useRef(document.getElementById('main'));
@@ -452,6 +452,18 @@ export function SingleActivityRenderer({
               )}
               <Box sx={{ marginRight: 'auto' }} />
 
+              {cluster && (
+                <Box
+                  sx={theme => ({
+                    fontSize: '0.875rem',
+                    paddingX: 0.5,
+                    color: theme.palette.text.secondary,
+                  })}
+                >
+                  <Icon icon="mdi:hexagon-multiple-outline" />
+                  {cluster}
+                </Box>
+              )}
               {!isOverview && (
                 <>
                   <IconButton
