@@ -962,15 +962,21 @@ export const ActivityBar = React.memo(function ({
           </IconButton>
         </Box>
       ))}
-      <Tooltip title={t('Overview')}>
-        <IconButton
-          onClick={() => setIsOverview(it => !it)}
-          sx={{ marginLeft: 'auto', flexShrink: 0 }}
-          aria-label={t('Overview')}
-        >
-          <Icon icon="mdi:grid-large" />
-        </IconButton>
-      </Tooltip>
+      <Box
+        sx={theme => ({
+          marginLeft: 'auto',
+          flexShrink: 0,
+          position: 'sticky',
+          right: 0,
+          background: theme.palette.background.muted,
+        })}
+      >
+        <Tooltip title={t('Overview')}>
+          <IconButton onClick={() => setIsOverview(it => !it)} aria-label={t('Overview')}>
+            <Icon icon="mdi:grid-large" />
+          </IconButton>
+        </Tooltip>
+      </Box>
     </Box>
   );
 });
