@@ -916,16 +916,17 @@ export const ActivityBar = React.memo(function ({
         borderColor: theme.palette.divider,
         gridRow: '2 / 3',
         gridColumn: '2 / 3',
-        paddingX: 1,
+        paddingLeft: 1,
         zIndex: 10,
         position: 'relative',
         alignItems: 'center',
         display: 'flex',
         minHeight: '56px',
         overflowX: 'auto',
+        scrollbarWidth: 'thin',
       })}
     >
-      {activities.map(it => (
+      {[...activities.reverse()].map(it => (
         <Box
           key={it.id}
           sx={theme => ({
