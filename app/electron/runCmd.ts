@@ -127,6 +127,76 @@ function checkCommandConsent(command: string, args: string[], mainWindow: Browse
   return true;
 }
 
+const COMMANDS_WITH_CONSENT = {
+  headlamp_minikube: [
+    'minikube start',
+    'minikube stop',
+    'minikube delete',
+    'minikube status',
+    'minikube service',
+    'minikube logs',
+    'minikube addons',
+    'minikube ssh',
+    'scriptjs headlamp_minikubeprerelease/manage-minikube.js',
+    'scriptjs headlamp_minikube/manage-minikube.js',
+    'scriptjs minikube/manage-minikube.js',
+  ],
+};
+/**
+ * Adds the runCmd consent for the plugin.
+ *
+ * This is used to give consent to the plugin to run commands when the plugin is installed.
+ * So the user is not presented with many consent requests.
+ *
+ * @param pluginInfo artifacthub plugin info
+ */
+export function addRunCmdConsent(pluginInfo: { name: string }): void {
+  const settings = loadSettings();
+  if (!settings.confirmedCommands) {
+    settings.confirmedCommands = {};
+  }
+  let commands: string[] = [];
+  const pluginIsMinikube =
+    pluginInfo.name === 'headlamp_minikube' ||
+    pluginInfo.name === 'headlamp_minikubeprerelease' ||
+    (process.env.NODE_ENV === 'development' && pluginInfo.name === 'minikube');
+
+  if (pluginIsMinikube) {
+    commands = COMMANDS_WITH_CONSENT.headlamp_minikube;
+  }
+  for (const command of commands) {
+    if (!settings.confirmedCommands[command]) {
+      settings.confirmedCommands[command] = true;
+    }
+  }
+
+  saveSettings(settings);
+}
+
+/**
+ * Adds the runCmd consent for the plugin.
+ *
+ * @param pluginName The package.json name of the plugin.
+ */
+export function removeRunCmdConsent(pluginName: string): void {
+  const settings = loadSettings();
+  if (!settings.confirmedCommands) {
+    return;
+  }
+  let commands: string[] = [];
+  if (
+    pluginName === '@headlamp-k8s/minikubeprerelease' ||
+    pluginName === '@headlamp-k8s/minikube'
+  ) {
+    commands = COMMANDS_WITH_CONSENT.headlamp_minikube;
+  }
+  for (const command of commands) {
+    delete settings.confirmedCommands[command];
+  }
+
+  saveSettings(settings);
+}
+
 /**
  * Check if the command has the correct permission secret.
  * If the command is 'scriptjs', it checks for a specific script path.
