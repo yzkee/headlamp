@@ -265,6 +265,56 @@ function findMatchingContexts(
 }
 
 /**
+ * Finds and replaces a kubeconfig by cluster name.
+ * @param clusterName - The name of the cluster to find and replace.
+ * @param kubeconfig - The base64 encoded kubeconfig to replace the existing one with.
+ * @param create - If true, create a new kubeconfig if it doesn't exist. If false, only replace existing kubeconfigs.
+ * @returns A promise that resolves when the kubeconfig is successfully replaced.
+ * @throws Error if the kubeconfig replacement fails at any step.
+ *
+ * Note: If deletion of the existing kubeconfig fails, the operation will still proceed
+ * to store the new kubeconfig. This ensures the new configuration is applied even if
+ * cleanup of the old one encounters issues.
+ */
+export async function findAndReplaceKubeconfig(
+  clusterName: string,
+  kubeconfig: string,
+  create: boolean = false
+): Promise<void> {
+  try {
+    // First try to find the existing kubeconfig
+    const existingKubeconfig = await findKubeconfigByClusterName(clusterName);
+
+    if (existingKubeconfig) {
+      // If found, delete the old one
+      // Note: If deletion fails, we continue with storing the new kubeconfig
+      // to ensure the new configuration is applied
+      try {
+        await deleteClusterKubeconfig(clusterName);
+      } catch (deleteError) {
+        console.warn(
+          `Failed to delete existing kubeconfig for cluster ${clusterName}, but continuing with replacement:`,
+          deleteError
+        );
+      }
+      // Store the new kubeconfig
+      await storeStatelessClusterKubeconfig(kubeconfig);
+    } else if (create) {
+      // If not found and create is true, store the new kubeconfig
+      await storeStatelessClusterKubeconfig(kubeconfig);
+    } else {
+      // If not found and create is false, throw error
+      throw new Error(
+        `No existing kubeconfig found for cluster ${clusterName} and create is false`
+      );
+    }
+  } catch (error) {
+    console.error('Error in findAndReplaceKubeconfig:', error);
+    throw error;
+  }
+}
+
+/**
  * Finds a kubeconfig by cluster name.
  * @param clusterName The name of the cluster to find.
  * @param clusterID The ID for a cluster, composed of the kubeconfig path and cluster name
