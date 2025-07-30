@@ -209,7 +209,8 @@ export function checkPermissionSecret(
 ): [boolean, string] {
   let permissionName = 'runCmd-' + commandData.command;
   if (commandData.command === 'scriptjs') {
-    permissionName = 'runCmd-' + commandData.command + '-' + commandData.args[0];
+    const pluginPathNormalized = commandData.args[0]?.replace(/plugins[\\/]/, 'plugins/');
+    permissionName = 'runCmd-' + commandData.command + '-' + pluginPathNormalized;
   }
   if (
     permissionSecrets[permissionName] === undefined ||
