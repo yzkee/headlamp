@@ -1524,8 +1524,6 @@ func (c *HeadlampConfig) getClusters() []Cluster {
 	}
 
 	for _, context := range contexts {
-		context := context
-
 		if context.Error != "" {
 			clusters = append(clusters, Cluster{
 				Name:  context.Name,
@@ -1580,8 +1578,6 @@ func parseCustomNameClusters(contexts []kubeconfig.Context) ([]Cluster, []error)
 	var setupErrors []error
 
 	for _, context := range contexts {
-		context := context
-
 		info := context.KubeContext.Extensions["headlamp_info"]
 		if info != nil {
 			// Convert the runtime.Unknown object to a byte slice
@@ -2042,8 +2038,6 @@ func (c *HeadlampConfig) updateCustomContextToCache(config *api.Config, clusterN
 	}
 
 	for _, context := range contexts {
-		context := context
-
 		// Remove the old context from the store
 		if err := c.KubeConfigStore.RemoveContext(clusterName); err != nil {
 			logger.Log(logger.LevelError, nil, err, "Removing context from the store")
