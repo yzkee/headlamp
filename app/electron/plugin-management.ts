@@ -821,7 +821,7 @@ function convertAnnotations(annotations: Record<string, string>): Record<string,
  * @param annotations - A record of annotations with path-style keys.
  * @returns The extra-files part of the nested JavaScript object structure.
  */
-function getExtraFiles(
+export function getExtraFiles(
   annotations: Record<string, string>
 ): ArtifactHubHeadlampPkg['extraFiles'] | undefined {
   const converted = convertAnnotations(annotations);
@@ -859,7 +859,9 @@ function getExtraFiles(
     // For testing purposes, we allow localhost URLs.
     const underTest = process.env.NODE_ENV === 'test' && file.url.includes('localhost');
     const validURL =
-      file.url && file.url.startsWith('https://github.com/kubernetes/minikube/releases/download/');
+      file.url &&
+      (file.url.startsWith('https://github.com/kubernetes/minikube/releases/download/') ||
+        file.url.startsWith('https://github.com/crc-org/vfkit/releases/download/'));
 
     if (!underTest && !validURL) {
       throw new Error(`Invalid URL, ${file.url}`);
