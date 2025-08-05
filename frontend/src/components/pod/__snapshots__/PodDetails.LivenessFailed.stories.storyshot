@@ -976,13 +976,17 @@
                     class="MuiGrid-root MuiGrid-item MuiGrid-grid-xs-12 MuiGrid-grid-sm-8 css-deb4a-MuiGrid-root"
                   >
                     <div
-                      class="MuiBox-root css-yi3mkw"
+                      class="MuiBox-root css-0"
                     >
-                      <p
-                        class="MuiTypography-root MuiTypography-body1 css-1on669h-MuiTypography-root"
+                      <div
+                        class="MuiBox-root css-yi3mkw"
                       >
-                        /server
-                      </p>
+                        <p
+                          class="MuiTypography-root MuiTypography-body1 css-1on669h-MuiTypography-root"
+                        >
+                          /server
+                        </p>
+                      </div>
                     </div>
                   </dd>
                   <dt

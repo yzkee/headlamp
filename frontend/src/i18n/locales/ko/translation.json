@@ -291,6 +291,8 @@
   "Annotations": "주석",
   "Owner refs": "소유자 참조",
   "Controlled by": "제어자",
+  "Show all labels (+{{count}} more)_other": "",
+  "Show fewer": "",
   "Start port forward": "포트 포워딩 시작",
   "Forward port": "포트 포워딩",
   "Delete port forward": "포트 포워딩 삭제",
