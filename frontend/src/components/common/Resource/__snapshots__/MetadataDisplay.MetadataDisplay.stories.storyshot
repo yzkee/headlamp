@@ -58,23 +58,27 @@
           class="MuiGrid-root MuiGrid-item MuiGrid-grid-xs-12 MuiGrid-grid-sm-8 css-1xrovmc-MuiGrid-root"
         >
           <div
-            class="MuiBox-root css-yi3mkw"
+            class="MuiBox-root css-0"
           >
-            <p
-              class="MuiTypography-root MuiTypography-body1 css-1on669h-MuiTypography-root"
+            <div
+              class="MuiBox-root css-yi3mkw"
             >
-              label1: My Label 1
-            </p>
-            <p
-              class="MuiTypography-root MuiTypography-body1 css-1on669h-MuiTypography-root"
-            >
-              label2: My Label 2
-            </p>
-            <p
-              class="MuiTypography-root MuiTypography-body1 css-1on669h-MuiTypography-root"
-            >
-              label3: My Label 3
-            </p>
+              <p
+                class="MuiTypography-root MuiTypography-body1 css-1on669h-MuiTypography-root"
+              >
+                label1: My Label 1
+              </p>
+              <p
+                class="MuiTypography-root MuiTypography-body1 css-1on669h-MuiTypography-root"
+              >
+                label2: My Label 2
+              </p>
+              <p
+                class="MuiTypography-root MuiTypography-body1 css-1on669h-MuiTypography-root"
+              >
+                label3: My Label 3
+              </p>
+            </div>
           </div>
         </dd>
       </dl>

@@ -291,6 +291,8 @@
   "Annotations": "アノテーション",
   "Owner refs": "オーナー参照",
   "Controlled by": "制御者",
+  "Show all labels (+{{count}} more)_other": "",
+  "Show fewer": "",
   "Start port forward": "ポートフォワードを開始",
   "Forward port": "ポートを転送",
   "Delete port forward": "ポートフォワードを削除",

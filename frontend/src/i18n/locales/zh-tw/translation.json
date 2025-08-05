@@ -291,6 +291,8 @@
   "Annotations": "註釋",
   "Owner refs": "所有者引用",
   "Controlled by": "受控於",
+  "Show all labels (+{{count}} more)_other": "",
+  "Show fewer": "",
   "Start port forward": "開始連線埠轉發",
   "Forward port": "轉發連線埠",
   "Delete port forward": "刪除連線埠轉發",

@@ -174,13 +174,17 @@
                     class="MuiGrid-root MuiGrid-item MuiGrid-grid-xs-12 MuiGrid-grid-sm-8 css-deb4a-MuiGrid-root"
                   >
                     <div
-                      class="MuiBox-root css-yi3mkw"
+                      class="MuiBox-root css-0"
                     >
-                      <p
-                        class="MuiTypography-root MuiTypography-body1 css-1on669h-MuiTypography-root"
+                      <div
+                        class="MuiBox-root css-yi3mkw"
                       >
-                        addonmanager.kubernetes.io/mode: Reconcile
-                      </p>
+                        <p
+                          class="MuiTypography-root MuiTypography-body1 css-1on669h-MuiTypography-root"
+                        >
+                          addonmanager.kubernetes.io/mode: Reconcile
+                        </p>
+                      </div>
                     </div>
                   </dd>
                   <dt
@@ -192,16 +196,20 @@
                     class="MuiGrid-root MuiGrid-item MuiGrid-grid-xs-12 MuiGrid-grid-sm-8 css-deb4a-MuiGrid-root"
                   >
                     <div
-                      class="MuiBox-root css-yi3mkw"
+                      class="MuiBox-root css-0"
                     >
-                      <p
-                        aria-label="kubectl.kubernetes.io/last-applied-configuration: {"apiVersion":"policy/v1beta1","kind":"PodDisruptionBudget","metadata":{"annotations":{},"labels":{"addonmanager.kubernetes.io/mode":"Reconcile"},"name":"coredns-pdb","namespace":"kube-system"},"spec":{"minAvailable":1,"selector":{"matchLabels":{"k8s-app":"kube-dns"}}}}
-"
-                        class="MuiTypography-root MuiTypography-body1 css-1on669h-MuiTypography-root"
-                        data-mui-internal-clone-element="true"
+                      <div
+                        class="MuiBox-root css-yi3mkw"
                       >
-                        kubectl.kubernetes.io/last-applied-configuration: …
-                      </p>
+                        <p
+                          aria-label="kubectl.kubernetes.io/last-applied-configuration: {"apiVersion":"policy/v1beta1","kind":"PodDisruptionBudget","metadata":{"annotations":{},"labels":{"addonmanager.kubernetes.io/mode":"Reconcile"},"name":"coredns-pdb","namespace":"kube-system"},"spec":{"minAvailable":1,"selector":{"matchLabels":{"k8s-app":"kube-dns"}}}}
+"
+                          class="MuiTypography-root MuiTypography-body1 css-1on669h-MuiTypography-root"
+                          data-mui-internal-clone-element="true"
+                        >
+                          kubectl.kubernetes.io/last-applied-configuration: …
+                        </p>
+                      </div>
                     </div>
                   </dd>
                   <dt
