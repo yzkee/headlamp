@@ -68,6 +68,14 @@
         left: 3.5em;
       }
 
+      @media (prefers-reduced-motion: reduce) {
+        .loader,
+        .loader:before,
+        .loader:after {
+          animation: none;
+        }
+      }
+
       @keyframes bblFadInOut {
         0%,
         80%,
