@@ -422,12 +422,13 @@ export default function Table<RowItem extends Record<string, any>>({
       return;
     }
 
-    const target = e.target;
-    if (
-      !(target instanceof HTMLInputElement) ||
-      target.tagName !== 'INPUT' ||
-      target.type !== 'checkbox'
-    ) {
+    const target = e.target as HTMLElement | null;
+    const shouldHandle =
+      !!target &&
+      !!target.closest('input[type="checkbox"]') &&
+      !target.closest('.MuiSwitch-root, [role="switch"]');
+
+    if (!shouldHandle) {
       return;
     }
 
