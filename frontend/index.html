@@ -24,7 +24,7 @@
     -->
     <title>Headlamp</title>
     <script>
-      headlampBaseUrl = '%BASE_URL%';
+      headlampBaseUrl = '%BASE_URL%<%= BASE_URL %>'.replace('%BASE_' + 'URL%', '').replace('<' + '%= BASE_URL %>', '');
     </script>
     <style>
       .splash {
