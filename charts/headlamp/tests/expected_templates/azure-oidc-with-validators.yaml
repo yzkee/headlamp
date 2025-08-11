@@ -81,6 +81,7 @@ spec:
         app.kubernetes.io/instance: headlamp
     spec:
       serviceAccountName: headlamp
+      automountServiceAccountToken: true
       securityContext:
         {}
       containers:
