@@ -38,6 +38,7 @@ import semver from 'semver';
 import { runCommand } from '../components/App/runCommand';
 import { themeSlice } from '../components/App/themeSlice';
 import * as CommonComponents from '../components/common';
+import { addBackstageAuthHeaders } from '../helpers/addBackstageAuthHeaders';
 import { getAppUrl } from '../helpers/getAppUrl';
 import { isElectron } from '../helpers/isElectron';
 import i18next from '../i18n/config';
@@ -293,6 +294,7 @@ function handlePluginRunError(error: unknown, packageName: string, packageVersio
  */
 async function fetchWithRetry(
   url: string,
+  headers: HeadersInit,
   maxTotalWaitMs = 30000,
   baseDelayMs = 50,
   maxDelayMs = 1000
@@ -303,7 +305,7 @@ async function fetchWithRetry(
 
   while (totalSlept < maxTotalWaitMs) {
     try {
-      const resp = await fetch(url);
+      const resp = await fetch(url, { headers: new Headers(headers) });
       if (!resp.ok) throw new Error(`HTTP error: ${resp.status}`);
       return resp;
     } catch (err) {
@@ -343,17 +345,23 @@ export async function fetchAndExecutePlugins(
 ) {
   const permissionSecretsPromise = permissionSecretsFromApp();
 
-  const pluginPaths = (await fetchWithRetry(`${getAppUrl()}plugins`).then(resp =>
+  const headers = addBackstageAuthHeaders();
+
+  const pluginPaths = (await fetchWithRetry(`${getAppUrl()}plugins`, headers).then(resp =>
     resp.json()
   )) as string[];
 
   const sourcesPromise = Promise.all(
-    pluginPaths.map(path => fetch(`${getAppUrl()}${path}/main.js`).then(resp => resp.text()))
+    pluginPaths.map(path =>
+      fetch(`${getAppUrl()}${path}/main.js`, { headers: new Headers(headers) }).then(resp =>
+        resp.text()
+      )
+    )
   );
 
   const packageInfosPromise = await Promise.all<PluginInfo>(
     pluginPaths.map(path =>
-      fetch(`${getAppUrl()}${path}/package.json`).then(resp => {
+      fetch(`${getAppUrl()}${path}/package.json`, { headers: new Headers(headers) }).then(resp => {
         if (!resp.ok) {
           if (resp.status !== 404) {
             return Promise.reject(resp);
