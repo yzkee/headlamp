@@ -102,6 +102,9 @@ config:
 #   - name: KUBERNETES_SERVICE_PORT
 #     value: "6443"
 
+# -- Mount Service Account token in pod
+automountServiceAccountToken: true
+
 serviceAccount:
   # -- Specifies whether a service account should be created
   create: true
