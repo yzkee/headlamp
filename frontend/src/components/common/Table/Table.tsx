@@ -414,29 +414,32 @@ export default function Table<RowItem extends Record<string, any>>({
   ]);
 
   const rows = useMRT_Rows(table);
+  const rowIds = useMemo(() => rows.map(r => r.id), [rows]);
 
   // Handle shift+click range selection
   const handleRowClick = (e: React.MouseEvent, clickedIndex: number) => {
-    if (!table || !table.getRowModel) return;
-    const target = e.target;
-    if (
-      !(target instanceof HTMLInputElement) ||
-      target.tagName !== 'INPUT' ||
-      target.type !== 'checkbox'
-    ) {
+    if (!table || !table.getRowModel) {
       return;
     }
+
+    const target = e.target as HTMLElement | null;
+    const shouldHandle =
+      !!target &&
+      !!target.closest('input[type="checkbox"]') &&
+      !target.closest('.MuiSwitch-root, [role="switch"]');
+
+    if (!shouldHandle) {
+      return;
+    }
+
     e.preventDefault();
     e.stopPropagation();
-
-    const rowModel = table.getRowModel();
-    const rowIds = rowModel.rows.map(row => row.id);
 
     if (e.shiftKey && lastSelectedRowIndex !== null) {
       const start = Math.min(lastSelectedRowIndex, clickedIndex);
       const end = Math.max(lastSelectedRowIndex, clickedIndex);
-      const newSelected: Record<string, boolean> = {};
 
+      const newSelected: Record<string, boolean> = {};
       for (let i = start; i <= end; i++) {
         const rowId = rowIds[i];
         if (rowId) {
@@ -444,16 +447,10 @@ export default function Table<RowItem extends Record<string, any>>({
         }
       }
 
-      table.setRowSelection(prev => ({
-        ...prev,
-        ...newSelected,
-      }));
+      table.setRowSelection(prev => ({ ...prev, ...newSelected }));
     } else {
       const rowId = rowIds[clickedIndex];
-      table.setRowSelection(prev => ({
-        ...prev,
-        [rowId]: !prev[rowId],
-      }));
+      table.setRowSelection(prev => ({ ...prev, [rowId]: !prev[rowId] }));
       setLastSelectedRowIndex(clickedIndex);
     }
   };
