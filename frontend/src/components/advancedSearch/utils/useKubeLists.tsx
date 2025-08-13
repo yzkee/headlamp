@@ -34,9 +34,10 @@ export const useKubeLists = (
   resources: ApiResource[],
   clusters: string[],
   maxItems: number,
-  refetchIntervalMs: number
+  refetchIntervalMs?: number,
+  namespaces?: string[]
 ) => {
-  const namespaces = useNamespaces();
+  const defaultNamespaces = useNamespaces();
   const classes = useMemo(
     () =>
       resources

@@ -159,9 +159,33 @@ const LazyGraphView = React.lazy(() =>
   import('../components/resourceMap/GraphView').then(it => ({ default: it.GraphView }))
 );
 
-const defaultRoutes: {
-  [routeName: string]: Route;
-} = {
+const defaultRoutes: { [routeName: string]: Route } = {
+  projectCreateYaml: {
+    path: '/project/create-yaml',
+    exact: true,
+    name: 'Create Project YAML',
+    sidebar: {
+      item: 'projects',
+      sidebar: DefaultSidebars.HOME,
+    },
+    useClusterURL: false,
+    noAuthRequired: true,
+    component: React.lazy(() =>
+      import('../components/project/ProjectCreateFromYaml').then(m => ({ default: m.CreateNew }))
+    ),
+  },
+  projectDetails: {
+    path: '/project/:name',
+    exact: true,
+    name: 'Project Details',
+    sidebar: {
+      item: 'projects',
+      sidebar: DefaultSidebars.HOME,
+    },
+    useClusterURL: false,
+    noAuthRequired: true,
+    component: React.lazy(() => import('../components/project/ProjectDetails')),
+  },
   cluster: {
     path: '/',
     exact: true,
