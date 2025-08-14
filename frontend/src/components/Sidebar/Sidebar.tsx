@@ -290,6 +290,9 @@ export const PureSidebar = memo(
 
     const adjustedDrawerWidth = largeSideBarOpen ? drawerWidth : closedWidth;
 
+    // Remove items from tab order when the sidebar is collapsed.
+    const tabIndex = largeSideBarOpen ? undefined : -1;
+
     /**
      * For closing the sidebar if temporaryDrawer on mobile.
      */
@@ -316,6 +319,7 @@ export const PureSidebar = memo(
           direction="column"
           justifyContent="space-between"
           wrap="nowrap"
+          aria-hidden={!largeSideBarOpen}
         >
           <Grid item>
             <List
@@ -328,6 +332,7 @@ export const PureSidebar = memo(
                   isSelected={item.isSelected}
                   fullWidth={largeSideBarOpen}
                   search={search}
+                  tabIndex={tabIndex}
                   {...item}
                 />
               ))}
