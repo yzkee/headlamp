@@ -67,6 +67,7 @@ func main() {
 		oidcValidatorClientID:     conf.OidcValidatorClientID,
 		oidcClientSecret:          conf.OidcClientSecret,
 		oidcIdpIssuerURL:          conf.OidcIdpIssuerURL,
+		oidcCallbackURL:           conf.OidcCallbackURL,
 		oidcValidatorIdpIssuerURL: conf.OidcValidatorIdpIssuerURL,
 		oidcScopes:                strings.Split(conf.OidcScopes, ","),
 		oidcUseAccessToken:        conf.OidcUseAccessToken,

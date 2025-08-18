@@ -73,6 +73,7 @@ type HeadlampConfig struct {
 	oidcValidatorClientID     string
 	oidcClientSecret          string
 	oidcIdpIssuerURL          string
+	oidcCallbackURL           string
 	oidcValidatorIdpIssuerURL string
 	oidcUseAccessToken        bool
 	cache                     cache.Cache[interface{}]
@@ -230,6 +231,12 @@ func baseURLReplace(staticDir string, baseURL string) {
 }
 
 func getOidcCallbackURL(r *http.Request, config *HeadlampConfig) string {
+	// If callback URL is configured, use it
+	if config.oidcCallbackURL != "" {
+		return config.oidcCallbackURL
+	}
+
+	// Otherwise, generate callback URL dynamically
 	urlScheme := r.URL.Scheme
 	if urlScheme == "" {
 		// check proxy headers first
