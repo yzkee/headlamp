@@ -105,23 +105,9 @@ window.pluginLib.MuiCore = window.pluginLib.MuiMaterial;
 window.plugins = {};
 
 /**
- * Load plugins in the frontend/src/plugin/plugins/ folder.
- *
- * Plugins can be developed inside the headlamp repo.
- * Move them out of the repo to an external location when they are ready.
- *
- * @see Plugin
- */
-function loadDevPlugins() {
-  import.meta.glob(['./plugins/*.index.{js,ts,tsx}'], { eager: true });
-}
-
-/**
  * Load external, then local plugins. Then initialize() them in order with a Registry.
  */
 export async function initializePlugins() {
-  await loadDevPlugins();
-
   // Initialize every plugin in the order they were loaded.
   return new Promise(resolve => {
     for (const pluginName of Object.keys(window.plugins)) {
