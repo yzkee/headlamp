@@ -56,7 +56,11 @@ export const useKubeLists = (
   );
 
   const data = classes.map(it =>
-    it.useList({ clusters, refetchInterval: refetchIntervalMs, namespace: namespaces })
+    it.useList({
+      clusters,
+      refetchInterval: refetchIntervalMs,
+      namespace: namespaces ?? defaultNamespaces,
+    })
   );
 
   const [items, setItems] = useState<any[]>([]);
