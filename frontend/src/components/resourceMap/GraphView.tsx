@@ -416,7 +416,7 @@ function CustomThemeProvider({ children }: { children: ReactNode }) {
       theme={(outer: Theme) => ({
         ...outer,
         palette:
-          outer.palette.mode === 'light'
+          outer?.palette?.mode === 'light'
             ? {
                 ...outer.palette,
                 primary: {
