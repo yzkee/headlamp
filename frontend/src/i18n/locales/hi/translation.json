@@ -47,6 +47,7 @@
   "Proceed to select your preferred method for cluster creation and addition": "क्लस्टर बनाने और जोड़ने के लिए अपनी पसंदीदा विधि चुनें",
   "Load from KubeConfig": "KubeConfig से लोड करें",
   "Providers": "प्रदाता",
+  "Add Local Cluster Provider": "",
   "This action will delete cluster \"{{ clusterName }}\" from \"{{ source }}\"": "",
   "This action will remove cluster \"{{ clusterName }}\".": "",
   "This action cannot be undone! Do you want to proceed?": "",

@@ -47,6 +47,7 @@
   "Proceed to select your preferred method for cluster creation and addition": "க்ளஸ்டர் உருவாக்கம் மற்றும் சேர்ப்பதற்கான உங்கள் விருப்பமான முறையைத் தேர்ந்தெடுக்க தொடரவும்",
   "Load from KubeConfig": "கியூப்கான்ஃபிக்கிலிருந்து ஏற்றுக",
   "Providers": "வழங்குநர்கள்",
+  "Add Local Cluster Provider": "",
   "This action will delete cluster \"{{ clusterName }}\" from \"{{ source }}\"": "இந்த செயல் \"{{ source }}\" இலிருந்து \"{{ clusterName }}\" க்ளஸ்டரை நீக்கும்.",
   "This action will remove cluster \"{{ clusterName }}\".": "இந்த செயல் \"{{ clusterName }}\" க்ளஸ்டரை நீக்கும்.",
   "This action cannot be undone! Do you want to proceed?": "இந்த செயலை மீட்டெடுக்க முடியாது! நீங்கள் தொடர விரும்புகிறீர்களா?",

@@ -47,6 +47,7 @@
   "Proceed to select your preferred method for cluster creation and addition": "클러스터 생성 및 추가 방법을 선택하세요.",
   "Load from KubeConfig": "KubeConfig에서 불러오기",
   "Providers": "제공자",
+  "Add Local Cluster Provider": "",
   "This action will delete cluster \"{{ clusterName }}\" from \"{{ source }}\"": "",
   "This action will remove cluster \"{{ clusterName }}\".": "",
   "This action cannot be undone! Do you want to proceed?": "",
