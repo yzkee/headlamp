@@ -66,6 +66,8 @@ config:
     issuerURL: ""
     # -- OIDC scopes to be used
     scopes: ""
+    # -- OIDC callback URL
+    callbackURL: ""
 
     # -- OIDC client to be used during token validation
     validatorClientID: ""
