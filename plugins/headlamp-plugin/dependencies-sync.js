@@ -32,7 +32,6 @@
 // Some packages are used by headlamp-plugin that are not used by the frontend.
 // These won't be removed from headlamp-plugin/package.json
 const dependenciesFrontDoesNotHave = new Set([
-  'ajv',
   'env-paths',
   'shx',
   'fs-extra',
