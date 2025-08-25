@@ -65,6 +65,7 @@ const dependenciesToNotCopy = [
   '@rsbuild/plugin-svgr',
   'nock',
   'vitest-websocket-mock',
+  'cross-env',
 ];
 
 const yargs = require('yargs/yargs');

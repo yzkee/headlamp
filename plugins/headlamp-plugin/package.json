@@ -59,7 +59,6 @@
     "@xterm/xterm": "^5.5.0",
     "@xyflow/react": "^12.2.0",
     "cronstrue": "^2.50.0",
-    "cross-env": "^7.0.3",
     "elkjs": "^0.9.3",
     "env-paths": "^2.2.1",
     "eslint": "^8.57.0",
