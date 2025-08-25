@@ -66,6 +66,7 @@ const dependenciesToNotCopy = [
   'vitest-websocket-mock',
   'cross-env',
   'fake-indexeddb',
+  'lint-staged',
 ];
 
 const yargs = require('yargs/yargs');
