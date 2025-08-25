@@ -38,7 +38,6 @@ const dependenciesFrontDoesNotHave = new Set([
   'fs-extra',
   'validate-npm-package-name',
   'yargs',
-  'vm-browserify',
   'table',
   'tar',
   'tmp',
