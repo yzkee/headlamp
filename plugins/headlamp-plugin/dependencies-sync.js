@@ -68,6 +68,7 @@ const dependenciesToNotCopy = [
   'lint-staged',
   'openapi-types',
   'resize-observer-polyfill',
+  'vitest-canvas-mock',
 ];
 
 const yargs = require('yargs/yargs');
