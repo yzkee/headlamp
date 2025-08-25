@@ -68,6 +68,7 @@ const dependenciesToNotCopy = [
   'fake-indexeddb',
   'lint-staged',
   'openapi-types',
+  'resize-observer-polyfill',
 ];
 
 const yargs = require('yargs/yargs');
