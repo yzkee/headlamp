@@ -47,6 +47,7 @@
   "Proceed to select your preferred method for cluster creation and addition": "",
   "Load from KubeConfig": "Charger à partir d'un KubeConfig",
   "Providers": "",
+  "Add Local Cluster Provider": "",
   "This action will delete cluster \"{{ clusterName }}\" from \"{{ source }}\"": "",
   "This action will remove cluster \"{{ clusterName }}\".": "",
   "This action cannot be undone! Do you want to proceed?": "",
