@@ -44,7 +44,6 @@ const dependenciesFrontDoesNotHave = new Set([
   'vite-plugin-static-copy',
   '@storybook/addon-webpack5-compiler-swc',
   '@storybook/react-webpack5',
-  'is-mergeable-object',
   'ts-loader',
   '@headlamp-k8s/pluginctl',
 ]);
