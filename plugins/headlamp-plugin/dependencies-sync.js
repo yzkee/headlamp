@@ -64,6 +64,7 @@ const dependenciesToNotCopy = [
   '@rsbuild/plugin-node-polyfill',
   '@rsbuild/plugin-react',
   '@rsbuild/plugin-svgr',
+  'nock',
 ];
 
 const yargs = require('yargs/yargs');
