@@ -67,6 +67,7 @@ const dependenciesToNotCopy = [
   'cross-env',
   'fake-indexeddb',
   'lint-staged',
+  'openapi-types',
 ];
 
 const yargs = require('yargs/yargs');
