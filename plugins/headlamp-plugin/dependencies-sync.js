@@ -39,7 +39,6 @@ const dependenciesFrontDoesNotHave = new Set([
   'yargs',
   'table',
   'tar',
-  'tmp',
   'vite-plugin-css-injected-by-js',
   'vite-plugin-static-copy',
   '@storybook/addon-webpack5-compiler-swc',
