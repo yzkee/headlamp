@@ -43,7 +43,7 @@ import { createRouteURL } from '../../lib/router';
 import { ViewYaml } from '../advancedSearch/ResourceSearch';
 import Table from '../common/Table';
 import { KubeIcon } from '../resourceMap/kubeIcon/KubeIcon';
-import { toKubernetesName } from './projectUtils';
+import { PROJECT_ID_LABEL, toKubernetesName } from './projectUtils';
 
 const DropZoneBox = styled(Box)({
   border: 1,
@@ -63,8 +63,6 @@ const DropZoneBox = styled(Box)({
     borderColor: 'rgba(0, 0, 0, 0.5)',
   },
 });
-
-const PROJECT_ID_LABEL = 'headlamp.io/project-id';
 
 async function createProjectFromYaml({
   items,
