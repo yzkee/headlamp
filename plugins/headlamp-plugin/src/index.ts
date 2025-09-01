@@ -46,6 +46,8 @@ import Registry, {
   registerClusterChooser,
   registerClusterProviderDialog,
   registerClusterProviderMenuItem,
+  registerClusterStatus,
+  registerCustomCreateProject,
   registerDetailsViewHeaderAction,
   registerDetailsViewHeaderActionsProcessor,
   registerDetailsViewSection,
@@ -54,6 +56,8 @@ import Registry, {
   registerKubeObjectGlance,
   registerMapSource,
   registerPluginSettings,
+  registerProjectDetailsTab,
+  registerProjectOverviewSection,
   registerResourceTableColumnsProcessor,
   registerRoute,
   registerRouteFilter,
@@ -105,6 +109,10 @@ export {
   useTranslation,
   isLocaleSupported,
   getSupportedLocales,
+  registerCustomCreateProject,
+  registerProjectDetailsTab,
+  registerProjectOverviewSection,
+  registerClusterStatus,
 };
 
 export type {
