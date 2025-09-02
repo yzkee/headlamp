@@ -30,7 +30,6 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { styled } from '@mui/system';
 import { loadAll } from 'js-yaml';
 import { Dispatch, FormEvent, SetStateAction, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
@@ -41,28 +40,10 @@ import { ApiError, apply } from '../../lib/k8s/apiProxy';
 import { KubeObjectInterface } from '../../lib/k8s/KubeObject';
 import { createRouteURL } from '../../lib/router';
 import { ViewYaml } from '../advancedSearch/ResourceSearch';
+import { DropZoneBox } from '../common/DropZoneBox';
 import Table from '../common/Table';
 import { KubeIcon } from '../resourceMap/kubeIcon/KubeIcon';
 import { PROJECT_ID_LABEL, toKubernetesName } from './projectUtils';
-
-const DropZoneBox = styled(Box)({
-  border: 1,
-  borderRadius: 1,
-  borderWidth: 2,
-  borderColor: 'rgba(0, 0, 0)',
-  borderStyle: 'dashed',
-  padding: '20px',
-  margin: '20px',
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  '&:hover': {
-    borderColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  '&:focus-within': {
-    borderColor: 'rgba(0, 0, 0, 0.5)',
-  },
-});
 
 async function createProjectFromYaml({
   items,

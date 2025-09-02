@@ -35,3 +35,5 @@ export const DropZoneBox = styled(Box)({
     borderColor: 'rgba(0, 0, 0, 0.5)',
   },
 });
+
+export default DropZoneBox;
