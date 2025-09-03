@@ -17,12 +17,13 @@
 import { addBackstageAuthHeaders } from '../../../../helpers/addBackstageAuthHeaders';
 import { loadClusterSettings } from '../../../../helpers/clusterSettings';
 import { getHeadlampAPIHeaders } from '../../../../helpers/getHeadlampAPIHeaders';
-import { ConfigState } from '../../../../redux/configSlice';
+import type { ConfigState } from '../../../../redux/configSlice';
 import store from '../../../../redux/stores/store';
 import { deleteClusterKubeconfig, storeStatelessClusterKubeconfig } from '../../../../stateless';
 import { findKubeconfigByClusterName } from '../../../../stateless/findKubeconfigByClusterName';
 import { getCluster, getSelectedClusters } from '../../../cluster';
-import { ClusterRequest, clusterRequest, post, request } from './clusterRequests';
+import type { ClusterRequest } from './clusterRequests';
+import { clusterRequest, post, request } from './clusterRequests';
 import { JSON_HEADERS } from './constants';
 
 /**
