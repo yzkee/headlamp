@@ -19,7 +19,6 @@ import { getCluster } from '../cluster';
 import { KubeMetadata } from './KubeMetadata';
 export {
   KubeObject,
-  makeKubeObject,
   type KubeObjectClass,
   type KubeObjectInterface,
   type ApiListOptions,
