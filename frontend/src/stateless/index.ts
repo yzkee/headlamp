@@ -24,6 +24,7 @@ import { KubeconfigObject } from '../lib/k8s/kubeconfig';
 import { ConfigState, setStatelessConfig } from '../redux/configSlice';
 import store from '../redux/stores/store';
 import { findKubeconfigByClusterName } from './findKubeconfigByClusterName';
+import { getUserIdFromLocalStorage } from './getUserIdFromLocalStorage';
 
 /**
  * ParsedConfig is the object that is fetched from the backend.
@@ -318,33 +319,11 @@ export async function findAndReplaceKubeconfig(
 }
 
 /**
- * In the backend we use a unique ID to identify a user. If there is no ID in localStorage
- * we generate a new one and store it in localStorage. We then combine it with the
- * cluster name and this headlamp-userId to create a unique ID for a cluster. If we don't
- * do it then if 2 different users have a cluster with the same name, then the
- * proxy will be overwritten.
- * @returns headlamp-userId from localStorage
- */
-export function getUserIdFromLocalStorage(): string {
-  let headlampUserId = localStorage.getItem('headlamp-userId');
-
-  if (!headlampUserId) {
-    headlampUserId = generateSecureToken();
-
-    if (headlampUserId) {
-      localStorage.setItem('headlamp-userId', headlampUserId);
-    }
-  }
-
-  return headlampUserId!;
-}
-
-/**
  * Generates a cryptographically secure random token using the browser's crypto API.
  * @param {number} length - The length of the token.
  * @returns {string} - The generated token.
  */
-function generateSecureToken(length = 16): string {
+export function generateSecureToken(length = 16): string {
   const buffer = new Uint8Array(length);
   if (import.meta.env.NODE_ENV === 'test') {
     // Use Math.random() in the testing environment

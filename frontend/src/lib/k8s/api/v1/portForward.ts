@@ -15,8 +15,8 @@
  */
 
 import { addBackstageAuthHeaders } from '../../../../helpers/addBackstageAuthHeaders';
-import { getUserIdFromLocalStorage } from '../../../../stateless';
 import { findKubeconfigByClusterName } from '../../../../stateless/findKubeconfigByClusterName';
+import { getUserIdFromLocalStorage } from '../../../../stateless/getUserIdFromLocalStorage';
 import { clusterFetch } from '../v2/fetch';
 import { JSON_HEADERS } from './constants';
 
