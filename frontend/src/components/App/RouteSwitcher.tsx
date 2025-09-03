@@ -21,7 +21,7 @@ import { useDispatch } from 'react-redux';
 import { Redirect, Route, RouteProps, Switch, useHistory } from 'react-router-dom';
 import { getCluster, getSelectedClusters } from '../../lib/cluster';
 import { useCluster, useClustersConf } from '../../lib/k8s';
-import { testAuth } from '../../lib/k8s/apiProxy';
+import { testAuth } from '../../lib/k8s/api/v1/clusterApi';
 import {
   createRouteURL,
   getDefaultRoutes,

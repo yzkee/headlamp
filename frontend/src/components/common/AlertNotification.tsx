@@ -21,7 +21,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { matchPath, useLocation } from 'react-router-dom';
 import { getCluster } from '../../lib/cluster';
-import { testClusterHealth } from '../../lib/k8s/apiProxy';
+import { testClusterHealth } from '../../lib/k8s/api/v1/clusterApi';
 import { getRoute, getRoutePath } from '../../lib/router';
 
 // in ms
