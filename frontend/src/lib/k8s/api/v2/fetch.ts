@@ -16,7 +16,8 @@
 
 import { addBackstageAuthHeaders } from '../../../../helpers/addBackstageAuthHeaders';
 import { getAppUrl } from '../../../../helpers/getAppUrl';
-import { findKubeconfigByClusterName, getUserIdFromLocalStorage } from '../../../../stateless';
+import { getUserIdFromLocalStorage } from '../../../../stateless';
+import { findKubeconfigByClusterName } from '../../../../stateless/findKubeconfigByClusterName';
 import { ApiError } from './ApiError';
 import { makeUrl } from './makeUrl';
 
