@@ -22,17 +22,14 @@ import { formatClusterPathParam, getCluster, getSelectedClusters } from '../clus
 import { createRouteURL } from '../router';
 import { timeAgo } from '../util';
 import { useConnectApi, useSelectedClusters } from '.';
+import { post } from './api/v1/clusterRequests';
+import { DeleteParameters } from './api/v1/deleteParameters';
 import { RecursivePartial } from './api/v1/factories';
+import { apiFactory, apiFactoryWithNamespace } from './api/v1/factories';
+import { QueryParameters } from './api/v1/queryParameters';
+import { ApiError } from './api/v2/ApiError';
 import { useKubeObject } from './api/v2/hooks';
 import { makeListRequests, useKubeObjectList } from './api/v2/useKubeObjectList';
-import {
-  ApiError,
-  apiFactory,
-  apiFactoryWithNamespace,
-  DeleteParameters,
-  post,
-  QueryParameters,
-} from './apiProxy';
 import { KubeEvent } from './event';
 import { KubeMetadata } from './KubeMetadata';
 

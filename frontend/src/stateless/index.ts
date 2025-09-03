@@ -17,8 +17,8 @@
 import * as jsyaml from 'js-yaml';
 import _ from 'lodash';
 import { addBackstageAuthHeaders } from '../helpers/addBackstageAuthHeaders';
+import { request } from '../lib/k8s/api/v1/clusterRequests';
 import { JSON_HEADERS } from '../lib/k8s/api/v1/constants';
-import { request } from '../lib/k8s/apiProxy';
 import { Cluster } from '../lib/k8s/cluster';
 import { KubeconfigObject } from '../lib/k8s/kubeconfig';
 import { ConfigState, setStatelessConfig } from '../redux/configSlice';

@@ -15,7 +15,8 @@
  */
 
 import { Base64 } from 'js-base64';
-import { post, stream, StreamArgs, StreamResultsCb } from './apiProxy';
+import { post } from './api/v1/clusterRequests';
+import { stream, StreamArgs, StreamResultsCb } from './api/v1/streamingApi';
 import { KubeCondition, KubeContainer, KubeContainerStatus, Time } from './cluster';
 import { KubeObject, KubeObjectInterface } from './KubeObject';
 
