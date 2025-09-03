@@ -23,6 +23,8 @@ import { Cluster } from '../lib/k8s/cluster';
 import { KubeconfigObject } from '../lib/k8s/kubeconfig';
 import { ConfigState, setStatelessConfig } from '../redux/configSlice';
 import store from '../redux/stores/store';
+import { findKubeconfigByClusterName } from './findKubeconfigByClusterName';
+import { getUserIdFromLocalStorage } from './getUserIdFromLocalStorage';
 
 /**
  * ParsedConfig is the object that is fetched from the backend.
@@ -44,7 +46,7 @@ interface ParsedConfig {
  * @see getStatelessClusterKubeConfigs
  * @see findKubeconfigByClusterName
  */
-interface DatabaseEvent extends Event {
+export interface DatabaseEvent extends Event {
   // target is the request that generated the event.
   target: IDBOpenDBRequest & {
     // result is the IndexedDB database. It is used to create the transaction and the object store.
@@ -77,7 +79,7 @@ interface DatabaseErrorEvent extends Event {
  * @see getStatelessClusterKubeConfigs
  * @see findKubeconfigByClusterName
  * */
-interface CursorSuccessEvent extends Event {
+export interface CursorSuccessEvent extends Event {
   // target is the request that generated the event.
   target: EventTarget & {
     // result is the cursor. It is used to iterate through the object store.
@@ -93,7 +95,7 @@ interface CursorSuccessEvent extends Event {
  * @see getStatelessClusterKubeConfigs
  * @see findKubeconfigByClusterName
  * **/
-function handleDatabaseUpgrade(event: DatabaseEvent) {
+export function handleDatabaseUpgrade(event: DatabaseEvent) {
   const db = event.target ? event.target.result : null;
   // Create the object store if it doesn't exist
   if (db && !db.objectStoreNames.contains('kubeconfigStore')) {
@@ -108,7 +110,7 @@ function handleDatabaseUpgrade(event: DatabaseEvent) {
  * @see findKubeconfigByClusterName
  * */
 
-function handleDataBaseError(event: DatabaseErrorEvent, reject: (reason?: any) => void) {
+export function handleDataBaseError(event: DatabaseErrorEvent, reject: (reason?: any) => void) {
   console.error(event.target ? event.target.error : 'An error occurred while opening IndexedDB');
   reject(event.target ? event.target.error : 'An error occurred while opening IndexedDB');
 }
@@ -230,7 +232,7 @@ export function getStatelessClusterKubeConfigs(): Promise<string[]> {
  * @param parsedKubeconfig The parsed kubeconfig object.
  * @returns An object containing the matching kubeconfig and context.
  */
-function findMatchingContexts(
+export function findMatchingContexts(
   clusterName: string,
   parsedKubeconfig: KubeconfigObject,
   clusterID?: string
@@ -317,102 +319,11 @@ export async function findAndReplaceKubeconfig(
 }
 
 /**
- * Finds a kubeconfig by cluster name.
- * @param clusterName The name of the cluster to find.
- * @param clusterID The ID for a cluster, composed of the kubeconfig path and cluster name
- * @returns A promise that resolves with the kubeconfig, or null if not found.
- * @throws Error if IndexedDB is not supported.
- * @throws Error if the kubeconfig is invalid.
- */
-export function findKubeconfigByClusterName(
-  /** The name of the cluster to find */
-  clusterName: string,
-  /** The ID for a cluster, composed of the kubeconfig path and cluster name */
-  clusterID?: string
-): Promise<string | null> {
-  return new Promise<string | null>(async (resolve, reject) => {
-    try {
-      const request = indexedDB.open('kubeconfigs', 1) as any;
-
-      // The onupgradeneeded event is fired when the database is created for the first time.
-      request.onupgradeneeded = handleDatabaseUpgrade;
-
-      // The onsuccess event is fired when the database is opened.
-      // This event is where you specify the actions to take when the database is opened.
-      request.onsuccess = function handleDatabaseSuccess(event: DatabaseEvent) {
-        const db = event.target.result;
-        const transaction = db.transaction(['kubeconfigStore'], 'readonly');
-        const store = transaction.objectStore('kubeconfigStore');
-
-        // The onsuccess event is fired when the request has succeeded.
-        // This is where you handle the results of the request.
-        // The result is the cursor. It is used to iterate through the object store.
-        // The cursor is null when there are no more objects to iterate through.
-        // The cursor is used to find the kubeconfig by cluster name.
-        store.openCursor().onsuccess = function storeSuccess(event: Event) {
-          const successEvent = event as CursorSuccessEvent;
-          const cursor = successEvent.target.result;
-          if (cursor) {
-            const kubeconfigObject = cursor.value;
-            const kubeconfig = kubeconfigObject.kubeconfig;
-
-            const parsedKubeconfig = jsyaml.load(atob(kubeconfig)) as KubeconfigObject;
-            // Check for "headlamp_info" in extensions
-
-            const { matchingKubeconfig, matchingContext } = findMatchingContexts(
-              clusterName,
-              parsedKubeconfig,
-              clusterID
-            );
-
-            if (matchingKubeconfig || matchingContext) {
-              resolve(kubeconfig);
-            } else {
-              cursor.continue();
-            }
-          } else {
-            resolve(null); // No matching kubeconfig found
-          }
-        };
-      };
-
-      // The onerror event is fired when the database is opened.
-      // This is where you handle errors.
-      request.onerror = handleDataBaseError;
-    } catch (error) {
-      reject(error);
-    }
-  });
-}
-
-/**
- * In the backend we use a unique ID to identify a user. If there is no ID in localStorage
- * we generate a new one and store it in localStorage. We then combine it with the
- * cluster name and this headlamp-userId to create a unique ID for a cluster. If we don't
- * do it then if 2 different users have a cluster with the same name, then the
- * proxy will be overwritten.
- * @returns headlamp-userId from localStorage
- */
-export function getUserIdFromLocalStorage(): string {
-  let headlampUserId = localStorage.getItem('headlamp-userId');
-
-  if (!headlampUserId) {
-    headlampUserId = generateSecureToken();
-
-    if (headlampUserId) {
-      localStorage.setItem('headlamp-userId', headlampUserId);
-    }
-  }
-
-  return headlampUserId!;
-}
-
-/**
  * Generates a cryptographically secure random token using the browser's crypto API.
  * @param {number} length - The length of the token.
  * @returns {string} - The generated token.
  */
-function generateSecureToken(length = 16): string {
+export function generateSecureToken(length = 16): string {
   const buffer = new Uint8Array(length);
   if (import.meta.env.NODE_ENV === 'test') {
     // Use Math.random() in the testing environment

@@ -20,7 +20,8 @@ import { addBackstageAuthHeaders } from '../../../../helpers/addBackstageAuthHea
 import { isDebugVerbose } from '../../../../helpers/debugVerbose';
 import { isBackstage } from '../../../../helpers/isBackstage';
 import store from '../../../../redux/stores/store';
-import { findKubeconfigByClusterName, getUserIdFromLocalStorage } from '../../../../stateless';
+import { findKubeconfigByClusterName } from '../../../../stateless/findKubeconfigByClusterName';
+import { getUserIdFromLocalStorage } from '../../../../stateless/getUserIdFromLocalStorage';
 import { logout } from '../../../auth';
 import { getCluster } from '../../../cluster';
 import { KubeObjectInterface } from '../../KubeObject';
