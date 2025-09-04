@@ -46,7 +46,7 @@ import ReplicaSet from '../../lib/k8s/replicaSet';
 import Service from '../../lib/k8s/service';
 import ServiceAccount from '../../lib/k8s/serviceAccount';
 import StatefulSet from '../../lib/k8s/statefulSet';
-import { createRouteURL } from '../../lib/router';
+import { createRouteURL } from '../../lib/router/createRouteURL';
 import { getDefaultRoutes } from '../../lib/router/getDefaultRoutes';
 import { getClusterPrefixedPath } from '../../lib/util';
 import { useTypedSelector } from '../../redux/hooks';

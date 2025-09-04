@@ -15,7 +15,7 @@
  */
 
 import React from 'react';
-import { generatePath, useHistory } from 'react-router';
+import { useHistory } from 'react-router';
 import NotFoundComponent from '../../components/404';
 import AuthToken from '../../components/account/Auth';
 import AddCluster from '../../components/App/CreateCluster/AddCluster';
@@ -117,24 +117,27 @@ import { isElectron } from '../../helpers/isElectron';
 import LocaleSelect from '../../i18n/LocaleSelect/LocaleSelect';
 import store from '../../redux/stores/store';
 import { useCluster } from '..//k8s';
-import { getClusterPathParam } from '../cluster';
 import DaemonSet from '../k8s/daemonSet';
 import Deployment from '../k8s/deployment';
 import Job from '../k8s/job';
 import ReplicaSet from '../k8s/replicaSet';
 import StatefulSet from '../k8s/statefulSet';
+import type { RouteURLProps } from './createRouteURL';
+import { createRouteURL, setStore } from './createRouteURL';
 import { getDefaultRoutes, setDefaultRoutes } from './getDefaultRoutes';
 import { getRoute } from './getRoute';
 import { getRoutePath } from './getRoutePath';
 import { getRouteUseClusterURL } from './getRouteUseClusterURL';
-import type { Route } from './Route';
+import { Route } from './Route';
+export type { Route, RouteURLProps };
 
-export { getDefaultRoutes, getRouteUseClusterURL, getRoutePath, getRoute };
-export type { Route };
+export { getDefaultRoutes, getRouteUseClusterURL, getRoutePath, getRoute, createRouteURL };
 
 const LazyGraphView = React.lazy(() =>
   import('../../components/resourceMap/GraphView').then(it => ({ default: it.GraphView }))
 );
+
+setStore(store);
 
 /** @private */
 const defaultRoutes: { [routeName: string]: Route } = {
@@ -973,68 +976,3 @@ export const NotFoundRoute = {
   sidebar: null,
   noAuthRequired: true,
 };
-
-export interface RouteURLProps {
-  /**
-   * Selected clusters path parameter
-   *
-   * Check out {@link getClusterPathParam} and {@link formatClusterPathParam} function
-   * for working with this parameter
-   */
-  cluster?: string;
-  [prop: string]: any;
-}
-
-export function createRouteURL(routeName: string, params: RouteURLProps = {}) {
-  const storeRoutes = store.getState().routes.routes;
-
-  // First try to find by name
-  const matchingStoredRouteByName =
-    storeRoutes &&
-    Object.entries(storeRoutes).find(
-      ([, route]) => route.name?.toLowerCase() === routeName.toLowerCase()
-    )?.[1];
-
-  // Then try to find by path
-  const matchingStoredRouteByPath =
-    storeRoutes &&
-    Object.entries(storeRoutes).find(([key]) => key.toLowerCase() === routeName.toLowerCase())?.[1];
-
-  if (matchingStoredRouteByPath && !matchingStoredRouteByName) {
-    console.warn(
-      `[Deprecation] Route "${routeName}" was found by path instead of name. ` +
-        'Please use route names instead of paths when calling createRouteURL.'
-    );
-  }
-
-  const route = matchingStoredRouteByName || matchingStoredRouteByPath || getRoute(routeName);
-
-  if (!route) {
-    return '';
-  }
-
-  let cluster = params.cluster;
-  if (!cluster && getRouteUseClusterURL(route)) {
-    cluster = getClusterPathParam();
-    if (!cluster) {
-      return '/';
-    }
-  }
-  const fullParams = {
-    selected: undefined,
-    ...params,
-  };
-
-  // Add cluster to the params if it is not already there
-  if (!fullParams.cluster && !!cluster) {
-    fullParams.cluster = cluster;
-  }
-
-  // @todo: Remove this hack once we support redirection in routes
-  if (routeName === 'settingsCluster') {
-    return `/settings/cluster?c=${fullParams.cluster}`;
-  }
-
-  const url = getRoutePath(route);
-  return generatePath(url, fullParams);
-}

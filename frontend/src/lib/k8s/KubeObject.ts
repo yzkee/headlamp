@@ -20,7 +20,7 @@ import unset from 'lodash/unset';
 import React, { useMemo } from 'react';
 import { loadClusterSettings } from '../../helpers/clusterSettings';
 import { formatClusterPathParam, getCluster, getSelectedClusters } from '../cluster';
-import { createRouteURL } from '../router';
+import { createRouteURL } from '../router/createRouteURL';
 import { timeAgo } from '../util';
 import { useConnectApi, useSelectedClusters } from '.';
 import { post } from './api/v1/clusterRequests';

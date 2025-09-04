@@ -40,7 +40,7 @@ import { useClustersConf } from '../../lib/k8s';
 import { apply } from '../../lib/k8s/api/v1/apply';
 import { ApiError } from '../../lib/k8s/api/v2/ApiError';
 import { KubeObjectInterface } from '../../lib/k8s/KubeObject';
-import { createRouteURL } from '../../lib/router';
+import { createRouteURL } from '../../lib/router/createRouteURL';
 import { ViewYaml } from '../advancedSearch/ResourceSearch';
 import Table from '../common/Table';
 import { KubeIcon } from '../resourceMap/kubeIcon/KubeIcon';
