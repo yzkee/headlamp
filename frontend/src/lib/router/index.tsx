@@ -996,7 +996,7 @@ export const NotFoundRoute = {
 
 export function getRoute(routeName: string) {
   let routeKey = routeName;
-  for (const key in defaultRoutes) {
+  for (const key in getDefaultRoutes()) {
     if (key.toLowerCase() === routeName.toLowerCase()) {
       // if (key !== routeName) {
       //   console.warn(`Route name ${routeName} and ${key} are not matching`);
@@ -1005,7 +1005,7 @@ export function getRoute(routeName: string) {
       break;
     }
   }
-  return defaultRoutes[routeKey];
+  return getDefaultRoutes()[routeKey];
 }
 
 /**
