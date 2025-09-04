@@ -124,11 +124,12 @@ import Job from '../k8s/job';
 import ReplicaSet from '../k8s/replicaSet';
 import StatefulSet from '../k8s/statefulSet';
 import { getDefaultRoutes, setDefaultRoutes } from './getDefaultRoutes';
+import { getRoute } from './getRoute';
 import { getRoutePath } from './getRoutePath';
 import { getRouteUseClusterURL } from './getRouteUseClusterURL';
 import type { Route } from './Route';
 
-export { getDefaultRoutes, getRouteUseClusterURL, getRoutePath };
+export { getDefaultRoutes, getRouteUseClusterURL, getRoutePath, getRoute };
 export type { Route };
 
 const LazyGraphView = React.lazy(() =>
@@ -972,20 +973,6 @@ export const NotFoundRoute = {
   sidebar: null,
   noAuthRequired: true,
 };
-
-export function getRoute(routeName: string) {
-  let routeKey = routeName;
-  for (const key in getDefaultRoutes()) {
-    if (key.toLowerCase() === routeName.toLowerCase()) {
-      // if (key !== routeName) {
-      //   console.warn(`Route name ${routeName} and ${key} are not matching`);
-      // }
-      routeKey = key;
-      break;
-    }
-  }
-  return getDefaultRoutes()[routeKey];
-}
 
 export interface RouteURLProps {
   /**

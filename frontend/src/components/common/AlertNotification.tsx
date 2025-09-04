@@ -22,7 +22,7 @@ import { useTranslation } from 'react-i18next';
 import { matchPath, useLocation } from 'react-router-dom';
 import { getCluster } from '../../lib/cluster';
 import { testClusterHealth } from '../../lib/k8s/api/v1/clusterApi';
-import { getRoute } from '../../lib/router';
+import { getRoute } from '../../lib/router/getRoute';
 import { getRoutePath } from '../../lib/router/getRoutePath';
 
 // in ms
