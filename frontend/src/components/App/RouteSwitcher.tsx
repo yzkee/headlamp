@@ -24,12 +24,12 @@ import { useCluster, useClustersConf } from '../../lib/k8s';
 import { testAuth } from '../../lib/k8s/api/v1/clusterApi';
 import {
   createRouteURL,
-  getDefaultRoutes,
   getRoutePath,
   getRouteUseClusterURL,
   NotFoundRoute,
-  Route as RouteType,
 } from '../../lib/router';
+import { getDefaultRoutes } from '../../lib/router/getDefaultRoutes';
+import { Route as RouteType } from '../../lib/router/Route';
 import { useTypedSelector } from '../../redux/hooks';
 import { uiSlice } from '../../redux/uiSlice';
 import ErrorBoundary from '../common/ErrorBoundary';

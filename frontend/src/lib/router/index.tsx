@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { ExoticComponent, ReactNode } from 'react';
+import React from 'react';
 import { generatePath, useHistory } from 'react-router';
 import NotFoundComponent from '../../components/404';
 import AuthToken from '../../components/account/Auth';
@@ -124,41 +124,17 @@ import Job from '../k8s/job';
 import ReplicaSet from '../k8s/replicaSet';
 import StatefulSet from '../k8s/statefulSet';
 import { getClusterPrefixedPath } from '../util';
+import { getDefaultRoutes, setDefaultRoutes } from './getDefaultRoutes';
+import type { Route } from './Route';
 
-export interface Route {
-  /** Any valid URL path or array of paths that path-to-regexp@^1.7.0 understands. */
-  path: string;
-  /** When true, will only match if the path matches the location.pathname exactly. */
-  exact?: boolean;
-  /** Human readable name. Capitalized and short. */
-  name?: string;
-  /**
-   * In case this route does *not* need a cluster prefix and context.
-   * @deprecated please use useClusterURL.
-   */
-  noCluster?: boolean;
-  /**
-   * Should URL have the cluster prefix? (default=true)
-   */
-  useClusterURL?: boolean;
-  /** This route does not require Authentication. */
-  noAuthRequired?: boolean;
-  /** The sidebar entry this Route should enable, or null if it shouldn't enable any. If an object is passed with item and sidebar, it will try to enable the given sidebar and the given item. */
-  sidebar: string | null | { item: string | null; sidebar: string | DefaultSidebars };
-  /** Shown component for this route. */
-  component: ExoticComponent<{}> | (() => ReactNode);
-  /** Hide the appbar at the top. */
-  hideAppBar?: boolean;
-  /** Whether the route should be disabled (not registered). */
-  disabled?: boolean;
-  /** Render route for full width */
-  isFullWidth?: boolean;
-}
+export { getDefaultRoutes };
+export type { Route };
 
 const LazyGraphView = React.lazy(() =>
   import('../../components/resourceMap/GraphView').then(it => ({ default: it.GraphView }))
 );
 
+/** @private */
 const defaultRoutes: { [routeName: string]: Route } = {
   projectCreateYaml: {
     path: '/project/create-yaml',
@@ -982,6 +958,8 @@ const defaultRoutes: { [routeName: string]: Route } = {
   },
 };
 
+setDefaultRoutes(defaultRoutes);
+
 // The NotFound route  needs to be considered always in the last place when used
 // with the router switch, as any routes added after this one will never be considered.
 // So we do not include it in the default routes in order to always "manually" consider it.
@@ -1101,8 +1079,4 @@ export function createRouteURL(routeName: string, params: RouteURLProps = {}) {
 
   const url = getRoutePath(route);
   return generatePath(url, fullParams);
-}
-
-export function getDefaultRoutes() {
-  return defaultRoutes;
 }
