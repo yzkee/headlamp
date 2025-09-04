@@ -123,12 +123,12 @@ import Deployment from '../k8s/deployment';
 import Job from '../k8s/job';
 import ReplicaSet from '../k8s/replicaSet';
 import StatefulSet from '../k8s/statefulSet';
-import { getClusterPrefixedPath } from '../util';
 import { getDefaultRoutes, setDefaultRoutes } from './getDefaultRoutes';
+import { getRoutePath } from './getRoutePath';
 import { getRouteUseClusterURL } from './getRouteUseClusterURL';
 import type { Route } from './Route';
 
-export { getDefaultRoutes, getRouteUseClusterURL };
+export { getDefaultRoutes, getRouteUseClusterURL, getRoutePath };
 export type { Route };
 
 const LazyGraphView = React.lazy(() =>
@@ -985,17 +985,6 @@ export function getRoute(routeName: string) {
     }
   }
   return getDefaultRoutes()[routeKey];
-}
-
-export function getRoutePath(route: Route) {
-  if (route.path === NotFoundRoute.path) {
-    return route.path;
-  }
-  if (!getRouteUseClusterURL(route)) {
-    return route.path;
-  }
-
-  return getClusterPrefixedPath(route.path);
 }
 
 export interface RouteURLProps {
