@@ -17,6 +17,7 @@ limitations under the License.
 package auth
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -24,6 +25,15 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/kubernetes-sigs/headlamp/backend/pkg/cache"
+	"github.com/kubernetes-sigs/headlamp/backend/pkg/logger"
+	"golang.org/x/oauth2"
+)
+
+const (
+	oldTokenTTL   = time.Second * 10 // seconds
+	oidcKeyPrefix = "oidc-token-"
 )
 
 // DecodeBase64JSON decodes a base64 URL-encoded JSON string into a map.
@@ -88,4 +98,28 @@ func GetExpiryUnixTimeUTC(tokenPayload map[string]interface{}) (time.Time, error
 	}
 
 	return time.Unix(int64(exp), 0).UTC(), nil
+}
+
+// CacheRefreshedToken updates the refresh token in the cache.
+func CacheRefreshedToken(token *oauth2.Token, tokenType string, oldToken string,
+	oldRefreshToken string, cache cache.Cache[interface{}],
+) error {
+	newToken, ok := token.Extra(tokenType).(string)
+	if !ok {
+		return nil
+	}
+
+	ctx := context.Background()
+
+	if err := cache.Set(ctx, oidcKeyPrefix+newToken, token.RefreshToken); err != nil {
+		logger.Log(logger.LevelError, nil, err, "failed to cache refreshed token")
+		return err
+	}
+
+	if err := cache.SetWithTTL(ctx, oidcKeyPrefix+oldToken, oldRefreshToken, oldTokenTTL); err != nil {
+		logger.Log(logger.LevelError, nil, err, "failed to cache refreshed token")
+		return err
+	}
+
+	return nil
 }

@@ -43,7 +43,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"github.com/kubernetes-sigs/headlamp/backend/pkg/auth"
+	auth "github.com/kubernetes-sigs/headlamp/backend/pkg/auth"
 	"github.com/kubernetes-sigs/headlamp/backend/pkg/cache"
 	cfg "github.com/kubernetes-sigs/headlamp/backend/pkg/config"
 
@@ -908,33 +908,11 @@ func getNewToken(clientID, clientSecret string, cache cache.Cache[interface{}],
 	}
 
 	// update the refresh token in the cache
-	if err := cacheRefreshedToken(newToken, tokenType, token, rToken, cache); err != nil {
+	if err := auth.CacheRefreshedToken(newToken, tokenType, token, rToken, cache); err != nil {
 		return nil, fmt.Errorf("caching refreshed token: %v", err)
 	}
 
 	return newToken, nil
-}
-
-// cacheRefreshedToken updates the refresh token in the cache.
-func cacheRefreshedToken(token *oauth2.Token, tokenType string, oldToken string,
-	oldRefreshToken string, cache cache.Cache[interface{}],
-) error {
-	newToken, ok := token.Extra(tokenType).(string)
-	if ok {
-		if err := cache.Set(context.Background(), fmt.Sprintf("oidc-token-%s", newToken), token.RefreshToken); err != nil {
-			logger.Log(logger.LevelError, nil, err, "failed to cache refreshed token")
-			return err
-		}
-
-		// set ttl to 10 seconds for old token to handle case when the new token is not accepted by the client.
-		if err := cache.SetWithTTL(context.Background(), fmt.Sprintf("oidc-token-%s", oldToken),
-			oldRefreshToken, time.Until(token.Expiry)); err != nil {
-			logger.Log(logger.LevelError, nil, err, "failed to cache refreshed token")
-			return err
-		}
-	}
-
-	return nil
 }
 
 func (c *HeadlampConfig) refreshAndSetToken(oidcAuthConfig *kubeconfig.OidcConfig,
