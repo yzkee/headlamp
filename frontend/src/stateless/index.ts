@@ -23,6 +23,7 @@ import { Cluster } from '../lib/k8s/cluster';
 import { KubeconfigObject } from '../lib/k8s/kubeconfig';
 import { ConfigState, setStatelessConfig } from '../redux/configSlice';
 import store from '../redux/stores/store';
+import { deleteClusterKubeconfig } from './deleteClusterKubeconfig';
 import { findKubeconfigByClusterName } from './findKubeconfigByClusterName';
 import { getUserIdFromLocalStorage } from './getUserIdFromLocalStorage';
 
@@ -411,78 +412,6 @@ export async function fetchStatelessClusterKubeConfigs(dispatch: any) {
     .catch((err: Error) => {
       console.error('Error getting config:', err);
     });
-}
-
-/**
- * deleteClusterKubeconfig deletes the kubeconfig for a stateless cluster from indexedDB
- * @param clusterName - The name of the cluster
- * @param clusterID The ID for a cluster, composed of the kubeconfig path and cluster name
- * @returns A promise that resolves with the kubeconfig, or null if not found.
- */
-export async function deleteClusterKubeconfig(
-  clusterName: string,
-  clusterID?: string
-): Promise<string | null> {
-  return new Promise<string | null>(async (resolve, reject) => {
-    try {
-      const request = indexedDB.open('kubeconfigs', 1) as any;
-
-      // The onupgradeneeded event is fired when the database is created for the first time.
-      request.onupgradeneeded = handleDatabaseUpgrade;
-
-      // The onsuccess event is fired when the database is opened.
-      // This event is where you specify the actions to take when the database is opened.
-      request.onsuccess = function handleDatabaseSuccess(event: DatabaseEvent) {
-        const db = event.target.result;
-        const transaction = db.transaction(['kubeconfigStore'], 'readwrite');
-        const store = transaction.objectStore('kubeconfigStore');
-
-        // The onsuccess event is fired when the request has succeeded.
-        // This is where you handle the results of the request.
-        // The result is the cursor. It is used to iterate through the object store.
-        // The cursor is null when there are no more objects to iterate through.
-        // The cursor is used to find the kubeconfig by cluster name.
-        store.openCursor().onsuccess = function storeSuccess(event: Event) {
-          // delete the kubeconfig by cluster name
-          const successEvent = event as CursorSuccessEvent;
-          const cursor = successEvent.target.result;
-          if (cursor) {
-            const kubeconfigObject = cursor.value;
-            const kubeconfig = kubeconfigObject.kubeconfig;
-
-            const parsedKubeconfig = jsyaml.load(atob(kubeconfig)) as KubeconfigObject;
-            const { matchingKubeconfig } = findMatchingContexts(
-              clusterName,
-              parsedKubeconfig,
-              clusterID
-            );
-
-            if (matchingKubeconfig) {
-              const deleteRequest = store.delete(cursor.key);
-              deleteRequest.onsuccess = () => {
-                console.log('Kubeconfig deleted from IndexedDB');
-                resolve(kubeconfig);
-              };
-              deleteRequest.onerror = () => {
-                console.error('Error deleting kubeconfig from IndexedDB');
-                reject('Error deleting kubeconfig from IndexedDB');
-              };
-            } else {
-              cursor.continue();
-            }
-          } else {
-            resolve(null); // No matching kubeconfig found
-          }
-        };
-      };
-
-      // The onerror event is fired when the database is opened.
-      // This is where you handle errors.
-      request.onerror = handleDataBaseError;
-    } catch (error) {
-      reject(error);
-    }
-  });
 }
 
 /**
