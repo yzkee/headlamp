@@ -18,12 +18,15 @@ package auth_test
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"reflect"
 	"testing"
 	"time"
 
 	"github.com/kubernetes-sigs/headlamp/backend/pkg/auth"
+	"github.com/kubernetes-sigs/headlamp/backend/pkg/cache"
+	"golang.org/x/oauth2"
 )
 
 func TestDecodeBase64JSON(t *testing.T) {
@@ -277,5 +280,169 @@ func TestGetExpiryUnixTimeUTC(t *testing.T) {
 				return
 			}
 		})
+	}
+}
+
+type cacheStub struct{}
+
+func (cacheStub) Delete(ctx context.Context, k string) error {
+	return nil
+}
+
+func (cacheStub) Get(ctx context.Context, k string) (interface{}, error) {
+	return nil, nil
+}
+
+func (cacheStub) GetAll(ctx context.Context, _ cache.Matcher) (map[string]interface{}, error) {
+	return map[string]interface{}{}, nil
+}
+
+func (cacheStub) UpdateTTL(ctx context.Context, k string, ttl time.Duration) error {
+	return nil
+}
+
+type fakeCache struct {
+	cacheStub
+	setCalls []struct {
+		key string
+		val interface{}
+	}
+	setWithTTLCalls []struct {
+		key string
+		val interface{}
+		ttl time.Duration
+	}
+	errOnSet, errOnSetWithTTL error
+}
+
+var _ cache.Cache[interface{}] = (*fakeCache)(nil)
+
+func (f *fakeCache) Set(_ context.Context, key string, val interface{}) error {
+	f.setCalls = append(f.setCalls, struct {
+		key string
+		val interface{}
+	}{key, val})
+
+	return f.errOnSet
+}
+
+func (f *fakeCache) SetWithTTL(_ context.Context, key string, val interface{}, ttl time.Duration) error {
+	f.setWithTTLCalls = append(f.setWithTTLCalls, struct {
+		key string
+		val interface{}
+		ttl time.Duration
+	}{key, val, ttl})
+
+	return f.errOnSetWithTTL
+}
+
+const refreshNew = "REFRESH_NEW"
+
+func tokenWithExtra(tokenType, tokenValue string) *oauth2.Token {
+	token := &oauth2.Token{RefreshToken: refreshNew}
+	if tokenType != "" {
+		token = token.WithExtra(map[string]interface{}{tokenType: tokenValue})
+	}
+
+	return token
+}
+
+func TestCacheRefreshedToken_Success(t *testing.T) {
+	fc := &fakeCache{}
+	tok := tokenWithExtra("id_token", "NEW")
+
+	err := auth.CacheRefreshedToken(tok, "id_token", "OLD", "REFRESH_OLD", fc)
+	if err != nil {
+		t.Fatalf("CacheRefreshedToken() unexpected error: %v", err)
+	}
+
+	if len(fc.setCalls) != 1 {
+		t.Fatalf("expected 1 Set call, got %d", len(fc.setCalls))
+	}
+
+	if fc.setCalls[0].key != "oidc-token-NEW" {
+		t.Errorf("new token key = %q, want %q", fc.setCalls[0].key, "oidc-token-NEW")
+	}
+
+	if fc.setCalls[0].val != "REFRESH_NEW" {
+		t.Errorf("new token value = %v, want %v", fc.setCalls[0].val, "REFRESH_NEW")
+	}
+
+	if len(fc.setWithTTLCalls) != 1 {
+		t.Fatalf("expected 1 SetWithTTL call, got %d", len(fc.setWithTTLCalls))
+	}
+
+	call := fc.setWithTTLCalls[0]
+	if call.key != "oidc-token-OLD" {
+		t.Errorf("old token key = %q, want %q", call.key, "oidc-token-OLD")
+	}
+
+	if call.val != "REFRESH_OLD" {
+		t.Errorf("old token value = %v, want %v", call.val, "REFRESH_OLD")
+	}
+
+	if call.ttl != 10*time.Second {
+		t.Errorf("ttl = %v, want %v", call.ttl, 10*time.Second)
+	}
+}
+
+func TestCacheRefreshedToken_NoExtra_NoOp(t *testing.T) {
+	fc := &fakeCache{}
+	tok := tokenWithExtra("", "") // no extra set → Extra(tokenType) not ok
+
+	err := auth.CacheRefreshedToken(tok, "id_token", "OLD", "REFRESH_OLD", fc)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if len(fc.setCalls) != 0 || len(fc.setWithTTLCalls) != 0 {
+		t.Fatalf("expected no cache writes, got Set=%d, SetWithTTL=%d",
+			len(fc.setCalls), len(fc.setWithTTLCalls))
+	}
+}
+
+func TestCacheRefreshedToken_ExtraNotString_NoOp(t *testing.T) {
+	fc := &fakeCache{}
+	tok := (&oauth2.Token{RefreshToken: "REFRESH_NEW"}).WithExtra(
+		map[string]interface{}{"id_token": 123}, // not a string → type assertion fails
+	)
+
+	err := auth.CacheRefreshedToken(tok, "id_token", "OLD", "REFRESH_OLD", fc)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if len(fc.setCalls) != 0 || len(fc.setWithTTLCalls) != 0 {
+		t.Fatalf("expected no cache writes, got Set=%d, SetWithTTL=%d",
+			len(fc.setCalls), len(fc.setWithTTLCalls))
+	}
+}
+
+func TestCacheRefreshedToken_SetError_StopsEarly(t *testing.T) {
+	fc := &fakeCache{errOnSet: errors.New("boom")}
+	tok := tokenWithExtra("id_token", "NEW")
+
+	err := auth.CacheRefreshedToken(tok, "id_token", "OLD", "REFRESH_OLD", fc)
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+
+	if len(fc.setWithTTLCalls) != 0 {
+		t.Fatalf("expected no SetWithTTL after Set error, got %d calls", len(fc.setWithTTLCalls))
+	}
+}
+
+func TestCacheRefreshedToken_SetWithTTLError_Propagates(t *testing.T) {
+	fc := &fakeCache{errOnSetWithTTL: errors.New("late-boom")}
+	tok := tokenWithExtra("id_token", "NEW")
+
+	err := auth.CacheRefreshedToken(tok, "id_token", "OLD", "REFRESH_OLD", fc)
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+
+	if len(fc.setCalls) != 1 || len(fc.setWithTTLCalls) != 1 {
+		t.Fatalf("expected both Set and SetWithTTL to be called once; got Set=%d, SetWithTTL=%d",
+			len(fc.setCalls), len(fc.setWithTTLCalls))
 	}
 }
