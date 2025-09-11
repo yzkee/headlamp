@@ -36,6 +36,8 @@ const (
 	oidcKeyPrefix = "oidc-token-"
 )
 
+const JWTExpirationTTL = 10 * time.Second // seconds
+
 // DecodeBase64JSON decodes a base64 URL-encoded JSON string into a map.
 func DecodeBase64JSON(base64JSON string) (map[string]interface{}, error) {
 	payloadBytes, err := base64.RawURLEncoding.DecodeString(base64JSON)
@@ -98,6 +100,30 @@ func GetExpiryUnixTimeUTC(tokenPayload map[string]interface{}) (time.Time, error
 	}
 
 	return time.Unix(int64(exp), 0).UTC(), nil
+}
+
+// IsTokenAboutToExpire reports whether the given token is within JWTExpirationTTL
+// of its expiry time.
+func IsTokenAboutToExpire(token string) bool {
+	parts := strings.SplitN(token, ".", 3)
+	if len(parts) != 3 || parts[1] == "" {
+		return false
+	}
+
+	payload, err := DecodeBase64JSON(parts[1])
+	if err != nil {
+		logger.Log(logger.LevelError, nil, err, "failed to decode payload")
+		return false
+	}
+
+	expiryUnixTimeUTC, err := GetExpiryUnixTimeUTC(payload)
+	if err != nil {
+		logger.Log(logger.LevelError, nil, err, "failed to get expiry time")
+		return false
+	}
+
+	// This time comparison is timezone aware, so it works correctly
+	return time.Until(expiryUnixTimeUTC) <= JWTExpirationTTL
 }
 
 // CacheRefreshedToken updates the refresh token in the cache.

@@ -18,6 +18,8 @@ package auth_test
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"reflect"
@@ -278,6 +280,65 @@ func TestGetExpiryUnixTimeUTC(t *testing.T) {
 			if !got.Equal(tt.wantDate) {
 				t.Errorf("GetExpiryUnixTimeUTC() got date = %v, wantDate %v", got, tt.wantDate)
 				return
+			}
+		})
+	}
+}
+
+const headerBase64 = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0"
+
+func makeJWTWithPayload(t *testing.T, payload map[string]interface{}) string {
+	t.Helper()
+
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		t.Fatalf("failed to marshal payload: %v", err)
+	}
+
+	payloadBase64 := base64.RawURLEncoding.EncodeToString(payloadBytes)
+
+	// 3 segments: header.payload.signature (signature)
+	return headerBase64 + "." + payloadBase64 + "."
+}
+
+func TestIsTokenAboutToExpire_Window(t *testing.T) {
+	now := time.Now()
+	tests := []struct {
+		name string
+		exp  time.Time
+		want bool
+	}{
+		{"within window", now.Add(auth.JWTExpirationTTL / 2), true},
+		{"beyond window", now.Add(auth.JWTExpirationTTL + 30*time.Second), false},
+		{"already expired", now.Add(-5 * time.Second), true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			token := makeJWTWithPayload(t, map[string]interface{}{"exp": float64(tt.exp.Unix())})
+			if got := auth.IsTokenAboutToExpire(token); got != tt.want {
+				t.Fatalf("IsTokenAboutToExpire() = %v, want %v (exp=%v, now=%v)",
+					got, tt.want, tt.exp.UTC(), now.UTC())
+			}
+		})
+	}
+}
+
+func TestIsTokenAboutToExpire_InvalidInputs(t *testing.T) {
+	tests := []struct {
+		name  string
+		token string
+	}{
+		{"not three parts", "not-a-jwt"},
+		{"invalid base64 payload", headerBase64 + ".%%%." + "."},
+		{"missing exp", makeJWTWithPayload(t, map[string]interface{}{})},
+		{"non-numeric exp", makeJWTWithPayload(t, map[string]interface{}{"exp": "1609459200"})},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := auth.IsTokenAboutToExpire(tt.token); got {
+				t.Fatalf("IsTokenAboutToExpire() = true, want false for %s", tt.name)
 			}
 		})
 	}
