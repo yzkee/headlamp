@@ -23,7 +23,7 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import useAutocomplete from '@mui/material/useAutocomplete';
 import { UseAutocompleteReturnValue } from '@mui/material/useAutocomplete';
-import Fuse from 'fuse.js';
+import Fuse, { Expression, FuseResultMatch } from 'fuse.js';
 import { capitalize } from 'lodash';
 import { lazy, Suspense, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -73,9 +73,11 @@ interface SearchResult {
   label: string;
   icon?: JSX.Element;
   subLabel?: string;
+  k8sLabels?: string[];
   onClick: () => void;
-  labelMatch?: { indices: number[][] };
-  subLabelMatch?: { indices: number[][] };
+  labelMatch?: FuseResultMatch;
+  subLabelMatch?: FuseResultMatch;
+  k8sLabelsMatch?: FuseResultMatch;
 }
 
 /**
@@ -130,6 +132,9 @@ function makeKubeObjectResults(
       items?.map(item => ({
         id: item.metadata.uid,
         label: item.metadata.name,
+        k8sLabels: item.metadata.labels
+          ? Object.entries(item.metadata.labels).map(([key, value]) => key + '=' + value)
+          : [],
         icon: (
           <Suspense fallback={null}>
             <LazyKubeIcon kind={item.kind} width="24px" height="24px" />
@@ -300,26 +305,48 @@ export function GlobalSearchContent({
       new Fuse(allOptions, {
         keys: [
           'label',
+          'k8sLabels',
           // We also want to search by subLabel sometimes
           // For example 'default namespace' (there are a lot of objects with 'default' name)
           // But it shouldn't be main field so it has half the weight (1/2)
           { name: 'subLabel', weight: 0.5 },
         ],
         includeMatches: true,
+        threshold: 0.3, // lower threshold to reduce false positives
       }),
     [allOptions]
   );
 
   const results: SearchResult[] = useMemo(() => {
     if (!query) return [];
-    return fuse.search(query, { limit: 100 }).map(
-      ({ item, matches }) =>
-        ({
-          ...item,
-          labelMatch: matches?.find(it => it.key === 'label'),
-          subLabelMatch: matches?.find(it => it.key === 'subLabel'),
-        } as any)
-    );
+    return fuse
+      .search(
+        {
+          // Construct logical query https://www.fusejs.io/api/query.html
+          // Improves search for space separated terms
+          $and: query
+            .split(' ')
+            .filter(Boolean)
+            .map(it => ({
+              $or: [
+                { label: it },
+                // Only search labels if there's an "=" character in the query
+                it.includes('=') ? { k8sLabels: it } : undefined,
+                { subLabel: it },
+              ].filter(Boolean) as Expression[],
+            })),
+        },
+        { limit: 100 }
+      )
+      .map(
+        ({ item, matches }) =>
+          ({
+            ...item,
+            labelMatch: matches?.find(it => it.key === 'label'),
+            subLabelMatch: matches?.find(it => it.key === 'subLabel'),
+            k8sLabelsMatch: matches?.find(it => it.key === 'k8sLabels'),
+          } satisfies SearchResult)
+      );
   }, [query, fuse]);
 
   const recentItems = useMemo(() => {
@@ -426,7 +453,7 @@ export function GlobalSearchContent({
   );
 }
 
-function HighlightText({ text, match }: { text?: string; match?: { indices: number[][] } }) {
+function HighlightText({ text, match }: { text?: string; match?: FuseResultMatch }) {
   if (!text) return null;
   if (!match) return <>{text}</>;
 
@@ -496,6 +523,31 @@ function SearchRow({
           <HighlightText text={option.label} match={option.labelMatch} />
         </Box>
       </Box>
+      {option.k8sLabelsMatch && option.k8sLabelsMatch.value && (
+        <Typography
+          title={option.k8sLabelsMatch.value}
+          sx={theme => ({
+            color: theme.palette.text.primary,
+            borderRadius: theme.shape.borderRadius + 'px',
+            backgroundColor: theme.palette.background.muted,
+            border: '1px solid',
+            borderColor: theme.palette.divider,
+            fontSize: theme.typography.pxToRem(14),
+            wordBreak: 'break-word',
+            paddingTop: 0.25,
+            paddingBottom: 0.25,
+            paddingLeft: 0.5,
+            paddingRight: 0.5,
+            overflow: 'hidden',
+            whiteSpace: 'nowrap',
+            overflowWrap: 'anywhere',
+            textOverflow: 'ellipsis',
+            maxWidth: '220px',
+          })}
+        >
+          <HighlightText text={option.k8sLabelsMatch.value} match={option.k8sLabelsMatch} />
+        </Typography>
+      )}
     </Box>
   );
 }
