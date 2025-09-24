@@ -61,7 +61,8 @@ var clusterPathRegex = regexp.MustCompile(`^/clusters/([^/]+)/.*`)
 var bearerTokenRegex = regexp.MustCompile(`^[\x21-\x7E]+$`)
 
 // ParseClusterAndToken extracts the cluster name from the URL path and
-// the Bearer token from the Authorization header of the HTTP request.
+// the Bearer token from the Authorization header of the HTTP request, falling
+// back to the cluster cookie when the header is missing.
 func ParseClusterAndToken(r *http.Request) (string, string) {
 	cluster := ""
 
@@ -70,6 +71,7 @@ func ParseClusterAndToken(r *http.Request) (string, string) {
 		cluster = matches[1]
 	}
 
+	// Try Authorization header first (for backward compatibility)
 	token := strings.TrimSpace(r.Header.Get("Authorization"))
 	if strings.Contains(token, ",") {
 		return cluster, ""
@@ -78,6 +80,13 @@ func ParseClusterAndToken(r *http.Request) (string, string) {
 	const bearerPrefix = "Bearer "
 	if strings.HasPrefix(strings.ToLower(token), strings.ToLower(bearerPrefix)) {
 		token = strings.TrimSpace(token[len(bearerPrefix):])
+	}
+
+	// If no auth header, try cookie
+	if token == "" && cluster != "" {
+		if cookieToken, err := GetTokenFromCookie(r, cluster); err == nil && cookieToken != "" {
+			token = cookieToken
+		}
 	}
 
 	if token != "" && !bearerTokenRegex.MatchString(token) {
