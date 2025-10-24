@@ -20,6 +20,12 @@ import (
 
 const defaultPort = 4466
 
+const (
+	DefaultMeUsernamePath = "preferred_username,upn,username,name"
+	DefaultMeEmailPath    = "email"
+	DefaultMeGroupsPath   = "groups,realm_access.roles"
+)
+
 type Config struct {
 	Version                   bool   `koanf:"version"`
 	InCluster                 bool   `koanf:"in-cluster"`
@@ -47,6 +53,9 @@ type Config struct {
 	OidcUseAccessToken        bool   `koanf:"oidc-use-access-token"`
 	OidcSkipTLSVerify         bool   `koanf:"oidc-skip-tls-verify"`
 	OidcCAFile                string `koanf:"oidc-ca-file"`
+	MeUsernamePath            string `koanf:"me-username-path"`
+	MeEmailPath               string `koanf:"me-email-path"`
+	MeGroupsPath              string `koanf:"me-groups-path"`
 	// telemetry configs
 	ServiceName        string   `koanf:"service-name"`
 	ServiceVersion     *string  `koanf:"service-version"`
@@ -219,6 +228,35 @@ func setKubeConfigPath(config *Config) {
 	}
 }
 
+// ApplyMeDefaults trims and applies defaults to the JMESPath expressions used for the /me endpoint.
+func ApplyMeDefaults(usernamePath, emailPath, groupsPath string) (string, string, string) {
+	username := strings.TrimSpace(usernamePath)
+	if username == "" {
+		username = DefaultMeUsernamePath
+	}
+
+	email := strings.TrimSpace(emailPath)
+	if email == "" {
+		email = DefaultMeEmailPath
+	}
+
+	groups := strings.TrimSpace(groupsPath)
+	if groups == "" {
+		groups = DefaultMeGroupsPath
+	}
+
+	return username, email, groups
+}
+
+// setMeDefaults ensures the /clusters/{clusterName}/me claim paths fall back to defaults when unset.
+func setMeDefaults(config *Config) {
+	config.MeUsernamePath, config.MeEmailPath, config.MeGroupsPath = ApplyMeDefaults(
+		config.MeUsernamePath,
+		config.MeEmailPath,
+		config.MeGroupsPath,
+	)
+}
+
 // Parse Loads the config from flags and env.
 // env vars should start with HEADLAMP_CONFIG_ and use _ as separator
 // If a value is set both in flags and env then flag takes priority.
@@ -267,6 +305,7 @@ func Parse(args []string) (*Config, error) {
 	// 7. Post-process: patch plugin flag and kubeconfig path.
 	patchWatchPluginsChanges(&config, explicitFlags)
 	setKubeConfigPath(&config)
+	setMeDefaults(&config)
 
 	// 8. Validate parsed config.
 	if err := config.Validate(); err != nil {
@@ -320,6 +359,15 @@ func DefaultHeadlampKubeConfigFile() (string, error) {
 func flagset() *flag.FlagSet {
 	f := flag.NewFlagSet("config", flag.ContinueOnError)
 
+	addGeneralFlags(f)
+	addOIDCFlags(f)
+	addTelemetryFlags(f)
+	addTLSFlags(f)
+
+	return f
+}
+
+func addGeneralFlags(f *flag.FlagSet) {
 	f.Bool("version", false, "Print version information and exit")
 	f.Bool("in-cluster", false, "Set when running from a k8s cluster")
 	f.Bool("dev", false, "Allow connections from other origins")
@@ -337,19 +385,29 @@ func flagset() *flag.FlagSet {
 	f.String("listen-addr", "", "Address to listen on; default is empty, which means listening to any address")
 	f.Uint("port", defaultPort, "Port to listen from")
 	f.String("proxy-urls", "", "Allow proxy requests to specified URLs")
+	f.Bool("enable-helm", false, "Enable Helm operations")
+}
 
+func addOIDCFlags(f *flag.FlagSet) {
 	f.String("oidc-client-id", "", "ClientID for OIDC")
 	f.String("oidc-client-secret", "", "ClientSecret for OIDC")
 	f.String("oidc-validator-client-id", "", "Override ClientID for OIDC during validation")
 	f.String("oidc-idp-issuer-url", "", "Identity provider issuer URL for OIDC")
 	f.String("oidc-callback-url", "", "Callback URL for OIDC")
 	f.String("oidc-validator-idp-issuer-url", "", "Override Identity provider issuer URL for OIDC during validation")
-	f.String("oidc-scopes", "profile,email",
-		"A comma separated list of scopes needed from the OIDC provider")
+	f.String("oidc-scopes", "profile,email", "A comma separated list of scopes needed from the OIDC provider")
 	f.Bool("oidc-skip-tls-verify", false, "Skip TLS verification for OIDC")
 	f.String("oidc-ca-file", "", "CA file for OIDC")
 	f.Bool("oidc-use-access-token", false, "Setup oidc to pass through the access_token instead of the default id_token")
-	// Telemetry flags.
+	f.String("me-username-path", DefaultMeUsernamePath,
+		"Comma separated JMESPath expressions used to read username from the JWT payload")
+	f.String("me-email-path", DefaultMeEmailPath,
+		"Comma separated JMESPath expressions used to read email from the JWT payload")
+	f.String("me-groups-path", DefaultMeGroupsPath,
+		"Comma separated JMESPath expressions used to read groups from the JWT payload")
+}
+
+func addTelemetryFlags(f *flag.FlagSet) {
 	f.String("service-name", "headlamp", "Service name for telemetry")
 	f.String("service-version", "0.30.0", "Service version for telemetry")
 	f.Bool("tracing-enabled", false, "Enable distributed tracing")
@@ -358,12 +416,12 @@ func flagset() *flag.FlagSet {
 	f.Bool("use-otlp-http", false, "Use HTTP instead of gRPC for OTLP export")
 	f.Bool("stdout-trace-enabled", false, "Enable tracing output to stdout")
 	f.Float64("sampling-rate", 1.0, "Sampling rate for traces")
+}
+
+func addTLSFlags(f *flag.FlagSet) {
 	// TLS flags
 	f.String("tls-cert-path", "", "Certificate for serving TLS")
 	f.String("tls-key-path", "", "Key for serving TLS")
-	f.Bool("enable-helm", false, "Enable Helm operations")
-
-	return f
 }
 
 // Gets the default plugins-dir depending on platform.
