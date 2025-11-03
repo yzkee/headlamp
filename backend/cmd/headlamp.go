@@ -93,8 +93,8 @@ type HeadlampConfig struct {
 	meEmailPaths string
 	// meGroupsPaths lists the JMESPath expressions tried for the groups in /clusters/{cluster}/me.
 	meGroupsPaths string
-	// MeUserInfoURL is the URL to fetch additional user info for the /me endpoint. /oauth2/userinfo
-	MeUserInfoURL string
+	// meUserInfoURL is the URL to fetch additional user info for the /me endpoint. /oauth2/userinfo
+	meUserInfoURL string
 }
 
 const DrainNodeCacheTTL = 20 // seconds
@@ -392,6 +392,13 @@ func createHeadlampHandler(config *HeadlampConfig) http.Handler {
 	logger.Log(logger.LevelInfo, nil, nil, "Proxy URLs: "+fmt.Sprint(config.ProxyURLs))
 	logger.Log(logger.LevelInfo, nil, nil, "TLS certificate path: "+config.TLSCertPath)
 	logger.Log(logger.LevelInfo, nil, nil, "TLS key path: "+config.TLSKeyPath)
+	logger.Log(logger.LevelInfo, nil, nil, "me Username Paths: "+config.meUsernamePaths)
+	logger.Log(logger.LevelInfo, nil, nil, "me Email Paths: "+config.meEmailPaths)
+	logger.Log(logger.LevelInfo, nil, nil, "me Groups Paths: "+config.meGroupsPaths)
+	logger.Log(logger.LevelInfo, nil, nil, "me User Info URL: "+config.meUserInfoURL)
+	logger.Log(logger.LevelInfo, nil, nil, "Base URL: "+config.BaseURL)
+	logger.Log(logger.LevelInfo, nil, nil, "Use In Cluster: "+fmt.Sprint(config.UseInCluster))
+	logger.Log(logger.LevelInfo, nil, nil, "Watch Plugins Changes: "+fmt.Sprint(config.WatchPluginsChanges))
 
 	plugins.PopulatePluginsCache(config.StaticPluginDir, config.PluginDir, config.cache)
 
@@ -496,7 +503,7 @@ func createHeadlampHandler(config *HeadlampConfig) http.Handler {
 			UsernamePaths: config.meUsernamePaths,
 			EmailPaths:    config.meEmailPaths,
 			GroupsPaths:   config.meGroupsPaths,
-			UserInfoURL:   config.MeUserInfoURL,
+			UserInfoURL:   config.meUserInfoURL,
 		}),
 	).Methods("GET")
 
