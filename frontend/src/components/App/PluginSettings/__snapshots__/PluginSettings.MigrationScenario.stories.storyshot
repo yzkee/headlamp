@@ -389,9 +389,9 @@
                 >
                   <a
                     class="MuiTypography-root MuiTypography-inherit MuiTypography-alignRight MuiLink-root MuiLink-underlineHover css-12snkzy-MuiTypography-root-MuiLink-root"
-                    href="/settings/plugins/plugin%20a%200/shipped"
+                    href="/settings/plugins/prometheus/user"
                   >
-                    plugin a 0
+                    prometheus
                   </a>
                 </h6>
                 <span
@@ -401,18 +401,18 @@
               <td
                 class="MuiTableCell-root MuiTableCell-alignLeft MuiTableCell-sizeMedium css-2wxm0s-MuiTableCell-root"
               >
-                This is a plugin for this project PLUGIN A0
+                Prometheus monitoring plugin (catalog-installed in old location, has isManagedByHeadlampPlugin=true)
               </td>
               <td
                 class="MuiTableCell-root MuiTableCell-alignLeft MuiTableCell-sizeMedium css-1qzqemr-MuiTableCell-root"
               >
                 <div
-                  class="MuiChip-root MuiChip-filled MuiChip-sizeSmall MuiChip-colorDefault MuiChip-filledDefault css-148jm2l-MuiChip-root"
+                  class="MuiChip-root MuiChip-filled MuiChip-sizeSmall MuiChip-colorInfo MuiChip-filledInfo css-1qavl4s-MuiChip-root"
                 >
                   <span
                     class="MuiChip-label MuiChip-labelSmall css-wjsjww-MuiChip-label"
                   >
-                    Shipped
+                    User-installed
                   </span>
                 </div>
               </td>
@@ -421,7 +421,7 @@
               >
                 <a
                   class="MuiTypography-root MuiTypography-inherit MuiLink-root MuiLink-underlineHover css-2ugbm1-MuiTypography-root-MuiLink-root"
-                  href="https://example.com/plugin-link-0"
+                  href="https://artifacthub.io/packages/headlamp/headlamp/prometheus"
                 >
                   Unknown
                 </a>
@@ -452,9 +452,9 @@
                 >
                   <a
                     class="MuiTypography-root MuiTypography-inherit MuiTypography-alignRight MuiLink-root MuiLink-underlineHover css-12snkzy-MuiTypography-root-MuiLink-root"
-                    href="/settings/plugins/plugin%20a%201/shipped"
+                    href="/settings/plugins/flux/user"
                   >
-                    plugin a 1
+                    flux
                   </a>
                 </h6>
                 <span
@@ -464,18 +464,18 @@
               <td
                 class="MuiTableCell-root MuiTableCell-alignLeft MuiTableCell-sizeMedium css-2wxm0s-MuiTableCell-root"
               >
-                This is a plugin for this project PLUGIN A1
+                Flux GitOps plugin (catalog-installed in new location)
               </td>
               <td
                 class="MuiTableCell-root MuiTableCell-alignLeft MuiTableCell-sizeMedium css-1qzqemr-MuiTableCell-root"
               >
                 <div
-                  class="MuiChip-root MuiChip-filled MuiChip-sizeSmall MuiChip-colorDefault MuiChip-filledDefault css-148jm2l-MuiChip-root"
+                  class="MuiChip-root MuiChip-filled MuiChip-sizeSmall MuiChip-colorInfo MuiChip-filledInfo css-1qavl4s-MuiChip-root"
                 >
                   <span
                     class="MuiChip-label MuiChip-labelSmall css-wjsjww-MuiChip-label"
                   >
-                    Shipped
+                    User-installed
                   </span>
                 </div>
               </td>
@@ -484,72 +484,7 @@
               >
                 <a
                   class="MuiTypography-root MuiTypography-inherit MuiLink-root MuiLink-underlineHover css-2ugbm1-MuiTypography-root-MuiLink-root"
-                  href="https://example.com/plugin-link-1"
-                >
-                  Unknown
-                </a>
-              </td>
-              <td
-                class="MuiTableCell-root MuiTableCell-alignLeft MuiTableCell-sizeMedium css-i01a7i-MuiTableCell-root"
-              >
-                <div
-                  aria-label="This plugin is not compatible with this version of Headlamp"
-                  class="MuiChip-root MuiChip-filled MuiChip-sizeSmall MuiChip-colorError MuiChip-filledError css-lt8dk4-MuiChip-root"
-                  data-mui-internal-clone-element="true"
-                >
-                  <span
-                    class="MuiChip-label MuiChip-labelSmall css-wjsjww-MuiChip-label"
-                  >
-                    Incompatible
-                  </span>
-                </div>
-              </td>
-            </tr>
-            <tr
-              class="css-1ospngb"
-              data-selected="false"
-            >
-              <td
-                class="MuiTableCell-root MuiTableCell-alignLeft MuiTableCell-sizeMedium css-16gecr3-MuiTableCell-root"
-              >
-                <h6
-                  class="MuiTypography-root MuiTypography-subtitle1 css-1t3dwd5-MuiTypography-root"
-                >
-                  <a
-                    class="MuiTypography-root MuiTypography-inherit MuiTypography-alignRight MuiLink-root MuiLink-underlineHover css-12snkzy-MuiTypography-root-MuiLink-root"
-                    href="/settings/plugins/plugin%20a%202/shipped"
-                  >
-                    plugin a 2
-                  </a>
-                </h6>
-                <span
-                  class="MuiTypography-root MuiTypography-caption css-1yjsbnr-MuiTypography-root"
-                />
-              </td>
-              <td
-                class="MuiTableCell-root MuiTableCell-alignLeft MuiTableCell-sizeMedium css-2wxm0s-MuiTableCell-root"
-              >
-                This is a plugin for this project PLUGIN A2
-              </td>
-              <td
-                class="MuiTableCell-root MuiTableCell-alignLeft MuiTableCell-sizeMedium css-1qzqemr-MuiTableCell-root"
-              >
-                <div
-                  class="MuiChip-root MuiChip-filled MuiChip-sizeSmall MuiChip-colorDefault MuiChip-filledDefault css-148jm2l-MuiChip-root"
-                >
-                  <span
-                    class="MuiChip-label MuiChip-labelSmall css-wjsjww-MuiChip-label"
-                  >
-                    Shipped
-                  </span>
-                </div>
-              </td>
-              <td
-                class="MuiTableCell-root MuiTableCell-alignLeft MuiTableCell-sizeMedium css-1yl63d8-MuiTableCell-root"
-              >
-                <a
-                  class="MuiTypography-root MuiTypography-inherit MuiLink-root MuiLink-underlineHover css-2ugbm1-MuiTypography-root-MuiLink-root"
-                  href="https://example.com/plugin-link-2"
+                  href="https://artifacthub.io/packages/headlamp/headlamp/flux"
                 >
                   Unknown
                 </a>
@@ -580,9 +515,9 @@
                 >
                   <a
                     class="MuiTypography-root MuiTypography-inherit MuiTypography-alignRight MuiLink-root MuiLink-underlineHover css-12snkzy-MuiTypography-root-MuiLink-root"
-                    href="/settings/plugins/plugin%20a%203/shipped"
+                    href="/settings/plugins/my-dev-plugin/development"
                   >
-                    plugin a 3
+                    my-dev-plugin
                   </a>
                 </h6>
                 <span
@@ -592,18 +527,18 @@
               <td
                 class="MuiTableCell-root MuiTableCell-alignLeft MuiTableCell-sizeMedium css-2wxm0s-MuiTableCell-root"
               >
-                This is a plugin for this project PLUGIN A3
+                A plugin being actively developed
               </td>
               <td
                 class="MuiTableCell-root MuiTableCell-alignLeft MuiTableCell-sizeMedium css-1qzqemr-MuiTableCell-root"
               >
                 <div
-                  class="MuiChip-root MuiChip-filled MuiChip-sizeSmall MuiChip-colorDefault MuiChip-filledDefault css-148jm2l-MuiChip-root"
+                  class="MuiChip-root MuiChip-filled MuiChip-sizeSmall MuiChip-colorPrimary MuiChip-filledPrimary css-zjbtey-MuiChip-root"
                 >
                   <span
                     class="MuiChip-label MuiChip-labelSmall css-wjsjww-MuiChip-label"
                   >
-                    Shipped
+                    Development
                   </span>
                 </div>
               </td>
@@ -612,7 +547,7 @@
               >
                 <a
                   class="MuiTypography-root MuiTypography-inherit MuiLink-root MuiLink-underlineHover css-2ugbm1-MuiTypography-root-MuiLink-root"
-                  href="https://example.com/plugin-link-3"
+                  href="https://example.com/my-dev-plugin"
                 >
                   Unknown
                 </a>
@@ -621,14 +556,12 @@
                 class="MuiTableCell-root MuiTableCell-alignLeft MuiTableCell-sizeMedium css-i01a7i-MuiTableCell-root"
               >
                 <div
-                  aria-label="This plugin is not compatible with this version of Headlamp"
-                  class="MuiChip-root MuiChip-filled MuiChip-sizeSmall MuiChip-colorError MuiChip-filledError css-lt8dk4-MuiChip-root"
-                  data-mui-internal-clone-element="true"
+                  class="MuiChip-root MuiChip-filled MuiChip-sizeSmall MuiChip-colorSuccess MuiChip-filledSuccess css-xfrc9u-MuiChip-root"
                 >
                   <span
                     class="MuiChip-label MuiChip-labelSmall css-wjsjww-MuiChip-label"
                   >
-                    Incompatible
+                    Loaded
                   </span>
                 </div>
               </td>
@@ -645,9 +578,9 @@
                 >
                   <a
                     class="MuiTypography-root MuiTypography-inherit MuiTypography-alignRight MuiLink-root MuiLink-underlineHover css-12snkzy-MuiTypography-root-MuiLink-root"
-                    href="/settings/plugins/plugin%20a%204/shipped"
+                    href="/settings/plugins/default-dashboard/shipped"
                   >
-                    plugin a 4
+                    default-dashboard
                   </a>
                 </h6>
                 <span
@@ -657,7 +590,7 @@
               <td
                 class="MuiTableCell-root MuiTableCell-alignLeft MuiTableCell-sizeMedium css-2wxm0s-MuiTableCell-root"
               >
-                This is a plugin for this project PLUGIN A4
+                Default dashboard plugin
               </td>
               <td
                 class="MuiTableCell-root MuiTableCell-alignLeft MuiTableCell-sizeMedium css-1qzqemr-MuiTableCell-root"
@@ -677,7 +610,7 @@
               >
                 <a
                   class="MuiTypography-root MuiTypography-inherit MuiLink-root MuiLink-underlineHover css-2ugbm1-MuiTypography-root-MuiLink-root"
-                  href="https://example.com/plugin-link-4"
+                  href="https://headlamp.dev/plugins/dashboard"
                 >
                   Unknown
                 </a>

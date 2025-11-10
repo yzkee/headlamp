@@ -45,6 +45,7 @@ import {
   addToPath,
   ArtifactHubHeadlampPkg,
   defaultPluginsDir,
+  defaultUserPluginsDir,
   getMatchingExtraFiles,
   getPluginBinDirectories,
   PluginManager,
@@ -422,6 +423,9 @@ class PluginManagerEventListeners {
   /**
    * Handles the list event.
    *
+   * Lists plugins from all three directories (shipped, user-installed, development)
+   * and returns a combined list with their locations.
+   *
    * @method
    * @name handleList
    * @param {Electron.IpcMainEvent} event - The IPC Main Event.
@@ -430,9 +434,84 @@ class PluginManagerEventListeners {
    */
   private handleList(event: Electron.IpcMainEvent, eventData: Action) {
     const { identifier, destinationFolder } = eventData;
-    PluginManager.list(destinationFolder, progress => {
-      event.sender.send('plugin-manager', JSON.stringify({ identifier: identifier, ...progress }));
-    });
+
+    // If a specific folder is requested, list only from that folder
+    if (destinationFolder) {
+      PluginManager.list(destinationFolder, progress => {
+        event.sender.send(
+          'plugin-manager',
+          JSON.stringify({ identifier: identifier, ...progress })
+        );
+      });
+      return;
+    }
+
+    // Otherwise, list from all three directories
+    try {
+      const allPlugins: any[] = [];
+
+      // List from shipped plugins (.plugins)
+      const shippedDir = path.join(__dirname, '.plugins');
+      try {
+        const shippedPlugins = PluginManager.list(shippedDir);
+        if (shippedPlugins) {
+          allPlugins.push(...shippedPlugins);
+        }
+      } catch (error: any) {
+        // Only ignore if directory doesn't exist, log other errors
+        if (error?.code !== 'ENOENT') {
+          console.error('Error listing shipped plugins:', error);
+        }
+      }
+
+      // List from user-installed plugins (user-plugins)
+      const userDir = defaultUserPluginsDir();
+      try {
+        const userPlugins = PluginManager.list(userDir);
+        if (userPlugins) {
+          allPlugins.push(...userPlugins);
+        }
+      } catch (error: any) {
+        // Only ignore if directory doesn't exist, log other errors
+        if (error?.code !== 'ENOENT') {
+          console.error('Error listing user plugins:', error);
+        }
+      }
+
+      // List from development plugins (plugins)
+      const devDir = defaultPluginsDir();
+      try {
+        const devPlugins = PluginManager.list(devDir);
+        if (devPlugins) {
+          allPlugins.push(...devPlugins);
+        }
+      } catch (error: any) {
+        // Only ignore if directory doesn't exist, log other errors
+        if (error?.code !== 'ENOENT') {
+          console.error('Error listing development plugins:', error);
+        }
+      }
+
+      // Send combined results
+      event.sender.send(
+        'plugin-manager',
+        JSON.stringify({
+          identifier: identifier,
+          type: 'success',
+          message: 'Plugins Listed',
+          data: allPlugins,
+        })
+      );
+    } catch (error) {
+      event.sender.send(
+        'plugin-manager',
+        JSON.stringify({
+          identifier: identifier,
+          type: 'error',
+          message: error instanceof Error ? error.message : String(error),
+        })
+      );
+    }
   }
 
   /**
@@ -1590,6 +1669,31 @@ function startElecron() {
 
     new PluginManagerEventListeners().setupEventHandlers();
 
+    // Handle opening plugin folder in file explorer
+    ipcMain.on(
+      'open-plugin-folder',
+      (
+        event: IpcMainEvent,
+        pluginInfo: { folderName: string; type: 'development' | 'user' | 'shipped' }
+      ) => {
+        let folderPath: string | null = null;
+
+        if (pluginInfo.type === 'user') {
+          folderPath = path.join(defaultUserPluginsDir(), pluginInfo.folderName);
+        } else if (pluginInfo.type === 'development') {
+          folderPath = path.join(defaultPluginsDir(), pluginInfo.folderName);
+        } else if (pluginInfo.type === 'shipped') {
+          folderPath = path.join(process.resourcesPath, '.plugins', pluginInfo.folderName);
+        }
+
+        if (folderPath) {
+          shell.openPath(folderPath).catch((err: Error) => {
+            console.error('Failed to open plugin folder:', err);
+          });
+        }
+      }
+    );
+
     // Also add bundled plugin bin directories to PATH
     const bundledPlugins = path.join(process.resourcesPath, '.plugins');
     const bundledPluginBinDirs = getPluginBinDirectories(bundledPlugins);
@@ -1598,7 +1702,7 @@ function startElecron() {
     }
 
     // Add the installed plugins as well
-    const userPluginBinDirs = getPluginBinDirectories(defaultPluginsDir());
+    const userPluginBinDirs = getPluginBinDirectories(defaultUserPluginsDir());
     if (userPluginBinDirs.length > 0) {
       addToPath(userPluginBinDirs, 'userPluginBinDirs plugin');
     }
