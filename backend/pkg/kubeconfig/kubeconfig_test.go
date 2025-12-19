@@ -21,7 +21,7 @@ import (
 
 var kubeConfigFilePath = filepath.Join(getTestDataPath(), "kubeconfig1")
 
-// Helper functions for creating pointers to primitive types
+// Helper functions for creating pointers to primitive types.
 func boolPtr(b bool) *bool {
 	return &b
 }
