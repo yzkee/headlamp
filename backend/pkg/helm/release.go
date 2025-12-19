@@ -168,6 +168,10 @@ func (h *Handler) ListRelease(clientConfig clientcmd.ClientConfig, w http.Respon
 		return
 	}
 
+	if releases == nil {
+		releases = []*release.Release{}
+	}
+
 	// Return response
 	res := ListReleaseResponse{
 		Releases: releases,
