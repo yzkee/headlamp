@@ -72,6 +72,7 @@ import (
 
 type HeadlampConfig struct {
 	*headlampcfg.HeadlampCFG
+	InClusterContextName      string
 	oidcClientID              string
 	oidcValidatorClientID     string
 	oidcClientSecret          string
@@ -450,7 +451,9 @@ func createHeadlampHandler(config *HeadlampConfig) http.Handler {
 
 	// In-cluster
 	if config.UseInCluster {
-		context, err := kubeconfig.GetInClusterContext(config.oidcIdpIssuerURL,
+		context, err := kubeconfig.GetInClusterContext(
+			config.InClusterContextName,
+			config.oidcIdpIssuerURL,
 			config.oidcClientID, config.oidcClientSecret,
 			strings.Join(config.oidcScopes, ","),
 			config.oidcSkipTLSVerify,
