@@ -151,6 +151,7 @@ config:
 | clusterRoleBinding.create | bool | `true` | Create cluster role binding |
 | clusterRoleBinding.clusterRoleName | string | `"cluster-admin"` | Kubernetes ClusterRole name |
 | clusterRoleBinding.annotations | object | `{}` | Cluster role binding annotations |
+| hostUsers | bool | `true` | Run in host uid namespace |
 | podSecurityContext | object | `{}` | Pod security context (e.g., fsGroup: 2000) |
 | securityContext.runAsNonRoot | bool | `true` | Run container as non-root |
 | securityContext.privileged | bool | `false` | Run container in privileged mode |
@@ -158,6 +159,8 @@ config:
 | securityContext.runAsGroup | int | `101` | Group ID to run container |
 | securityContext.capabilities | object | `{}` | Container capabilities (e.g., drop: [ALL]) |
 | securityContext.readOnlyRootFilesystem | bool | `false` | Mount root filesystem as read-only |
+
+NOTE: for `hostUsers=false` user namespaces must be supported. See: https://kubernetes.io/docs/concepts/workloads/pods/user-namespaces/
 
 ### Storage Configuration
 
