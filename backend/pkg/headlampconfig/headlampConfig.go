@@ -6,8 +6,7 @@ import (
 )
 
 type HeadlampCFG struct {
-	UseInCluster bool
-	// InClusterContextName is the name of the in-cluster context as it shoudl apper to users.
+	UseInCluster          bool
 	InClusterContextName  string
 	ListenAddr            string
 	CacheEnabled          bool

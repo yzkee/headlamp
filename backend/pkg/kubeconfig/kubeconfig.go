@@ -1029,6 +1029,7 @@ func GetInClusterContext(
 		Cluster:  contextName,
 		AuthInfo: contextName,
 	}
+	contextName = makeDNSFriendly(contextName)
 
 	inClusterAuthInfo := &api.AuthInfo{}
 
