@@ -72,7 +72,6 @@ import (
 
 type HeadlampConfig struct {
 	*headlampcfg.HeadlampCFG
-	InClusterContextName      string
 	oidcClientID              string
 	oidcValidatorClientID     string
 	oidcClientSecret          string
