@@ -123,6 +123,7 @@
   "Original name: {{ displayName }}": "原名称：{{ displayName }}",
   "This custom name is already in use, please choose a different name.": "此自定义名称已被使用，请选择其他名称。",
   "The current name of the cluster. You can define a custom name": "集群的当前名称。您可以定义一个自定义名称",
+  "Cluster name": "",
   "Change name": "更改名称",
   "Are you sure you want to change the name for \"{{ clusterName }}\"?": "您确定要更改 \"{{ clusterName }}\" 的名称吗？",
   "Apply": "应用",

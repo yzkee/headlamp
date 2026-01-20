@@ -123,6 +123,7 @@
   "Original name: {{ displayName }}": "",
   "This custom name is already in use, please choose a different name.": "",
   "The current name of the cluster. You can define a custom name": "",
+  "Cluster name": "",
   "Change name": "नाम बदलें",
   "Are you sure you want to change the name for \"{{ clusterName }}\"?": "क्या आप वाकई \"{{ clusterName }}\" का नाम बदलना चाहते हैं?",
   "Apply": "लागू करें",

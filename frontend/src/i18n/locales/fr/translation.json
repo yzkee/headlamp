@@ -123,6 +123,7 @@
   "Original name: {{ displayName }}": "Nom d'origine : {{ displayName }}",
   "This custom name is already in use, please choose a different name.": "Ce nom personnalisé est déjà utilisé, veuillez choisir un nom différent.",
   "The current name of the cluster. You can define a custom name": "Le nom actuel du cluster. Vous pouvez définir un nom personnalisé",
+  "Cluster name": "",
   "Change name": "Changer le nom",
   "Are you sure you want to change the name for \"{{ clusterName }}\"?": "Êtes-vous sûr de vouloir changer le nom de \"{{ clusterName }}\" ?",
   "Apply": "Appliquer",
