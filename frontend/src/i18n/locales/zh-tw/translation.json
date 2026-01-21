@@ -608,7 +608,7 @@
   "Create Project": "建立專案",
   "Details": "詳細資料",
   "Show Logs": "顯示日誌",
-  "Logs": "日誌",
+  "Logs: {{ itemName }}": "日誌：{{ itemName }}",
   "Terminal / Exec": "終端機 / 執行",
   "No {{category}} resources found for this project.": "此專案找不到 {{category}} 資源。",
   "Current//context:replicas": "當前",

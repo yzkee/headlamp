@@ -616,7 +616,7 @@
   "Create Project": "",
   "Details": "",
   "Show Logs": "",
-  "Logs": "",
+  "Logs: {{ itemName }}": "",
   "Terminal / Exec": "",
   "No {{category}} resources found for this project.": "",
   "Current//context:replicas": "Attuale",
