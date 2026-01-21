@@ -47,6 +47,7 @@ import React, {
 import { createPortal } from 'react-dom';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { Trans, useTranslation } from 'react-i18next';
+import { useLocation } from 'react-router-dom';
 import { useTypedSelector } from '../../redux/hooks';
 import store from '../../redux/stores/store';
 import { activitySlice } from './activitySlice';
@@ -946,6 +947,28 @@ export const ActivitiesRenderer = React.memo(function ActivitiesRenderer() {
   const history = useTypedSelector(state => state.activity.history) as string[];
   const lastElement = history.at(-1);
   const [isOverview, setIsOverview] = useState(false);
+  const location = useLocation();
+  const locationRef = useRef(location.pathname);
+
+  // Minimize activities that block the main content on route change.
+  // Activities in 'split-right' location are kept visible since they
+  // allow the user to see most of the main content.
+  useEffect(() => {
+    activities.forEach(activity => {
+      // If we were triggered just because of the activities changing but the
+      // location hasn't changed, we have nothing to do.
+      if (locationRef.current === location.pathname) {
+        return;
+      }
+
+      if (activity.location !== 'split-right' && !activity.minimized) {
+        Activity.update(activity.id, { minimized: true });
+      }
+    });
+
+    locationRef.current = location.pathname;
+  }, [location.pathname, activities]);
+
   useEffect(() => {
     if (activities.length === 0 && isOverview) {
       setIsOverview(false);
