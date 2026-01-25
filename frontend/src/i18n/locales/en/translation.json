@@ -264,6 +264,7 @@
   "Deleted {{ itemsLength }} items.": "Deleted {{ itemsLength }} items.",
   "Error deleting {{ itemsLength }} items.": "Error deleting {{ itemsLength }} items.",
   "Delete items": "Delete items",
+  "Resource details": "Resource details",
   "Loading documentation": "Loading documentation",
   "No documentation available.": "No documentation available.",
   "No documentation for type {{ docsType }}.": "No documentation for type {{ docsType }}.",

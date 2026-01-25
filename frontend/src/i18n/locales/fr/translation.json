@@ -265,6 +265,7 @@
   "Deleted {{ itemsLength }} items.": "",
   "Error deleting {{ itemsLength }} items.": "",
   "Delete items": "",
+  "Resource details": "",
   "Loading documentation": "Chargement de la documentation",
   "No documentation available.": "",
   "No documentation for type {{ docsType }}.": "Pas de documentation pour le type {{ docsType }}.",

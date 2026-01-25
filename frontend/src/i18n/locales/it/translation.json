@@ -265,6 +265,7 @@
   "Deleted {{ itemsLength }} items.": "{{ itemsLength }} elementi eliminati.",
   "Error deleting {{ itemsLength }} items.": "Errore durante l'eliminazione di {{ itemsLength }} elementi.",
   "Delete items": "Elimina elementi",
+  "Resource details": "",
   "Loading documentation": "Caricamento della documentazione",
   "No documentation available.": "Nessuna documentazione disponibile.",
   "No documentation for type {{ docsType }}.": "Nessuna documentazione per il tipo {{ docsType }}.",

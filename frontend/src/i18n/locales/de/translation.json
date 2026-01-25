@@ -264,6 +264,7 @@
   "Deleted {{ itemsLength }} items.": "{{ itemsLength }} Elemente gelöscht.",
   "Error deleting {{ itemsLength }} items.": "Fehler beim Löschen von {{ itemsLength }} Elementen.",
   "Delete items": "Elemente löschen",
+  "Resource details": "",
   "Loading documentation": "Dokumentation laden",
   "No documentation available.": "",
   "No documentation for type {{ docsType }}.": "Keine Dokumentation für Typ {{ docsType }}.",
