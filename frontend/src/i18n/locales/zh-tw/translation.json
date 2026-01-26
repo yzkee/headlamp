@@ -263,6 +263,7 @@
   "Deleted {{ itemsLength }} items.": "已刪除 {{ itemsLength }} 個專案。",
   "Error deleting {{ itemsLength }} items.": "刪除 {{ itemsLength }} 個專案時出錯。",
   "Delete items": "刪除專案",
+  "Resource details": "",
   "Loading documentation": "讀取檔案",
   "No documentation available.": "無可用檔案。",
   "No documentation for type {{ docsType }}.": "類型 {{ docsType }} 沒有檔案。",

@@ -263,6 +263,7 @@
   "Deleted {{ itemsLength }} items.": "{{ itemsLength }}개 항목 삭제됨.",
   "Error deleting {{ itemsLength }} items.": "{{ itemsLength }}개 항목 삭제 중 오류 발생.",
   "Delete items": "항목 삭제",
+  "Resource details": "",
   "Loading documentation": "문서 로딩 중",
   "No documentation available.": "사용 가능한 문서가 없습니다.",
   "No documentation for type {{ docsType }}.": "{{ docsType }} 유형에 대한 문서가 없습니다.",

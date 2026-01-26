@@ -263,6 +263,7 @@
   "Deleted {{ itemsLength }} items.": "已删除 {{ itemsLength }} 个资源。",
   "Error deleting {{ itemsLength }} items.": "删除 {{ itemsLength }} 个资源时出错。",
   "Delete items": "删除资源",
+  "Resource details": "",
   "Loading documentation": "读取文件",
   "No documentation available.": "暂无可用文件。",
   "No documentation for type {{ docsType }}.": "类型 {{ docsType }} 没有文件。",
