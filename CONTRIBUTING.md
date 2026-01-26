@@ -24,10 +24,7 @@ Ready to run Headlamp locally? Here's the full setup from scratch.
 
 ### Prerequisites
 
-Make sure you have the following installed:
-
-- **Node.js** (LTS recommended)
-- **Go** (for building the backend)
+Make sure you have Node.js (>= 20.11.1 with npm >= 10.0.0) and Go installed before starting; see the development dependencies for the full list.
 
 ### Build and Run
 
@@ -54,7 +51,7 @@ Make sure you have the following installed:
 4. **Start the application**
 
    ```bash
-   npm run start
+   npm start
    ```
 
 That's it—you should now have Headlamp running locally.
@@ -82,10 +79,12 @@ minikube start --driver=vfkit
 
 ### macOS Gatekeeper / Security Warning
 
-When you first launch the Headlamp app on macOS, you might see a warning that the app is "damaged" or can't be opened. This is due to Gatekeeper's quarantine flag. To clear it, run:
+When you first launch the Headlamp app on macOS, you might see a warning that the app is "damaged" or can't be opened. This is due to Gatekeeper's quarantine flag.
+
+Run the following command using the actual path to your .app file:
 
 ```bash
-xattr -cr /Applications/Headlamp*.app
+xattr -cr /path/to/Headlamp.app
 ```
 
 Then try opening the app again.
