@@ -71,59 +71,11 @@ See the documentation on [how to easily get a Service Account token](https://hea
 
 ## Quick Start for Contributors
 
-Want to hack on Headlamp? Here's how to get the project running locally from scratch.
+Want to hack on Headlamp? We'd love your help!
 
-### Build Sequence
+Check out the [Contributing Guidelines](./CONTRIBUTING.md) for detailed instructions on setting up your local development environment, building the project, and platform-specific tips (including Apple Silicon and macOS).
 
-Make sure you have **Node.js** and **Go** installed before starting.
-
-1. **Install root dependencies**
-
-   ```bash
-   npm install
-   ```
-
-2. **Build the backend** (requires Go)
-
-   ```bash
-   npm run backend:build
-   ```
-
-3. **Install frontend dependencies**
-
-   ```bash
-   cd frontend
-   npm install
-   cd ..
-   ```
-
-4. **Start the application**
-
-   ```bash
-   npm run start
-   ```
-
-That's it—you should now have Headlamp running locally.
-
-### Apple Silicon (ARM64)
-
-If you're on an M1/M2/M3 Mac and want to run Headlamp with Minikube, use the **Docker driver**. Make sure Docker Desktop is running first:
-
-```bash
-minikube start --driver=docker
-```
-
-> **Note:** VirtualBox doesn't support ARM64, so avoid using the `--driver=virtualbox` option on Apple Silicon.
-
-### macOS Gatekeeper / Security Warning
-
-When you first launch the Headlamp app on macOS, you might see a warning that the app is "damaged" or can't be opened. This is a Gatekeeper quarantine flag—just clear it with:
-
-```bash
-xattr -cr /Applications/Headlamp*.app
-```
-
-Then try opening the app again.
+For more in-depth development docs, see the [Development Guide](https://headlamp.dev/docs/latest/development/).
 
 ## Tested platforms
 

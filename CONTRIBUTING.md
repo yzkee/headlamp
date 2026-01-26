@@ -17,3 +17,75 @@ Since Headlamp is part of the Kubernetes Community, please read also:
 - [Contributor License Agreement](https://git.k8s.io/community/CLA.md) Kubernetes projects require that you sign a Contributor License Agreement (CLA) before we can accept your pull requests
 - [Kubernetes Contributor Guide](https://git.k8s.io/community/contributors/guide) - Main contributor documentation, or you can just jump directly to the [contributing section](https://git.k8s.io/community/contributors/guide#contributing)
 - [Contributor Cheat Sheet](https://git.k8s.io/community/contributors/guide/contributor-cheatsheet/README.md) - Common resources for existing developers
+
+## Local Development Setup
+
+Ready to run Headlamp locally? Here's the full setup from scratch.
+
+### Prerequisites
+
+Make sure you have the following installed:
+
+- **Node.js** (LTS recommended)
+- **Go** (for building the backend)
+
+### Build and Run
+
+1. **Install root dependencies**
+
+   ```bash
+   npm install
+   ```
+
+2. **Build the backend** (requires Go)
+
+   ```bash
+   npm run backend:build
+   ```
+
+3. **Install frontend dependencies**
+
+   ```bash
+   cd frontend
+   npm install
+   cd ..
+   ```
+
+4. **Start the application**
+
+   ```bash
+   npm run start
+   ```
+
+That's it—you should now have Headlamp running locally.
+
+### Apple Silicon (ARM64)
+
+If you're developing on an M1/M2/M3 Mac and want to use Minikube, you'll need a driver that supports ARM64. Two good options:
+
+- **docker** – uses the Docker runtime
+- **vfkit** – a lightweight hypervisor for macOS
+
+Example commands:
+
+```bash
+minikube start --driver=docker
+```
+
+or
+
+```bash
+minikube start --driver=vfkit
+```
+
+> **Note:** VirtualBox does not support ARM64. Avoid `--driver=virtualbox` on Apple Silicon.
+
+### macOS Gatekeeper / Security Warning
+
+When you first launch the Headlamp app on macOS, you might see a warning that the app is "damaged" or can't be opened. This is due to Gatekeeper's quarantine flag. To clear it, run:
+
+```bash
+xattr -cr /Applications/Headlamp*.app
+```
+
+Then try opening the app again.
