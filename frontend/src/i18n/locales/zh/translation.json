@@ -612,7 +612,7 @@
   "Create Project": "创建项目",
   "Details": "详情",
   "Show Logs": "显示日志",
-  "Logs": "日志",
+  "Logs: {{ itemName }}": "",
   "Terminal / Exec": "Terminal / Exec",
   "No {{category}} resources found for this project.": "在此项目中未找到 {{category}} 资源。",
   "Current//context:replicas": "当前",
