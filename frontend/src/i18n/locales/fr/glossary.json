@@ -169,7 +169,7 @@
   "{{ restarts }} ({{ abbrevTime }} ago)": "{{ restarts }} (il y a {{ abbrevTime }})",
   "Request": "Demande",
   "Limit": "Limite",
-  "Nominated Node": "Nœud nomminé",
+  "Nominated Node": "Nœud nominé",
   "Readiness Gates": "Portes de disponibilité",
   "Pod Disruption Budget": "Pod Disruption Budget",
   "Port Forwarding": "Redirection de port",
