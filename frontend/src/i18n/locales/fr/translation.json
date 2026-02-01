@@ -544,7 +544,7 @@
   "Create new project": "Créer un nouveau projet",
   "To create a new project pick which clusters you want to include and then select existing or create a new namespace": "Pour créer un nouveau projet, choisissez les clusters que vous souhaitez inclure, puis sélectionnez un espace de noms existant ou créez-en un nouveau",
   "Project Name": "Nom du projet",
-  "A project with this name already exists": "Un projet portant ce nom existe déja",
+  "A project with this name already exists": "Un projet portant ce nom existe déjà",
   "Enter a name for your new project.": "Entrez un nom pour votre nouveau projet.",
   "Clusters": "Clusters",
   "Select one or more clusters for this project": "Sélectionnez un ou plusieurs clusters pour ce projet",
