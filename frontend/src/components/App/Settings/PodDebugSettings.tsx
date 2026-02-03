@@ -15,7 +15,6 @@
  */
 
 import { Icon } from '@iconify/react';
-import { Alert, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import Switch from '@mui/material/Switch';
 import TextField from '@mui/material/TextField';
@@ -27,6 +26,7 @@ import {
   loadClusterSettings,
   storeClusterSettings,
 } from '../../../helpers/clusterSettings';
+import { HoverInfoLabel } from '../../common/Label';
 import { NameValueTable } from '../../common/NameValueTable';
 import SectionBox from '../../common/SectionBox';
 
@@ -136,7 +136,14 @@ export default function PodDebugSettings(props: SettingsProps) {
       <NameValueTable
         rows={[
           {
-            name: <Typography id={podDebugLabelID}>Enable Pod Debug</Typography>,
+            name: (
+              <HoverInfoLabel
+                label={<span id={podDebugLabelID}>Enable Pod Debug</span>}
+                hoverInfo={t(
+                  'translation|Ephemeral debug containers cannot be removed via Kubernetes API. They will remain in the pod specification even after the terminal closes. To remove them, the pod must be recreated.'
+                )}
+              />
+            ),
             value: (
               <Switch
                 inputProps={{ 'aria-labelledby': podDebugLabelID }}
@@ -177,16 +184,6 @@ export default function PodDebugSettings(props: SettingsProps) {
                   sx: { maxWidth: 300 },
                 }}
               />
-            ),
-          },
-          {
-            name: t('translation|Important Note'),
-            value: (
-              <Alert severity="info" sx={{ maxWidth: 400 }}>
-                {t(
-                  'translation|Ephemeral debug containers cannot be removed via Kubernetes API. They will remain in the pod specification even after the terminal closes. To remove them, the pod must be recreated.'
-                )}
-              </Alert>
             ),
           },
         ]}
