@@ -77,6 +77,7 @@ export async function setCluster(clusterReq: ClusterRequest) {
       false
     );
   }
+
   return request(
     '/cluster',
     {
