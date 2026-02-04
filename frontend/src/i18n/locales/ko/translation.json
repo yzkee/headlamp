@@ -278,6 +278,7 @@
   "Failed to fetch release information": "릴리스 정보를 가져오지 못했습니다",
   "An update is available": "업데이트가 가능합니다",
   "Read more": "자세히 보기",
+  "Disable update notifications": "",
   "Dismiss": "닫기",
   "Install the metrics-server to get usage data.": "사용량 데이터를 확인하려면 metrics-server를 설치하세요.",
   "Copy to clipboard": "",

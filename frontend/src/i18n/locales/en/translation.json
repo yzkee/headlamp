@@ -279,6 +279,7 @@
   "Failed to fetch release information": "Failed to fetch release information",
   "An update is available": "An update is available",
   "Read more": "Read more",
+  "Disable update notifications": "Disable update notifications",
   "Dismiss": "Dismiss",
   "Install the metrics-server to get usage data.": "Install the metrics-server to get usage data.",
   "Copy to clipboard": "Copy to clipboard",

@@ -279,6 +279,7 @@
   "Failed to fetch release information": "வெளியீட்டு தகவல்களைப் பெறுவதில் தோல்வி",
   "An update is available": "ஒரு புதுப்பிப்பு கிடைக்கிறது",
   "Read more": "மேலும் படிக்க",
+  "Disable update notifications": "",
   "Dismiss": "நிராகரி",
   "Install the metrics-server to get usage data.": "பயன்பாட்டு தரவைப் பெற மெட்ரிக்ஸ்-சர்வர் நிறுவவும்.",
   "Copy to clipboard": "",

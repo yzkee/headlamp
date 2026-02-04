@@ -280,6 +280,7 @@
   "Failed to fetch release information": "Falha ao obter informação da versão",
   "An update is available": "Está disponível uma actualização",
   "Read more": "Ler mais",
+  "Disable update notifications": "",
   "Dismiss": "Dispensar",
   "Install the metrics-server to get usage data.": "Instale o metrics-server para obter dados sobre o uso.",
   "Copy to clipboard": "",

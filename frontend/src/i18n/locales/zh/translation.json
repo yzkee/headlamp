@@ -278,6 +278,7 @@
   "Failed to fetch release information": "获取发行版信息失败",
   "An update is available": "有可用更新",
   "Read more": "阅读更多",
+  "Disable update notifications": "",
   "Dismiss": "忽略",
   "Install the metrics-server to get usage data.": "安装 metrics-server 以获取使用信息。",
   "Copy to clipboard": "复制到剪贴板",

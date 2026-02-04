@@ -279,6 +279,7 @@
   "Failed to fetch release information": "रिलीज जानकारी प्राप्त करने में विफल",
   "An update is available": "एक अपडेट उपलब्ध है",
   "Read more": "अधिक पढ़ें",
+  "Disable update notifications": "",
   "Dismiss": "ख़ारिज करें",
   "Install the metrics-server to get usage data.": "उपयोग डेटा प्राप्त करने के लिए metrics-server इंस्टॉल करें।",
   "Copy to clipboard": "",
