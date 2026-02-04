@@ -33,6 +33,11 @@ export interface ClusterSettings {
     debugImage?: string;
     isEnabled?: boolean;
   };
+  /** Cluster appearance settings stored in localStorage */
+  appearance?: {
+    accentColor?: string;
+    icon?: string;
+  };
 }
 
 export const DEFAULT_NODE_SHELL_LINUX_IMAGE = 'docker.io/library/busybox:latest';
