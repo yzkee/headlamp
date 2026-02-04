@@ -387,6 +387,7 @@
             >
               <div
                 class="MuiPaper-root MuiPaper-outlined MuiPaper-rounded MuiTableContainer-root css-onzayo-MuiPaper-root-MuiTableContainer-root"
+                tabindex="0"
               >
                 <table
                   class="MuiTable-root css-votmdl-MuiTable-root"
@@ -527,6 +528,7 @@
             >
               <div
                 class="MuiPaper-root MuiPaper-outlined MuiPaper-rounded MuiTableContainer-root css-onzayo-MuiPaper-root-MuiTableContainer-root"
+                tabindex="0"
               >
                 <table
                   class="MuiTable-root css-r7i92b-MuiTable-root"
@@ -975,6 +977,7 @@
             >
               <div
                 class="MuiPaper-root MuiPaper-outlined MuiPaper-rounded MuiTableContainer-root css-onzayo-MuiPaper-root-MuiTableContainer-root"
+                tabindex="0"
               >
                 <table
                   class="MuiTable-root css-r7i92b-MuiTable-root"
