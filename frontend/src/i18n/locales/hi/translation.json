@@ -194,6 +194,7 @@
   "Account of current user": "वर्तमान उपयोगकर्ता का खाता",
   "Appbar Tools": "ऐपबार टूल्स",
   "show more": "अधिक दिखाएँ",
+  "Version information": "",
   "Getting auth info: {{ clusterName }}": "प्रमाणीकरण जानकारी प्राप्त कर रहे हैं: {{ clusterName }}",
   "Getting auth info": "प्रमाणीकरण जानकारी प्राप्त कर रहे हैं",
   "Testing auth": "प्रमाणीकरण का परीक्षण कर रहे हैं",

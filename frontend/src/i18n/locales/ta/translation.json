@@ -194,6 +194,7 @@
   "Account of current user": "தற்போதைய பயனரின் கணக்கு",
   "Appbar Tools": "ஆப்பார் கருவிகள்",
   "show more": "மேலும் காட்டு",
+  "Version information": "",
   "Getting auth info: {{ clusterName }}": "அங்கீகாரத் தகவல் பெறுகிறது: {{ clusterName }}",
   "Getting auth info": "அங்கீகாரத் தகவல் பெறுகிறது",
   "Testing auth": "அங்கீகாரத்தைச் சோதிக்கிறது",

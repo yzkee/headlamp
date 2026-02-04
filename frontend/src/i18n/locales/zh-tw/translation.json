@@ -194,6 +194,7 @@
   "Account of current user": "當前使用者的使用者",
   "Appbar Tools": "應用欄工具",
   "show more": "顯示更多",
+  "Version information": "",
   "Getting auth info: {{ clusterName }}": "獲取身份驗證訊息：{{ clusterName }}",
   "Getting auth info": "獲取身份驗證訊息",
   "Testing auth": "測試身份驗證",

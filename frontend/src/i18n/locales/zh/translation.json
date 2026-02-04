@@ -194,6 +194,7 @@
   "Account of current user": "当前用户的账户",
   "Appbar Tools": "应用栏工具",
   "show more": "显示更多",
+  "Version information": "",
   "Getting auth info: {{ clusterName }}": "获取身份验证信息：{{ clusterName }}",
   "Getting auth info": "获取身份验证信息",
   "Testing auth": "测试身份验证",

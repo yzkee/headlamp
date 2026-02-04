@@ -194,6 +194,7 @@
   "Account of current user": "Account dell'utente corrente",
   "Appbar Tools": "Strumenti Appbar",
   "show more": "mostra di più",
+  "Version information": "",
   "Getting auth info: {{ clusterName }}": "Recuperando le informazioni di autenticazione: {{ clusterName }}",
   "Getting auth info": "Recuperando le informazioni di autenticazione",
   "Testing auth": "Test di autenticazione",
