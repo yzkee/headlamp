@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { Meta, StoryFn } from '@storybook/react';
 import { http, HttpResponse } from 'msw';
 import { useEffect } from 'react';
@@ -32,6 +33,16 @@ const AUTH_URL = `http://localhost:4466/clusters/${CLUSTER_NAME}/apis/authorizat
 
 // Store the initial path at module scope, so we can always restore to it
 const INITIAL_PATH = window.location.pathname;
+
+const theme = createTheme({
+  components: {
+    MuiButtonBase: {
+      defaultProps: {
+        disableRipple: true,
+      },
+    },
+  },
+});
 
 export default {
   title: 'Pod/PodDetailsView',
@@ -63,7 +74,11 @@ export default {
           };
         }, []);
 
-        return <Story />;
+        return (
+          <ThemeProvider theme={theme}>
+            <Story />
+          </ThemeProvider>
+        );
       };
 
       return <ClusterMockWrapper />;
@@ -90,9 +105,7 @@ export default {
               ],
             })
           ),
-          http.get(`http://localhost:4466/clusters/${CLUSTER_NAME}/api/v1/pods`, () =>
-            HttpResponse.json({})
-          ),
+          http.get(PODS_URL, () => HttpResponse.json({ items: [] })),
           http.post(AUTH_URL, () =>
             HttpResponse.json({ status: { allowed: true, reason: '', code: 200 } })
           ),
@@ -187,7 +200,11 @@ DebugDisabled.decorators = [
         };
       }, []);
 
-      return <Story />;
+      return (
+        <ThemeProvider theme={theme}>
+          <Story />
+        </ThemeProvider>
+      );
     };
 
     return <ClusterMockWrapper />;
