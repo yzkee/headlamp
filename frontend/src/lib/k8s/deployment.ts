@@ -22,7 +22,7 @@ import type { KubeObjectInterface } from './KubeObject';
 import { KubeObject } from './KubeObject';
 import type { KubePodSpec } from './pod';
 import ReplicaSet, { type KubeReplicaSet } from './replicaSet';
-import { RollbackResult } from './rollback';
+import { type RevisionInfo, RollbackResult } from './rollback';
 
 export type { RollbackResult };
 
@@ -50,6 +50,7 @@ class Deployment extends KubeObject<KubeDeployment> {
   static apiVersion = 'apps/v1';
   static isNamespaced = true;
   static isScalable = true;
+  private revisionHistoryCache?: { resourceVersion?: string; history: RevisionInfo[] };
 
   get spec() {
     return this.getValue('spec');
@@ -105,16 +106,18 @@ class Deployment extends KubeObject<KubeDeployment> {
   }
 
   /**
-   * Rollback to the previous revision.
-   * Finds the second-most-recent ReplicaSet and patches the deployment
+   * Rollback to a specific or previous revision.
+   * Finds the target ReplicaSet and patches the deployment
    * with its pod template, similar to `kubectl rollout undo`.
+   *
+   * @param toRevision - Optional revision number to rollback to. Defaults to the previous revision.
    *
    * @see {@link https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#rolling-back-a-deployment | K8s: Rolling Back a Deployment}
    * @see {@link https://github.com/kubernetes/kubectl/blob/master/pkg/polymorphichelpers/rollback.go | kubectl rollback implementation}
    *
    * @returns Promise with rollback result containing success status and message.
    */
-  async rollback(): Promise<RollbackResult> {
+  async rollback(toRevision?: number): Promise<RollbackResult> {
     if (this.spec?.paused) {
       return {
         success: false,
@@ -136,18 +139,37 @@ class Deployment extends KubeObject<KubeDeployment> {
         .filter(r => r.revision > 0)
         .sort((a, b) => b.revision - a.revision);
 
-      if (sortedRS.length < 2) {
-        return {
-          success: false,
-          message: 'No previous revision available to rollback to',
-        };
+      // Find target revision: specific or previous (second in sorted list)
+      let targetEntry;
+      if (toRevision !== undefined && toRevision > 0) {
+        targetEntry = sortedRS.find(r => r.revision === toRevision);
+        if (!targetEntry) {
+          return {
+            success: false,
+            message: `Revision ${toRevision} not found in history`,
+          };
+        }
+        if (targetEntry.revision === sortedRS[0].revision) {
+          return {
+            success: false,
+            message: 'Cannot rollback to current revision',
+          };
+        }
+      } else {
+        if (sortedRS.length < 2) {
+          return {
+            success: false,
+            message: 'No previous revision available to rollback to',
+          };
+        }
+        targetEntry = sortedRS[1];
       }
 
-      const previousRS = sortedRS[1].rs;
-      const previousRevision = sortedRS[1].revision;
+      const targetRS = targetEntry.rs;
+      const targetRevision = targetEntry.revision;
 
       const template = JSON.parse(
-        JSON.stringify(previousRS.spec.template)
+        JSON.stringify(targetRS.spec.template)
       ) as KubeReplicaSet['spec']['template'];
 
       if (template.metadata?.labels?.['pod-template-hash']) {
@@ -165,11 +187,12 @@ class Deployment extends KubeObject<KubeDeployment> {
       const url = `${apiRoot}/namespaces/${this.getNamespace()}/deployments/${this.getName()}`;
 
       await jsonPatch(url, patchOperations, true, { cluster: this.cluster });
+      this.revisionHistoryCache = undefined;
 
       return {
         success: true,
-        message: `Rolled back to revision ${previousRevision}`,
-        previousRevision,
+        message: `Rolled back to revision ${targetRevision}`,
+        previousRevision: targetRevision,
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -178,6 +201,48 @@ class Deployment extends KubeObject<KubeDeployment> {
         message: `Failed to rollback: ${errorMessage}`,
       };
     }
+  }
+
+  /**
+   * Get the revision history for this Deployment.
+   * Returns a list of RevisionInfo objects sorted by revision number (descending).
+   */
+  async getRevisionHistory(): Promise<RevisionInfo[]> {
+    const resourceVersion = this.metadata?.resourceVersion;
+    const cachedHistory = this.revisionHistoryCache;
+    if (cachedHistory && cachedHistory.resourceVersion === resourceVersion) {
+      return cachedHistory.history;
+    }
+
+    const replicaSets = await this.getOwnedReplicaSets();
+    const currentRevision = this.getCurrentRevision();
+
+    const history = replicaSets
+      .map(rs => {
+        const revision = parseInt(
+          rs.metadata.annotations?.['deployment.kubernetes.io/revision'] || '0',
+          10
+        );
+        const images = (rs.spec?.template?.spec?.containers || []).map(
+          (c: { image?: string }) => c.image || ''
+        );
+        return {
+          revision,
+          createdAt: rs.metadata.creationTimestamp || '',
+          images,
+          isCurrent: String(revision) === currentRevision,
+          podTemplate: rs.spec?.template,
+        };
+      })
+      .filter(r => r.revision > 0)
+      .sort((a, b) => b.revision - a.revision);
+
+    this.revisionHistoryCache = {
+      resourceVersion,
+      history,
+    };
+
+    return history;
   }
 
   static getBaseObject(): KubeDeployment {

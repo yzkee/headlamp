@@ -22,7 +22,7 @@ import type { KubeMetadata } from './KubeMetadata';
 import type { KubeObjectInterface } from './KubeObject';
 import { KubeObject } from './KubeObject';
 import type { KubePodSpec } from './pod';
-import type { RollbackResult } from './rollback';
+import type { RevisionInfo, RollbackResult } from './rollback';
 
 export interface KubeStatefulSet extends KubeObjectInterface {
   spec: {
@@ -50,6 +50,7 @@ class StatefulSet extends KubeObject<KubeStatefulSet> {
   static apiVersion = 'apps/v1';
   static isNamespaced = true;
   static isScalable = true;
+  private revisionHistoryCache?: { resourceVersion?: string; history: RevisionInfo[] };
 
   get spec() {
     return this.jsonData.spec;
@@ -134,14 +135,16 @@ class StatefulSet extends KubeObject<KubeStatefulSet> {
   }
 
   /**
-   * Rolls back the StatefulSet to the previous ControllerRevision.
+   * Rolls back the StatefulSet to a specific or previous ControllerRevision.
    *
    * This mirrors the behavior of `kubectl rollout undo statefulset/<name>`.
+   *
+   * @param toRevision - Optional revision number to rollback to. Defaults to the previous revision.
    *
    * @see {@link https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#rolling-back-a-statefulset | K8s: Rolling Back a StatefulSet}
    * @see {@link https://github.com/kubernetes/kubectl/blob/master/pkg/polymorphichelpers/rollback.go | kubectl rollback implementation}
    */
-  async rollback(): Promise<RollbackResult> {
+  async rollback(toRevision?: number): Promise<RollbackResult> {
     try {
       const revisions = await this.getOwnedControllerRevisions();
 
@@ -149,22 +152,40 @@ class StatefulSet extends KubeObject<KubeStatefulSet> {
         .filter(rev => rev.revision > 0)
         .sort((a, b) => b.revision - a.revision);
 
-      if (sortedRevisions.length < 2) {
-        return {
-          success: false,
-          message: 'No previous revision available to rollback to',
-        };
+      // Find target revision: specific or previous (second in sorted list)
+      let targetRev;
+      if (toRevision !== undefined && toRevision > 0) {
+        targetRev = sortedRevisions.find(r => r.revision === toRevision);
+        if (!targetRev) {
+          return {
+            success: false,
+            message: `Revision ${toRevision} not found in history`,
+          };
+        }
+        if (targetRev.revision === sortedRevisions[0].revision) {
+          return {
+            success: false,
+            message: 'Cannot rollback to current revision',
+          };
+        }
+      } else {
+        if (sortedRevisions.length < 2) {
+          return {
+            success: false,
+            message: 'No previous revision available to rollback to',
+          };
+        }
+        targetRev = sortedRevisions[1];
       }
 
-      const previousRev = sortedRevisions[1];
-      const previousRevision = previousRev.revision;
+      const targetRevision = targetRev.revision;
 
-      const template = previousRev.data?.spec?.template;
+      const template = targetRev.data?.spec?.template;
 
       if (!template) {
         return {
           success: false,
-          message: 'Previous revision does not contain a valid pod template',
+          message: 'Target revision does not contain a valid pod template',
         };
       }
 
@@ -185,11 +206,12 @@ class StatefulSet extends KubeObject<KubeStatefulSet> {
       const url = `${apiRoot}/namespaces/${this.getNamespace()}/statefulsets/${this.getName()}`;
 
       await jsonPatch(url, patchOperations, true, { cluster: this.cluster });
+      this.revisionHistoryCache = undefined;
 
       return {
         success: true,
-        message: `Rolled back to revision ${previousRevision}`,
-        previousRevision,
+        message: `Rolled back to revision ${targetRevision}`,
+        previousRevision: targetRevision,
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -198,6 +220,48 @@ class StatefulSet extends KubeObject<KubeStatefulSet> {
         message: `Failed to rollback: ${errorMessage}`,
       };
     }
+  }
+
+  /**
+   * Get the revision history for this StatefulSet.
+   * Returns a list of RevisionInfo objects sorted by revision number (descending).
+   */
+  async getRevisionHistory(): Promise<RevisionInfo[]> {
+    const resourceVersion = this.metadata?.resourceVersion;
+    const cachedHistory = this.revisionHistoryCache;
+    if (cachedHistory && cachedHistory.resourceVersion === resourceVersion) {
+      return cachedHistory.history;
+    }
+
+    const revisions = await this.getOwnedControllerRevisions();
+
+    // Determine the current revision (highest revision number)
+    const sortedRevisions = revisions
+      .filter(rev => rev.revision > 0)
+      .sort((a, b) => b.revision - a.revision);
+
+    const highestRevision = sortedRevisions.length > 0 ? sortedRevisions[0].revision : 0;
+
+    const history = sortedRevisions.map(rev => {
+      const template = rev.data?.spec?.template;
+      const images = (template?.spec?.containers || []).map(
+        (c: { image?: string }) => c.image || ''
+      );
+      return {
+        revision: rev.revision,
+        createdAt: rev.metadata.creationTimestamp || '',
+        images,
+        isCurrent: rev.revision === highestRevision,
+        podTemplate: template,
+      };
+    });
+
+    this.revisionHistoryCache = {
+      resourceVersion,
+      history,
+    };
+
+    return history;
   }
 }
 
