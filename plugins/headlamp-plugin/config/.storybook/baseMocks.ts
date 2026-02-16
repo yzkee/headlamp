@@ -339,4 +339,36 @@ export const fallbackMocks = [
       items: [],
     })
   ),
+  http.get('http://localhost:4466/apis/apps/v1/deployments', () =>
+    HttpResponse.json({
+      kind: 'DeploymentList',
+      apiVersion: 'apps/v1',
+      metadata: {},
+      items: [],
+    })
+  ),
+  http.get('http://localhost:4466/apis/apps/v1/statefulsets', () =>
+    HttpResponse.json({
+      kind: 'StatefulSetList',
+      apiVersion: 'apps/v1',
+      metadata: {},
+      items: [],
+    })
+  ),
+  http.get('http://localhost:4466/apis/apps/v1/daemonsets', () =>
+    HttpResponse.json({
+      kind: 'DaemonSetList',
+      apiVersion: 'apps/v1',
+      metadata: {},
+      items: [],
+    })
+  ),
+  http.get('http://localhost:4466/apis/apps/v1/replicasets', () =>
+    HttpResponse.json({
+      kind: 'ReplicaSetList',
+      apiVersion: 'apps/v1',
+      metadata: {},
+      items: [],
+    })
+  ),
 ];

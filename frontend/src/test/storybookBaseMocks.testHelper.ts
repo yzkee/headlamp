@@ -18,7 +18,15 @@ import type { http } from 'msw';
 
 export const CLUSTER_WIDE_PODS_URL = 'http://localhost:4466/api/v1/pods';
 export const NAMESPACED_PODS_URL = 'http://localhost:4466/api/v1/namespaces/default/pods';
+/** The complete set of apps/v1 workload collections expected in Storybook fallbacks. */
+export const APPS_WORKLOAD_COLLECTION_URLS = [
+  'http://localhost:4466/apis/apps/v1/daemonsets',
+  'http://localhost:4466/apis/apps/v1/deployments',
+  'http://localhost:4466/apis/apps/v1/replicasets',
+  'http://localhost:4466/apis/apps/v1/statefulsets',
+];
 
+const APPS_WORKLOAD_COLLECTION_PATH = /\/apis\/apps\/v1\/(\w+)$/;
 const POD_COLLECTION_PATH = /\/api\/v1(?:\/namespaces\/[^/]+)?\/pods$/;
 
 type HttpHandler = ReturnType<typeof http.get>;
@@ -34,6 +42,23 @@ export function podCollectionUrls(handlers: HttpHandler[]): string[] {
     .filter(
       handler =>
         handler.info.method === 'GET' && POD_COLLECTION_PATH.test(String(handler.info.path))
+    )
+    .map(handler => String(handler.info.path))
+    .sort();
+}
+
+/**
+ * Returns the apps/v1 workload collection URLs handled by a Storybook mock set.
+ *
+ * @param handlers - Storybook request handlers to inspect.
+ * @returns Sorted workload collection URLs.
+ */
+export function appsWorkloadCollectionUrls(handlers: HttpHandler[]): string[] {
+  return handlers
+    .filter(
+      handler =>
+        handler.info.method === 'GET' &&
+        APPS_WORKLOAD_COLLECTION_PATH.test(String(handler.info.path))
     )
     .map(handler => String(handler.info.path))
     .sort();
