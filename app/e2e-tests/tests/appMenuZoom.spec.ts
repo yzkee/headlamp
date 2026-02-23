@@ -58,6 +58,21 @@ test.describe('application menu zoom actions', () => {
   });
 
   test('changes and resets the window zoom factor', async () => {
+    await electronPage.evaluate(() => {
+      window.desktopApi.send('setMenu', [
+        {
+          id: 'serialized-view',
+          label: 'View',
+          submenu: [
+            { id: 'original-reset-zoom', label: 'Reset Zoom' },
+            { id: 'original-zoom-in', label: 'Zoom In' },
+            { id: 'original-zoom-out', label: 'Zoom Out' },
+          ],
+        },
+      ]);
+    });
+
+    await expect.poll(() => hasMenuItem('original-zoom-in')).toBe(true);
     await clickMenuItem('original-reset-zoom');
     await expect.poll(() => getZoomFactor()).toBe(1);
 
@@ -88,4 +103,10 @@ async function getZoomFactor() {
   return electronApp.evaluate(({ BrowserWindow }) => {
     return BrowserWindow.getAllWindows()[0]?.webContents.getZoomFactor();
   });
+}
+
+async function hasMenuItem(id: string) {
+  return electronApp.evaluate(({ Menu }, menuId) => {
+    return Boolean(Menu.getApplicationMenu()?.getMenuItemById(menuId));
+  }, id);
 }

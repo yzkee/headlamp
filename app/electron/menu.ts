@@ -30,6 +30,8 @@ export interface AppMenu extends Omit<Partial<MenuItemConstructorOptions>, 'clic
 interface MenuActions {
   openExternal(url: string): Promise<void>;
   openAboutDialog(): void;
+  adjustZoom(delta: number): void;
+  setZoom(factor: number): void;
 }
 
 export function menusToTemplate(
@@ -51,6 +53,12 @@ export function menusToTemplate(
       menu.click = () => {
         actions.openAboutDialog();
       };
+    } else if (appMenu.id === 'original-zoom-in') {
+      menu.click = () => actions.adjustZoom(0.1);
+    } else if (appMenu.id === 'original-zoom-out') {
+      menu.click = () => actions.adjustZoom(-0.1);
+    } else if (appMenu.id === 'original-reset-zoom') {
+      menu.click = () => actions.setZoom(1.0);
     } else if (url) {
       menu.click = () => {
         const openUrl =

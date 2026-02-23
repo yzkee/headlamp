@@ -1219,6 +1219,8 @@ function setMenu(appWindow: BrowserWindow | null, newAppMenu: AppMenu[] = []) {
       menusToTemplate(appWindow, appMenu, loadFullMenu, {
         openExternal: url => shell.openExternal(url),
         openAboutDialog: () => appWindow?.webContents.send('open-about-dialog'),
+        adjustZoom,
+        setZoom,
       }) || [];
     menu = Menu.buildFromTemplate(menuTemplate);
   } catch (e) {

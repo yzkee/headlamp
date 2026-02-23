@@ -22,6 +22,8 @@ function setup(mainWindow: BrowserWindow | null = null) {
   const actions = {
     openExternal: vi.fn().mockResolvedValue(undefined),
     openAboutDialog: vi.fn(),
+    adjustZoom: vi.fn(),
+    setZoom: vi.fn(),
   };
 
   return {
@@ -55,6 +57,27 @@ describe('menusToTemplate', () => {
     about.click?.({} as never, {} as never, {} as never);
 
     expect(actions.openAboutDialog).toHaveBeenCalledOnce();
+  });
+
+  it.each([
+    ['original-zoom-in', 0.1],
+    ['original-zoom-out', -0.1],
+  ])('restores the %s adjustment action', (id, delta) => {
+    const { actions, convert } = setup();
+    const [zoom] = convert([{ id }]);
+
+    zoom.click?.({} as never, {} as never, {} as never);
+
+    expect(actions.adjustZoom).toHaveBeenCalledWith(delta);
+  });
+
+  it('restores the reset zoom action', () => {
+    const { actions, convert } = setup();
+    const [reset] = convert([{ id: 'original-reset-zoom' }]);
+
+    reset.click?.({} as never, {} as never, {} as never);
+
+    expect(actions.setZoom).toHaveBeenCalledWith(1);
   });
 
   it('loads internal URLs in the app window', async () => {
