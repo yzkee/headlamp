@@ -15,9 +15,9 @@
  */
 
 import i18next from 'i18next';
+import i18nextBackend from 'i18next-fs-backend';
 import * as path from 'path';
 import { CURRENT_LOCALES, LOCALES_DIR } from './i18n-helper';
-const i18nextBackend = require('i18next-fs-backend');
 
 i18next.use(i18nextBackend).init({
   debug: process.env.NODE_ENV === 'development',
