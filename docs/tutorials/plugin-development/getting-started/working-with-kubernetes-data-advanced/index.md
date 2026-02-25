@@ -537,6 +537,7 @@ function MyPodsPage() {
     </SectionBox>
   );
 }
+```
 
 **Try it out:** Click "Evict" and watch the pod disappear from the table. This happens because the `useList()` hook automatically refreshes when it detects the resource is gone!
 
@@ -574,7 +575,7 @@ You've mastered advanced Kubernetes data patterns:
 - ✅ Handling errors and understanding automatic UI updates
 
 
-**Coming up in Tutorial 6: Building List & Detail Pages**
+**Next: [Tutorial 6 – Building List & Detail Pages](../building-list-and-detail-pages/)**
 
 - Using `ResourceListView` component for professional list pages
 - Creating detail pages with `DetailsGrid`
