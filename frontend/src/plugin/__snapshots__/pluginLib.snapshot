@@ -91,6 +91,7 @@
     "NamespaceTextField": [Function],
     "NamespacesAutocomplete": [Function],
     "ObjectEventList": [Function],
+    "OwnedJobsSection": [Function],
     "OwnedPodsSection": [Function],
     "PORT_FORWARDS_STORAGE_KEY": "portforwards",
     "PORT_FORWARD_RUNNING_STATUS": "Running",
@@ -139,6 +140,7 @@
       "MetadataDictGrid": [Function],
       "MetadataDisplay": [Function],
       "NamespaceTextField": [Function],
+      "OwnedJobsSection": [Function],
       "OwnedPodsSection": [Function],
       "PORT_FORWARDS_STORAGE_KEY": "portforwards",
       "PORT_FORWARD_RUNNING_STATUS": "Running",
@@ -343,6 +345,7 @@
       "Ingress": [Function],
       "IngressClass": [Function],
       "Job": [Function],
+      "JobSet": [Function],
       "Lease": [Function],
       "LimitRange": [Function],
       "Namespace": [Function],
@@ -408,6 +411,9 @@
       "default": [Function],
     },
     "job": {
+      "default": [Function],
+    },
+    "jobSet": {
       "default": [Function],
     },
     "labelSelectorToQuery": [Function],
