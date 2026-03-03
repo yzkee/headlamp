@@ -34,6 +34,7 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
+	"sort"
 	"strings"
 	"sync"
 	"syscall"
@@ -63,6 +64,7 @@ import (
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	k8sruntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/clientcmd/api"
@@ -2099,8 +2101,8 @@ func (c *HeadlampConfig) handleStatelessClusterRename(w http.ResponseWriter, r *
 	}, nil, "Completed stateless cluster rename")
 }
 
-// customNameToExtenstions writes the custom name to the Extensions map in the kubeconfig.
-func customNameToExtenstions(config *api.Config, contextName, newClusterName, path string) error {
+// customNameToExtensions writes the custom name to the Extensions map in the kubeconfig.
+func customNameToExtensions(config *api.Config, contextName, newClusterName, path string) error {
 	var err error
 
 	// Get the context with the given cluster name
@@ -2119,7 +2121,13 @@ func customNameToExtenstions(config *api.Config, contextName, newClusterName, pa
 		CustomName: newClusterName,
 	}
 
-	// Assign the CustomObject to the Extensions map
+	// Assign the CustomObject to the Extensions map.
+	// Extensions is nil for contexts that have never had extensions set; initialize
+	// it before writing to avoid a nil-map panic.
+	if contextConfig.Extensions == nil {
+		contextConfig.Extensions = make(map[string]k8sruntime.Object)
+	}
+
 	contextConfig.Extensions["headlamp_info"] = customObj
 
 	if err := clientcmd.WriteToFile(*config, path); err != nil {
@@ -2249,7 +2257,7 @@ func (c *HeadlampConfig) handleClusterRename(w http.ResponseWriter, r *http.Requ
 
 	contextName := findMatchingContextName(config, clusterName)
 
-	if err := customNameToExtenstions(config, contextName, reqBody.NewClusterName, path); err != nil {
+	if err := customNameToExtensions(config, contextName, reqBody.NewClusterName, path); err != nil {
 		c.handleError(w, ctx, span, err, "failed to write custom extension", http.StatusInternalServerError)
 		return err
 	}
@@ -2266,27 +2274,66 @@ func (c *HeadlampConfig) handleClusterRename(w http.ResponseWriter, r *http.Requ
 }
 
 // findMatchingContextName checks all contexts, returning the key for whichever
-// has a matching customObj.CustomName, if any.
+// has a matching customObj.CustomName, if any. It also handles the case where
+// the clusterName is a DNS-friendly version of the original context key
+// (e.g. slashes replaced with double dashes by MakeDNSFriendly).
+//
+// Resolution order:
+//  1. Custom name match (headlamp_info extension) — highest priority, returns immediately.
+//  2. Exact key match — avoids DNS-friendly ambiguity when the name already exists verbatim.
+//  3. DNS-friendly match — collects all candidates; warns and picks the
+//     lexicographically first one when multiple keys map to the same form.
 func findMatchingContextName(config *api.Config, clusterName string) string {
-	contextName := clusterName
-
+	// 1. Custom name takes priority: return the real context key immediately.
 	for k, v := range config.Contexts {
 		info := v.Extensions["headlamp_info"]
-		if info != nil {
-			customObj, err := MarshalCustomObject(info, contextName)
-			if err != nil {
-				logger.Log(logger.LevelError, map[string]string{"cluster": contextName},
-					err, "marshaling custom object")
-				continue
-			}
+		if info == nil {
+			continue
+		}
 
-			if customObj.CustomName != "" && customObj.CustomName == clusterName {
-				contextName = k
-			}
+		customObj, err := MarshalCustomObject(info, k)
+		if err != nil {
+			logger.Log(logger.LevelError, map[string]string{"cluster": k},
+				err, "marshaling custom object")
+			continue
+		}
+
+		if customObj.CustomName != "" && customObj.CustomName == clusterName {
+			return k
 		}
 	}
 
-	return contextName
+	// 2. Exact key match: clusterName is already a verbatim context key.
+	if _, ok := config.Contexts[clusterName]; ok {
+		return clusterName
+	}
+
+	// 3. DNS-friendly match: collect all keys whose DNS-friendly form matches.
+	// Sorting makes the selection deterministic when multiple keys collide.
+	var matches []string
+
+	for k := range config.Contexts {
+		if kubeconfig.MakeDNSFriendly(k) == clusterName {
+			matches = append(matches, k)
+		}
+	}
+
+	switch len(matches) {
+	case 1:
+		return matches[0]
+	case 0:
+		return clusterName
+	default:
+		sort.Strings(matches)
+		logger.Log(logger.LevelWarn,
+			map[string]string{"clusterName": clusterName},
+			nil,
+			fmt.Sprintf("ambiguous DNS-friendly cluster name %q matches multiple context keys %v; using %q",
+				clusterName, matches, matches[0]),
+		)
+
+		return matches[0]
+	}
 }
 
 // checkUniqueName returns false if 'newName' is already in 'names', otherwise returns true.
