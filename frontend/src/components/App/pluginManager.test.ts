@@ -20,18 +20,24 @@ import { PluginManager } from './pluginManager';
 describe('PluginManager', () => {
   let handleResponse: (response: string) => void;
   const send = vi.fn();
+  const receive = vi.fn();
+  const unsubscribe = vi.fn();
   const removeListener = vi.fn();
 
   beforeEach(() => {
     vi.useFakeTimers();
     send.mockReset();
+    receive.mockReset();
+    receive.mockImplementation((_channel, listener) => {
+      handleResponse = listener;
+      return unsubscribe;
+    });
+    unsubscribe.mockReset();
     removeListener.mockReset();
     window.desktopApi = {
       platform: 'darwin',
       send,
-      receive: vi.fn((_channel, listener) => {
-        handleResponse = listener;
-      }),
+      receive,
       removeListener,
     };
   });
@@ -41,12 +47,16 @@ describe('PluginManager', () => {
   });
 
   it.each([
-    ['install', ['operation-1', 'example', 'https://example.com/plugin'], 'INSTALL'],
-    ['update', ['operation-1', 'example'], 'UPDATE'],
-    ['uninstall', ['operation-1', 'example'], 'UNINSTALL'],
-    ['cancel', ['operation-1'], 'CANCEL'],
-  ] as const)('sends the %s request', (method, args, action) => {
-    PluginManager[method](...(args as any));
+    [
+      'install',
+      () => PluginManager.install('operation-1', 'example', 'https://example.com/plugin'),
+      'INSTALL',
+    ],
+    ['update', () => PluginManager.update('operation-1', 'example'), 'UPDATE'],
+    ['uninstall', () => PluginManager.uninstall('operation-1', 'example'), 'UNINSTALL'],
+    ['cancel', () => PluginManager.cancel('operation-1'), 'CANCEL'],
+  ] as const)('sends the %s request', (_method, invoke, action) => {
+    invoke();
 
     expect(send).toHaveBeenCalledOnce();
     expect(send).toHaveBeenCalledWith(
@@ -80,26 +90,37 @@ describe('PluginManager', () => {
     await expect(response).rejects.toThrow('list failed');
   });
 
-  it('removes its listener after receiving the matching response', async () => {
+  it('unsubscribes after receiving the matching response', async () => {
     const response = PluginManager.getStatus('operation-1');
 
     handleResponse(JSON.stringify({ type: 'success', message: 'done', identifier: 'operation-1' }));
 
     await expect(response).resolves.toMatchObject({ identifier: 'operation-1' });
-    expect(removeListener).toHaveBeenCalledOnce();
-    expect(removeListener).toHaveBeenCalledWith('plugin-manager', handleResponse);
+    expect(unsubscribe).toHaveBeenCalledOnce();
+    expect(removeListener).not.toHaveBeenCalled();
   });
 
-  it('removes its listener after malformed JSON', async () => {
+  it('unsubscribes after malformed JSON', async () => {
     const response = PluginManager.getStatus('operation-1');
 
     handleResponse('{');
 
     await expect(response).rejects.toBeInstanceOf(SyntaxError);
-    expect(removeListener).toHaveBeenCalledOnce();
+    expect(unsubscribe).toHaveBeenCalledOnce();
   });
 
-  it('removes its listener after the response limit', async () => {
+  it('rejects malformed JSON when receive returns no unsubscribe function', async () => {
+    receive.mockImplementationOnce((_channel, listener) => {
+      handleResponse = listener;
+    });
+    const response = PluginManager.getStatus('operation-1');
+
+    handleResponse('{');
+
+    await expect(response).rejects.toBeInstanceOf(SyntaxError);
+  });
+
+  it('unsubscribes after the response limit', async () => {
     const response = PluginManager.getStatus('operation-1');
 
     for (let index = 0; index < 10; index++) {
@@ -109,16 +130,28 @@ describe('PluginManager', () => {
     }
 
     await expect(response).rejects.toThrow('Message limit exceeded');
-    expect(removeListener).toHaveBeenCalledOnce();
+    expect(unsubscribe).toHaveBeenCalledOnce();
   });
 
-  it('removes its listener after timing out', async () => {
+  it('unsubscribes after timing out', async () => {
     const response = PluginManager.getStatus('operation-1');
     const rejection = expect(response).rejects.toThrow('Timeout exceeded');
 
     await vi.advanceTimersByTimeAsync(10000);
 
     await rejection;
-    expect(removeListener).toHaveBeenCalledOnce();
+    expect(unsubscribe).toHaveBeenCalledOnce();
+  });
+
+  it('rejects after timing out when receive returns no unsubscribe function', async () => {
+    receive.mockImplementationOnce((_channel, listener) => {
+      handleResponse = listener;
+    });
+    const response = PluginManager.getStatus('operation-1');
+    const rejection = expect(response).rejects.toThrow('Timeout exceeded');
+
+    await vi.advanceTimersByTimeAsync(10000);
+
+    await rejection;
   });
 });
