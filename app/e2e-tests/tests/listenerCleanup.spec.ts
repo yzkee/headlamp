@@ -149,7 +149,7 @@ test.describe('desktop listener cleanup', () => {
     const result = await electronPage.evaluate(() => (window as any).runE2ECommand());
 
     expect(result).toEqual({
-      code: -1,
+      code: -3,
       stdout: [],
       stderr: [],
       removedChannels: ['command-stdout', 'command-stderr', 'command-exit'],

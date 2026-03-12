@@ -282,9 +282,9 @@ export async function handleRunCommand(
   permissionSecrets: Record<string, number>
 ): Promise<void> {
   const commandId = typeof eventData?.id === 'string' ? eventData.id : undefined;
-  const sendRejectedExit = () => {
+  const sendRejectedExit = (exitCode = -1) => {
     if (commandId) {
-      event.sender.send('command-exit', commandId, -1);
+      event.sender.send('command-exit', commandId, exitCode);
     }
   };
 
@@ -304,12 +304,12 @@ export async function handleRunCommand(
   const [permissionsValid, permissionError] = checkPermissionSecret(commandData, permissionSecrets);
   if (!permissionsValid) {
     console.error(permissionError);
-    sendRejectedExit();
+    sendRejectedExit(-2);
     return;
   }
 
   if (!checkCommandConsent(commandData.command, commandData.args, mainWindow)) {
-    sendRejectedExit();
+    sendRejectedExit(-3);
     return;
   }
 

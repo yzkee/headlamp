@@ -374,12 +374,13 @@ describe('handleRunCommand', () => {
   });
 
   it.each([
-    ['missing window', { id: 'test-id' }, null, { 'runCmd-gh': 99 }],
+    ['missing window', { id: 'test-id' }, null, { 'runCmd-gh': 99 }, -1],
     [
       'invalid command data',
       { id: 'test-id', command: 'invalid', args: [], options: {}, permissionSecrets: {} },
       { id: 1 },
       {},
+      -1,
     ],
     [
       'invalid permission secret',
@@ -392,12 +393,13 @@ describe('handleRunCommand', () => {
       },
       { id: 1 },
       { 'runCmd-gh': 99 },
+      -2,
     ],
-  ])('reports a rejected exit for %s', async (_name, data, window, secrets) => {
+  ])('reports a rejected exit for %s', async (_name, data, window, secrets, exitCode) => {
     await handleRunCommand(fakeEvent, data as any, window as any, secrets);
 
     expect(spawnMock).not.toHaveBeenCalled();
-    expect(sentMessages).toEqual([['command-exit', 'test-id', -1]]);
+    expect(sentMessages).toEqual([['command-exit', 'test-id', exitCode]]);
   });
 
   it('reports a rejected exit when command consent was denied previously', async () => {
@@ -414,7 +416,7 @@ describe('handleRunCommand', () => {
     await handleRunCommand(fakeEvent, eventData, { id: 1 } as any, { 'runCmd-gh': 99 });
 
     expect(spawnMock).not.toHaveBeenCalled();
-    expect(sentMessages).toEqual([['command-exit', 'test-id', -1]]);
+    expect(sentMessages).toEqual([['command-exit', 'test-id', -3]]);
   });
 
   it('reports synchronous spawn errors without rejecting', async () => {
@@ -762,6 +764,7 @@ describe('command consent', () => {
 
     expect(showMessageBoxSyncMock).toHaveBeenCalled();
     expect(spawnMock).not.toHaveBeenCalled();
+    expect(fakeEvent.sender.send).toHaveBeenCalledWith('command-exit', 'test-id', -3);
   });
 
   it('runs the command when the user allows it', async () => {
