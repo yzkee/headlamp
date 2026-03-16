@@ -80,9 +80,9 @@ func TestTracingMiddleware(t *testing.T) {
 		return false
 	}
 
-	assert.True(t, containsAttribute("http.method", "GET"))
-	assert.True(t, containsAttribute("http.target", "/test-path"))
-	assert.True(t, containsAttribute("http.status_code", 200))
+	assert.True(t, containsAttribute("http.request.method", "GET"))
+	assert.True(t, containsAttribute("url.path", "/test-path"))
+	assert.True(t, containsAttribute("http.response.status_code", 200))
 }
 
 func TestTracingMiddlewareWithPropagation(t *testing.T) {
