@@ -14,17 +14,18 @@
  * limitations under the License.
  */
 
+import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import { loadSettings, saveSettings } from '../settings';
 import { expandEnvAndResolvePaths, loadMCPSettings, saveMCPSettings } from './MCPSettings';
 import * as MCP from './MCPSettings';
 
-jest.mock('../settings', () => ({
-  loadSettings: jest.fn(),
-  saveSettings: jest.fn(),
+vi.mock('../settings', () => ({
+  loadSettings: vi.fn(),
+  saveSettings: vi.fn(),
 }));
 
 beforeEach(() => {
-  jest.resetAllMocks();
+  vi.resetAllMocks();
 });
 
 describe('MCPSettings', () => {
@@ -33,7 +34,7 @@ describe('MCPSettings', () => {
       enabled: true,
       servers: [{ name: 's1', command: 'cmd', args: ['-v'], enabled: true }],
     };
-    (loadSettings as jest.Mock).mockReturnValue({ mcp: expected });
+    (loadSettings as Mock).mockReturnValue({ mcp: expected });
 
     const result = loadMCPSettings('/path/to/settings.json');
 
@@ -42,7 +43,7 @@ describe('MCPSettings', () => {
   });
 
   it('loadMCPSettings returns null when no mcp settings', () => {
-    (loadSettings as jest.Mock).mockReturnValue({ other: 123 });
+    (loadSettings as Mock).mockReturnValue({ other: 123 });
 
     const result = loadMCPSettings('/settings');
 
@@ -52,7 +53,7 @@ describe('MCPSettings', () => {
 
   it('saveMCPSettings sets mcp on loaded settings and calls saveSettings', () => {
     const existing = { someKey: 'value' };
-    (loadSettings as jest.Mock).mockReturnValue(existing);
+    (loadSettings as Mock).mockReturnValue(existing);
 
     const newMCP = {
       enabled: false,
@@ -137,7 +138,7 @@ describe('MultiServerMCPClient', () => {
   beforeEach(() => {
     // ensure predictable env for merging tests
     process.env.TEST_ORIG_ENV = 'orig';
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   afterEach(() => {
@@ -145,21 +146,21 @@ describe('MultiServerMCPClient', () => {
   });
 
   it('returns empty when no mcp settings', () => {
-    jest.spyOn(MCP, 'loadMCPSettings').mockReturnValue(null);
+    vi.spyOn(MCP, 'loadMCPSettings').mockReturnValue(null);
 
     const result = MCP.makeMcpServersFromSettings('/cfg', ['cluster1']);
 
     // Cannot reliably assert the internal call to loadMCPSettings when both functions
-    // are in the same module (jest.spyOn does not intercept internal local references),
+    // are in the same module (vi.spyOn does not intercept internal local references),
     // so only assert the returned result.
     expect(result).toEqual({});
   });
 
   it('returns empty when mcp is disabled or has no servers', () => {
-    jest.spyOn(MCP, 'loadMCPSettings').mockReturnValue({ enabled: false, servers: [] });
+    vi.spyOn(MCP, 'loadMCPSettings').mockReturnValue({ enabled: false, servers: [] });
     expect(MCP.makeMcpServersFromSettings('/cfg', ['c'])).toEqual({});
 
-    jest.spyOn(MCP, 'loadMCPSettings').mockReturnValue({ enabled: true, servers: [] });
+    vi.spyOn(MCP, 'loadMCPSettings').mockReturnValue({ enabled: true, servers: [] });
     expect(MCP.makeMcpServersFromSettings('/cfg', ['c'])).toEqual({});
   });
 
@@ -197,7 +198,7 @@ describe('MultiServerMCPClient', () => {
       ],
     };
 
-    (loadSettings as jest.Mock).mockReturnValue({ mcp: mcpSettings });
+    (loadSettings as Mock).mockReturnValue({ mcp: mcpSettings });
 
     const result = MCP.makeMcpServersFromSettings('/cfg', ['clusterA']);
 
@@ -231,7 +232,7 @@ describe('MultiServerMCPClient', () => {
       ],
     };
 
-    (loadSettings as jest.Mock).mockReturnValue({ mcp: mcpSettings });
+    (loadSettings as Mock).mockReturnValue({ mcp: mcpSettings });
 
     const result = MCP.makeMcpServersFromSettings('/cfg', ['my-current-cluster']);
 

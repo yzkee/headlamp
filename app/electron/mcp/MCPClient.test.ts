@@ -17,6 +17,7 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import MCPClient from './MCPClient';
 
 function tmpPath(): string {
@@ -25,7 +26,7 @@ function tmpPath(): string {
 
 describe('MCPClient', () => {
   let client: MCPClient;
-  let infoSpy: jest.Mock;
+  let infoSpy: Mock;
 
   let cfgPath: string;
   let settingsPath: string;
@@ -61,11 +62,11 @@ describe('MCPClient', () => {
   beforeEach(() => {
     client = new MCPClient(cfgPath, settingsPath);
     // spy on console.info to avoid noisy output and to assert calls
-    infoSpy = jest.spyOn(console, 'info').mockImplementation(() => {}) as unknown as jest.Mock;
+    infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {}) as unknown as Mock;
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('throws from handleClustersChange if not initialized', async () => {
@@ -125,20 +126,20 @@ describe('MCPClient', () => {
 
   it('initialize marks isInitialized and leaves client null when no servers are configured', async () => {
     // Mock MCPSettings to return no servers
-    jest.doMock('./MCPSettings', () => ({
-      makeMcpServersFromSettings: jest.fn().mockReturnValue({}),
-      hasClusterDependentServers: jest.fn().mockReturnValue(false),
+    vi.doMock('./MCPSettings', () => ({
+      makeMcpServersFromSettings: vi.fn().mockReturnValue({}),
+      hasClusterDependentServers: vi.fn().mockReturnValue(false),
     }));
     // Mock MultiServerMCPClient just in case, it should not be constructed
-    const MultiServerMCPClientMock = jest.fn();
-    jest.doMock('@langchain/mcp-adapters', () => ({
+    const MultiServerMCPClientMock = vi.fn();
+    vi.doMock('@langchain/mcp-adapters', () => ({
       MultiServerMCPClient: MultiServerMCPClientMock,
     }));
 
-    const MCPClient = require('./MCPClient').default as typeof import('./MCPClient').default;
+    const { default: MCPClient } = await import('./MCPClient');
     const client = new MCPClient(cfgPath, settingsPath);
 
-    const infoSpy = jest.spyOn(console, 'info').mockImplementation(() => {});
+    const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
     await client.initialize();
 
     expect((client as any).isInitialized).toBe(true);
@@ -149,20 +150,20 @@ describe('MCPClient', () => {
 
   it('initialize constructs MCP client and caches tools when servers exist', async () => {
     const fakeTools = [{ name: 't1' }, { name: 't2' }];
-    const getTools = jest.fn().mockResolvedValue(fakeTools);
-    const close = jest.fn().mockResolvedValue(undefined);
-    const MultiServerMCPClientMock = jest.fn().mockImplementation(() => ({ getTools, close }));
+    const getTools = vi.fn().mockResolvedValue(fakeTools);
+    const close = vi.fn().mockResolvedValue(undefined);
+    const MultiServerMCPClientMock = vi.fn().mockImplementation(() => ({ getTools, close }));
 
-    jest.resetModules();
-    jest.doMock('@langchain/mcp-adapters', () => ({
+    vi.resetModules();
+    vi.doMock('@langchain/mcp-adapters', () => ({
       MultiServerMCPClient: MultiServerMCPClientMock,
     }));
-    jest.doMock('./MCPSettings', () => ({
-      makeMcpServersFromSettings: jest.fn().mockReturnValue({ serverA: { url: 'http://x' } }),
-      hasClusterDependentServers: jest.fn().mockReturnValue(false),
+    vi.doMock('./MCPSettings', () => ({
+      makeMcpServersFromSettings: vi.fn().mockReturnValue({ serverA: { url: 'http://x' } }),
+      hasClusterDependentServers: vi.fn().mockReturnValue(false),
     }));
 
-    const MCPClient = require('./MCPClient').default as typeof import('./MCPClient').default;
+    const { default: MCPClient } = await import('./MCPClient');
     const client = new MCPClient(cfgPath, settingsPath);
 
     await client.initialize();
@@ -176,22 +177,23 @@ describe('MCPClient', () => {
   });
 
   it('handleClustersChange logs and returns early when no cluster-dependent servers', async () => {
-    const getTools = jest.fn().mockResolvedValue([]);
-    const close = jest.fn().mockResolvedValue(undefined);
-    const MultiServerMCPClientMock = jest.fn().mockImplementation(() => ({ getTools, close }));
+    const getTools = vi.fn().mockResolvedValue([]);
+    const close = vi.fn().mockResolvedValue(undefined);
+    const MultiServerMCPClientMock = vi.fn().mockImplementation(() => ({ getTools, close }));
 
-    jest.doMock('@langchain/mcp-adapters', () => ({
+    vi.resetModules();
+    vi.doMock('@langchain/mcp-adapters', () => ({
       MultiServerMCPClient: MultiServerMCPClientMock,
     }));
     // make servers exist, but indicate no cluster-dependent servers
-    const makeMcpServersFromSettings = jest.fn().mockReturnValue({ serverA: {} });
-    const hasClusterDependentServers = jest.fn().mockReturnValue(false);
-    jest.doMock('./MCPSettings', () => ({
+    const makeMcpServersFromSettings = vi.fn().mockReturnValue({ serverA: {} });
+    const hasClusterDependentServers = vi.fn().mockReturnValue(false);
+    vi.doMock('./MCPSettings', () => ({
       makeMcpServersFromSettings,
       hasClusterDependentServers,
     }));
 
-    const MCPClient = require('./MCPClient').default as typeof import('./MCPClient').default;
+    const { default: MCPClient } = await import('./MCPClient');
     const client = new MCPClient(cfgPath, settingsPath);
 
     await client.initialize();
@@ -205,19 +207,20 @@ describe('MCPClient', () => {
   });
 
   it('handleClustersChange does nothing when clusters array is identical', async () => {
-    const getTools = jest.fn().mockResolvedValue([]);
-    const close = jest.fn().mockResolvedValue(undefined);
-    const MultiServerMCPClientMock = jest.fn().mockImplementation(() => ({ getTools, close }));
+    const getTools = vi.fn().mockResolvedValue([]);
+    const close = vi.fn().mockResolvedValue(undefined);
+    const MultiServerMCPClientMock = vi.fn().mockImplementation(() => ({ getTools, close }));
 
-    jest.doMock('@langchain/mcp-adapters', () => ({
+    vi.resetModules();
+    vi.doMock('@langchain/mcp-adapters', () => ({
       MultiServerMCPClient: MultiServerMCPClientMock,
     }));
-    jest.doMock('./MCPSettings', () => ({
-      makeMcpServersFromSettings: jest.fn().mockReturnValue({ serverA: {} }),
-      hasClusterDependentServers: jest.fn().mockReturnValue(true),
+    vi.doMock('./MCPSettings', () => ({
+      makeMcpServersFromSettings: vi.fn().mockReturnValue({ serverA: {} }),
+      hasClusterDependentServers: vi.fn().mockReturnValue(true),
     }));
 
-    const MCPClient = require('./MCPClient').default as typeof import('./MCPClient').default;
+    const { default: MCPClient } = await import('./MCPClient');
     const client = new MCPClient(cfgPath, settingsPath);
 
     await client.initialize();
@@ -225,8 +228,8 @@ describe('MCPClient', () => {
     // set currentClusters to a value and call with the same value
     (client as any).currentClusters = ['same-cluster'];
 
-    jest.spyOn(console, 'info').mockImplementation(() => {});
-    const closeSpy = jest.spyOn((client as any).client, 'close').mockImplementation(async () => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    const closeSpy = vi.spyOn((client as any).client, 'close').mockImplementation(async () => {});
 
     await client.handleClustersChange(['same-cluster']);
 
@@ -235,34 +238,34 @@ describe('MCPClient', () => {
   });
 
   it('handleClustersChange restarts client when cluster-dependent servers exist', async () => {
-    const getToolsFirst = jest.fn().mockResolvedValue([{ name: 'a' }]);
-    const closeFirst = jest.fn().mockResolvedValue(undefined);
-    const getToolsSecond = jest.fn().mockResolvedValue([{ name: 'b' }]);
-    const closeSecond = jest.fn().mockResolvedValue(undefined);
+    const getToolsFirst = vi.fn().mockResolvedValue([{ name: 'a' }]);
+    const closeFirst = vi.fn().mockResolvedValue(undefined);
+    const getToolsSecond = vi.fn().mockResolvedValue([{ name: 'b' }]);
+    const closeSecond = vi.fn().mockResolvedValue(undefined);
 
     // We'll create a factory to return different instances on subsequent constructions
     const instances: any[] = [
       { getTools: getToolsFirst, close: closeFirst },
       { getTools: getToolsSecond, close: closeSecond },
     ];
-    const MultiServerMCPClientMock = jest.fn().mockImplementation(() => instances.shift());
+    const MultiServerMCPClientMock = vi.fn().mockImplementation(() => instances.shift());
 
-    // Ensure module cache is cleared so our doMock is respected when requiring the MCPClient module
-    jest.resetModules();
-    jest.doMock('@langchain/mcp-adapters', () => ({
+    // Ensure module cache is cleared so our doMock is respected when importing the MCPClient module
+    vi.resetModules();
+    vi.doMock('@langchain/mcp-adapters', () => ({
       MultiServerMCPClient: MultiServerMCPClientMock,
     }));
-    const makeMcpServersFromSettings = jest.fn().mockReturnValue({ serverA: {} });
-    const hasClusterDependentServers = jest.fn().mockReturnValue(true);
-    jest.doMock('./MCPSettings', () => ({
+    const makeMcpServersFromSettings = vi.fn().mockReturnValue({ serverA: {} });
+    const hasClusterDependentServers = vi.fn().mockReturnValue(true);
+    vi.doMock('./MCPSettings', () => ({
       makeMcpServersFromSettings,
       hasClusterDependentServers,
     }));
 
-    const MCPClient = require('./MCPClient').default as typeof import('./MCPClient').default;
+    const { default: MCPClient } = await import('./MCPClient');
     const client = new MCPClient(cfgPath, settingsPath);
 
-    jest.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'log').mockImplementation(() => {});
     await client.initialize();
 
     // initial client should be the first instance
@@ -286,11 +289,12 @@ describe('MCPClient', () => {
 describe('MCPClient logging behavior', () => {
   it('logs clusters change even when not initialized', async () => {
     const cfgPath = path.join(os.tmpdir(), `mcp-test-${Date.now()}-${Math.random()}.json`);
-    const client = new (require('./MCPClient').default)(cfgPath) as InstanceType<
+    const { default: MCPClientLocal } = await import('./MCPClient');
+    const client = new MCPClientLocal(cfgPath, cfgPath) as InstanceType<
       typeof import('./MCPClient').default
     >;
 
-    const infoSpy = jest.spyOn(console, 'info').mockImplementation(() => {}) as jest.Mock;
+    const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {}) as unknown as Mock;
 
     await expect(client.handleClustersChange(['cluster-log'])).rejects.toThrow(
       'MCPClient: not initialized'
@@ -316,38 +320,42 @@ describe('MCPClient#mcpExecuteTool', () => {
   });
 
   it('executes a tool successfully and records usage', async () => {
-    jest.resetModules();
-    jest.doMock('./MCPToolStateStore', () => ({
-      parseServerNameToolName: jest.fn().mockImplementation((fullName: string) => {
+    vi.resetModules();
+    vi.doMock('./MCPSettings', () => ({
+      makeMcpServersFromSettings: vi.fn().mockReturnValue({}),
+      hasClusterDependentServers: vi.fn().mockReturnValue(false),
+    }));
+    vi.doMock('./MCPToolStateStore', () => ({
+      parseServerNameToolName: vi.fn().mockImplementation((fullName: string) => {
         const [serverName, ...rest] = fullName.split('.');
         return { serverName, toolName: rest.join('.') };
       }),
-      validateToolArgs: jest.fn().mockReturnValue({ valid: true }),
-      MCPToolStateStore: jest.fn().mockImplementation(() => ({
+      validateToolArgs: vi.fn().mockReturnValue({ valid: true }),
+      MCPToolStateStore: vi.fn().mockImplementation(() => ({
         // initialize config from client tools is invoked during MCPClient.initialize
         // provide a no-op mock so tests that don't assert this behavior don't fail
-        initConfigFromClientTools: jest.fn(),
+        initConfigFromClientTools: vi.fn(),
       })),
     }));
 
     // Ensure initialize can construct a client with getTools/close methods
-    jest.doMock('@langchain/mcp-adapters', () => ({
-      MultiServerMCPClient: jest.fn().mockImplementation(() => ({
-        getTools: jest.fn().mockResolvedValue([]),
-        close: jest.fn().mockResolvedValue(undefined),
+    vi.doMock('@langchain/mcp-adapters', () => ({
+      MultiServerMCPClient: vi.fn().mockImplementation(() => ({
+        getTools: vi.fn().mockResolvedValue([]),
+        close: vi.fn().mockResolvedValue(undefined),
       })),
     }));
 
-    const MCPClient = require('./MCPClient').default as typeof import('./MCPClient').default;
+    const { default: MCPClient } = await import('./MCPClient');
     const client = new MCPClient(cfgPath, settingsPath) as any;
 
     await client.initialize();
 
-    const invoke = jest.fn().mockResolvedValue({ ok: true });
+    const invoke = vi.fn().mockResolvedValue({ ok: true });
     client.clientTools = [{ name: 'serverA.tool1', schema: {}, invoke }];
     client.mcpToolState = {
-      isToolEnabled: jest.fn().mockReturnValue(true),
-      recordToolUsage: jest.fn(),
+      isToolEnabled: vi.fn().mockReturnValue(true),
+      recordToolUsage: vi.fn(),
     };
     client.isInitialized = true;
     client.client = {};
@@ -361,27 +369,31 @@ describe('MCPClient#mcpExecuteTool', () => {
   });
 
   it('returns error when parameter validation fails', async () => {
-    jest.resetModules();
-    jest.doMock('./MCPToolStateStore', () => ({
-      parseServerNameToolName: jest
+    vi.resetModules();
+    vi.doMock('./MCPSettings', () => ({
+      makeMcpServersFromSettings: vi.fn().mockReturnValue({}),
+      hasClusterDependentServers: vi.fn().mockReturnValue(false),
+    }));
+    vi.doMock('./MCPToolStateStore', () => ({
+      parseServerNameToolName: vi
         .fn()
         .mockReturnValue({ serverName: 'serverA', toolName: 'tool1' }),
-      validateToolArgs: jest.fn().mockReturnValue({ valid: false, error: 'bad-params' }),
-      MCPToolStateStore: jest.fn().mockImplementation(() => ({
-        initConfigFromClientTools: jest.fn(),
+      validateToolArgs: vi.fn().mockReturnValue({ valid: false, error: 'bad-params' }),
+      MCPToolStateStore: vi.fn().mockImplementation(() => ({
+        initConfigFromClientTools: vi.fn(),
       })),
     }));
 
-    const MCPClient = require('./MCPClient').default as typeof import('./MCPClient').default;
+    const { default: MCPClient } = await import('./MCPClient');
     const client = new MCPClient(cfgPath, settingsPath) as any;
 
     // ensure the client is initialized so mcpExecuteTool follows the normal execution path
     await client.initialize();
 
-    client.clientTools = [{ name: 'serverA.tool1', schema: {}, invoke: jest.fn() }];
+    client.clientTools = [{ name: 'serverA.tool1', schema: {}, invoke: vi.fn() }];
     client.mcpToolState = {
-      isToolEnabled: jest.fn().mockReturnValue(true),
-      recordToolUsage: jest.fn(),
+      isToolEnabled: vi.fn().mockReturnValue(true),
+      recordToolUsage: vi.fn(),
     };
     client.isInitialized = true;
     // provide a minimal client object so mcpExecuteTool does not early-return
@@ -394,19 +406,19 @@ describe('MCPClient#mcpExecuteTool', () => {
   });
 
   it('returns error when tool is disabled', async () => {
-    jest.resetModules();
-    jest.doMock('./MCPToolStateStore', () => ({
-      parseServerNameToolName: jest.fn().mockReturnValue({ serverName: 's', toolName: 't' }),
-      validateToolArgs: jest.fn().mockReturnValue({ valid: true }),
-      MCPToolStateStore: jest.fn().mockImplementation(() => ({})),
+    vi.resetModules();
+    vi.doMock('./MCPToolStateStore', () => ({
+      parseServerNameToolName: vi.fn().mockReturnValue({ serverName: 's', toolName: 't' }),
+      validateToolArgs: vi.fn().mockReturnValue({ valid: true }),
+      MCPToolStateStore: vi.fn().mockImplementation(() => ({})),
     }));
 
     const client = new MCPClient(cfgPath, settingsPath) as any;
 
-    client.clientTools = [{ name: 's.t', schema: {}, invoke: jest.fn() }];
+    client.clientTools = [{ name: 's.t', schema: {}, invoke: vi.fn() }];
     client.mcpToolState = {
-      isToolEnabled: jest.fn().mockReturnValue(false),
-      recordToolUsage: jest.fn(),
+      isToolEnabled: vi.fn().mockReturnValue(false),
+      recordToolUsage: vi.fn(),
     };
     client.isInitialized = true;
     client.client = {};
@@ -418,22 +430,20 @@ describe('MCPClient#mcpExecuteTool', () => {
   });
 
   it('returns error when tool not found', async () => {
-    jest.resetModules();
-    jest.doMock('./MCPToolStateStore', () => ({
-      parseServerNameToolName: jest
-        .fn()
-        .mockReturnValue({ serverName: 'srv', toolName: 'missing' }),
-      validateToolArgs: jest.fn().mockReturnValue({ valid: true }),
-      MCPToolStateStore: jest.fn().mockImplementation(() => ({})),
+    vi.resetModules();
+    vi.doMock('./MCPToolStateStore', () => ({
+      parseServerNameToolName: vi.fn().mockReturnValue({ serverName: 'srv', toolName: 'missing' }),
+      validateToolArgs: vi.fn().mockReturnValue({ valid: true }),
+      MCPToolStateStore: vi.fn().mockImplementation(() => ({})),
     }));
 
     const client = new MCPClient(cfgPath, settingsPath) as any;
 
     // clientTools does not contain the requested tool
-    client.clientTools = [{ name: 'srv.other', schema: {}, invoke: jest.fn() }];
+    client.clientTools = [{ name: 'srv.other', schema: {}, invoke: vi.fn() }];
     client.mcpToolState = {
-      isToolEnabled: jest.fn().mockReturnValue(true),
-      recordToolUsage: jest.fn(),
+      isToolEnabled: vi.fn().mockReturnValue(true),
+      recordToolUsage: vi.fn(),
     };
     client.isInitialized = true;
     // provide a minimal client object so mcpExecuteTool does not early-return
@@ -446,17 +456,17 @@ describe('MCPClient#mcpExecuteTool', () => {
   });
 
   it('returns undefined when mcpToolState is not set', async () => {
-    jest.resetModules();
+    vi.resetModules();
     // Keep default behavior for parse/validate but it's irrelevant here
-    jest.doMock('./MCPToolStateStore', () => ({
-      parseServerNameToolName: jest.fn().mockReturnValue({ serverName: 'x', toolName: 'y' }),
-      validateToolArgs: jest.fn().mockReturnValue({ valid: true }),
-      MCPToolStateStore: jest.fn().mockImplementation(() => ({})),
+    vi.doMock('./MCPToolStateStore', () => ({
+      parseServerNameToolName: vi.fn().mockReturnValue({ serverName: 'x', toolName: 'y' }),
+      validateToolArgs: vi.fn().mockReturnValue({ valid: true }),
+      MCPToolStateStore: vi.fn().mockImplementation(() => ({})),
     }));
 
     const client = new MCPClient(cfgPath, settingsPath) as any;
 
-    client.clientTools = [{ name: 'x.y', schema: {}, invoke: jest.fn() }];
+    client.clientTools = [{ name: 'x.y', schema: {}, invoke: vi.fn() }];
     client.mcpToolState = null;
     client.isInitialized = true;
 
