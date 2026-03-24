@@ -147,7 +147,7 @@ const SourceLoader = memo(
 );
 
 export default function useThrottledMemo<T>(factory: () => T, deps: any[], throttleMs: number): T {
-  const [state, setState] = useState(factory());
+  const [state, setState] = useState(factory);
 
   const debouncedSetState = useCallback(throttle(setState, throttleMs), []);
 
