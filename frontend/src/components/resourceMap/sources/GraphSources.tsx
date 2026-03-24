@@ -314,7 +314,7 @@ export function GraphSourceManager({ sources, children, relations }: GraphSource
       };
     },
     [sources, selectedSources, sourceData, setSelectedSources, relations],
-    500
+    1000
   );
 
   return (
