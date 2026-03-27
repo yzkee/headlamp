@@ -54,6 +54,10 @@ import {
 import { addRunCmdConsent, removeRunCmdConsent, runScript, setupRunCmdHandlers } from './runCmd';
 import windowSize from './windowSize';
 
+if (process.env.APPIMAGE) {
+  app.commandLine.appendSwitch('disable-setuid-sandbox');
+}
+
 let isRunningScript = false;
 if (process.env.HEADLAMP_RUN_SCRIPT) {
   isRunningScript = true;
