@@ -112,7 +112,7 @@ export type ResourceTableColumn<RowItem> = {
     }
 );
 
-export type ColumnType = 'age' | 'name' | 'namespace' | 'type' | 'kind' | 'cluster';
+export type ColumnType = 'age' | 'name' | 'namespace' | 'type' | 'kind' | 'cluster' | 'labels';
 
 /**
  * Default column ID to use for sorting when no explicit default is provided.
@@ -220,6 +220,10 @@ function initColumnVisibilityState(columns: ResourceTableProps<any>['columns'], 
 
   // Apply default visibility we got from the props
   columns.forEach((col, index) => {
+    // Labels column is hidden by default
+    if (col === 'labels') {
+      visibility[col] = false;
+    }
     if (typeof col === 'string') return;
 
     if ('show' in col) {
@@ -427,6 +431,19 @@ function ResourceTableContent<RowItem extends KubeObject>(props: ResourceTablePr
                     iconProps={{ color: theme.palette.text.primary }}
                   />
                 ),
+            };
+
+          case 'labels':
+            return {
+              id: 'labels',
+              header: t('translation|Labels'),
+              gridTemplate: 'min-content',
+              accessorFn: (item: RowItem) =>
+                item.metadata.labels
+                  ? Object.entries(item.metadata.labels)
+                      .map(([key, value]) => key + '=' + value)
+                      .join(', ')
+                  : '',
             };
           case 'namespace':
             return {

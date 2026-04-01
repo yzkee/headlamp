@@ -86,6 +86,7 @@ export default function ServiceList() {
           render: service =>
             service.spec.selector ? <MetadataDictGrid dict={service.spec.selector} /> : null,
         },
+        'labels',
         'age',
       ]}
       actions={[

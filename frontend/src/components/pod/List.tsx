@@ -474,6 +474,7 @@ export function PodListRenderer(props: PodListProps) {
           },
           show: false,
         },
+        'labels',
         'age',
       ]}
       data={pods}
