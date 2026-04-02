@@ -210,6 +210,8 @@
   "Memory Usage": "मेमोरी उपयोग",
   "{{ available }} units": "{{ available }} इकाइयाँ",
   "CPU Usage": "CPU उपयोग",
+  "{{ used }} / {{ total }} Pods": "",
+  "Pod Usage": "",
   "{{ numReady }} / {{ numItems }} Requested": "{{ numReady }} / {{ numItems }} अनुरोधित",
   "{{ numReady }} / {{ numItems }} Ready": "{{ numReady }} / {{ numItems }} तैयार",
   "Recent clusters": "हाल के क्लस्टर",

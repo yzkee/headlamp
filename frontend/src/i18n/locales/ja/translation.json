@@ -210,6 +210,8 @@
   "Memory Usage": "メモリ使用量",
   "{{ available }} units": "{{ available }} ユニット",
   "CPU Usage": "CPU 使用量",
+  "{{ used }} / {{ total }} Pods": "",
+  "Pod Usage": "",
   "{{ numReady }} / {{ numItems }} Requested": "{{ numReady }} / {{ numItems }} リクエスト済み",
   "{{ numReady }} / {{ numItems }} Ready": "{{ numReady }} / {{ numItems }} 準備完了",
   "Recent clusters": "最近のクラスター",

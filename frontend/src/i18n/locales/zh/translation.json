@@ -210,6 +210,8 @@
   "Memory Usage": "内存使用",
   "{{ available }} units": "{{ available }} 单位",
   "CPU Usage": "CPU 使用",
+  "{{ used }} / {{ total }} Pods": "",
+  "Pod Usage": "",
   "{{ numReady }} / {{ numItems }} Requested": "{{ numReady }} / {{ numItems }} 已请求",
   "{{ numReady }} / {{ numItems }} Ready": "{{ numReady }} / {{ numItems }} 已准备好",
   "Recent clusters": "最近的集群",

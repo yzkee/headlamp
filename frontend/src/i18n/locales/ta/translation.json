@@ -210,6 +210,8 @@
   "Memory Usage": "நினைவக பயன்பாடு",
   "{{ available }} units": "{{ available }} அலகுகள்",
   "CPU Usage": "CPU பயன்பாடு",
+  "{{ used }} / {{ total }} Pods": "",
+  "Pod Usage": "",
   "{{ numReady }} / {{ numItems }} Requested": "{{ numReady }} / {{ numItems }} கோரப்பட்டது",
   "{{ numReady }} / {{ numItems }} Ready": "{{ numReady }} / {{ numItems }} தயார்",
   "Recent clusters": "சமீபத்திய க்ளஸ்டர்கள்",
