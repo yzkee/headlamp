@@ -93,7 +93,9 @@ vi.mock('../../../lib/k8s/statefulSet', () => ({
   __esModule: true,
 }));
 
-vi.mock('../../../lib/k8s', () => ({}));
+vi.mock('../../../lib/k8s', () => ({
+  labelSelectorToQuery: vi.fn(() => 'app=test'),
+}));
 
 vi.mock('../../../lib/k8s/api/v2/fetch', () => ({
   clusterFetch: (...args: any[]) => mockClusterFetch(...args),
