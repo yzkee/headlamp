@@ -260,7 +260,12 @@ export function PodListRenderer(props: PodListProps) {
           gridTemplate: 'min-content',
           filterVariant: 'multi-select',
           label: t('translation|Status'),
-          getValue: pod => pod.getDetailedStatus().reason,
+          // include ready condition status so the cell re-renders when icon state changes
+          getValue: pod => {
+            const status = pod.getDetailedStatus();
+            const readyCondition = pod.status?.conditions?.find(c => c.type === 'Ready');
+            return `${status.reason}:${readyCondition?.status ?? ''}`;
+          },
           render: makePodStatusLabel,
         },
         ...(metrics?.length
