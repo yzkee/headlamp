@@ -28,6 +28,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -1122,6 +1123,107 @@ func (c *HeadlampConfig) OIDCTokenRefreshMiddleware(next http.Handler) http.Hand
 	})
 }
 
+// isLoopbackAddr reports whether the given listen address is a loopback address.
+func isLoopbackAddr(addr string) bool {
+	if strings.EqualFold(addr, "localhost") {
+		return true
+	}
+
+	// Strip brackets from IPv6 addresses like "[::1]".
+	ip := net.ParseIP(strings.Trim(addr, "[]"))
+
+	return ip != nil && ip.IsLoopback()
+}
+
+// allowedHosts returns the set of normalized host values that are considered
+// valid for the given listen address and port. All entries are lowercased and
+// host:port pairs are built with net.JoinHostPort so that IPv6 literals are
+// always bracketed correctly.
+func allowedHosts(listenAddr string, port uint) map[string]bool {
+	portStr := fmt.Sprintf("%d", port)
+
+	loopbackHosts := []string{"localhost", "127.0.0.1", "::1"}
+
+	hosts := make(map[string]bool, len(loopbackHosts)*2+2)
+
+	for _, h := range loopbackHosts {
+		hosts[net.JoinHostPort(h, portStr)] = true
+		hosts[h] = true
+	}
+
+	// If the server was told to listen on a specific address, accept that too.
+	// Normalize via net.ParseIP so non-canonical IPv6 forms (e.g.
+	// "0:0:0:0:0:0:0:1") are reduced to their canonical representation ("::1")
+	// before being added to the set.
+	rawAddr := strings.ToLower(strings.Trim(listenAddr, "[]"))
+	normAddr := rawAddr
+
+	if ip := net.ParseIP(rawAddr); ip != nil {
+		normAddr = ip.String()
+	}
+
+	if normAddr != "" && !hosts[normAddr] {
+		hosts[net.JoinHostPort(normAddr, portStr)] = true
+		hosts[normAddr] = true
+	}
+
+	return hosts
+}
+
+// normalizeHost canonicalizes the Host header value. The host portion is
+// lowercased and, if it is an IP address, reduced to its canonical string form
+// so that e.g. "[0:0:0:0:0:0:0:1]" and "[::1]" are treated identically.
+// When a port is present the result is re-joined with net.JoinHostPort.
+func normalizeHost(raw string) string {
+	if raw == "" {
+		return ""
+	}
+
+	host, port, err := net.SplitHostPort(raw)
+	if err != nil {
+		// No port — strip brackets from IPv6 literals (e.g. "[::1]" → "::1"),
+		// then normalize to canonical IP form if applicable.
+		stripped := strings.ToLower(strings.Trim(raw, "[]"))
+		if ip := net.ParseIP(stripped); ip != nil {
+			return ip.String()
+		}
+
+		return stripped
+	}
+
+	// Normalize the host part: lowercase, then canonicalize if it's an IP.
+	lower := strings.ToLower(host)
+	if ip := net.ParseIP(lower); ip != nil {
+		lower = ip.String()
+	}
+
+	return net.JoinHostPort(lower, port)
+}
+
+// hostValidationMiddleware rejects requests whose Host header is not in the
+// allowlist derived from the configured port's loopback hostnames/IPs
+// (localhost, 127.0.0.1, and ::1, with or without the port) and, when
+// provided, the server's explicit listen address.
+func hostValidationMiddleware(listenAddr string, port uint) func(http.Handler) http.Handler {
+	allowed := allowedHosts(listenAddr, port)
+
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			normalized := normalizeHost(r.Host)
+
+			if !allowed[normalized] {
+				logger.Log(logger.LevelWarn, map[string]string{"host": r.Host},
+					nil, "Rejected request with unexpected Host header")
+				http.Error(w, "invalid Host header", http.StatusForbidden)
+
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
 func StartHeadlampServer(config *HeadlampConfig) {
 	tel, err := initTelemetry(config)
 	if err != nil {
@@ -1157,7 +1259,15 @@ func StartHeadlampServer(config *HeadlampConfig) {
 	handler := createHeadlampHandler(ctx, config)
 	handler = config.OIDCTokenRefreshMiddleware(handler)
 
-	addr := fmt.Sprintf("%s:%d", config.ListenAddr, config.Port)
+	// Only validate the Host header when listening on a loopback address.
+	// When bound to a non-loopback address (e.g. behind a reverse proxy),
+	// arbitrary Host headers are expected and must be allowed through.
+	if isLoopbackAddr(config.ListenAddr) {
+		handler = hostValidationMiddleware(config.ListenAddr, config.Port)(handler)
+	}
+
+	listenHost := strings.TrimPrefix(strings.TrimSuffix(config.ListenAddr, "]"), "[")
+	addr := net.JoinHostPort(listenHost, fmt.Sprintf("%d", config.Port))
 
 	server := &http.Server{Addr: addr, Handler: handler} //nolint:gosec
 
