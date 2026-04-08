@@ -74,3 +74,12 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+
+{{/*
+Check if readOnlyRootFilesystem is enabled, returns string "true" if enabled, otherwise returns "false".
+*/}}
+{{- define "headlamp.readOnlyRootFilesystem" -}}
+{{- $securityContextReadOnly := and .securityContext (hasKey .securityContext "readOnlyRootFilesystem") .securityContext.readOnlyRootFilesystem -}}
+{{- if $securityContextReadOnly -}}true{{- else -}}false{{- end -}}
+{{- end }}
