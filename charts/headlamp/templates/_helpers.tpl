@@ -86,8 +86,14 @@ Check if readOnlyRootFilesystem is enabled, returns string "true" if enabled, ot
 
 {{/*
 Compute whether to auto-add a writable /tmp emptyDir for a container with
-readOnlyRootFilesystem: true, skipping if the user already supplies a
-conflicting volumeMount (mountPath: /tmp) or a volume with the same name.
+readOnlyRootFilesystem: true.
+
+- addMount is false when the user already has a volumeMount at /tmp
+  (avoids duplicate mountPath).
+- addVolume is false when the user already has a /tmp mount (avoids an
+  orphaned volume) OR when a volume with mountName already exists (allows
+  users to supply their own headlamp-tmp with custom emptyDir settings
+  such as sizeLimit, while the chart still wires up the /tmp mount).
 
 Input (dict):
   volumeMounts - list of existing volumeMounts for this container
@@ -108,7 +114,6 @@ Output (YAML dict, intended for use with fromYaml):
 {{- range .volumes -}}
   {{- if eq .name $.mountName -}}{{- $hasTmpVolume = true -}}{{- end -}}
 {{- end -}}
-{{- $add := and .readOnly (not $hasTmpMount) (not $hasTmpVolume) -}}
-addMount: {{ $add }}
-addVolume: {{ $add }}
+addMount: {{ and .readOnly (not $hasTmpMount) }}
+addVolume: {{ and .readOnly (not $hasTmpMount) (not $hasTmpVolume) }}
 {{- end }}
