@@ -83,3 +83,32 @@ Check if readOnlyRootFilesystem is enabled, returns string "true" if enabled, ot
 {{- $securityContextReadOnly := and .securityContext (hasKey .securityContext "readOnlyRootFilesystem") .securityContext.readOnlyRootFilesystem -}}
 {{- if $securityContextReadOnly -}}true{{- else -}}false{{- end -}}
 {{- end }}
+
+{{/*
+Compute whether to auto-add a writable /tmp emptyDir for a container with
+readOnlyRootFilesystem: true, skipping if the user already supplies a
+conflicting volumeMount (mountPath: /tmp) or a volume with the same name.
+
+Input (dict):
+  volumeMounts - list of existing volumeMounts for this container
+  volumes      - list of existing pod-level volumes
+  readOnly     - bool: is readOnlyRootFilesystem active for this container
+  mountName    - string: name for the auto-created volume (e.g. "headlamp-tmp")
+
+Output (YAML dict, intended for use with fromYaml):
+  addMount: bool
+  addVolume: bool
+*/}}
+{{- define "headlamp.tmpVolumeContext" -}}
+{{- $hasTmpMount := false -}}
+{{- range .volumeMounts -}}
+  {{- if eq .mountPath "/tmp" -}}{{- $hasTmpMount = true -}}{{- end -}}
+{{- end -}}
+{{- $hasTmpVolume := false -}}
+{{- range .volumes -}}
+  {{- if eq .name $.mountName -}}{{- $hasTmpVolume = true -}}{{- end -}}
+{{- end -}}
+{{- $add := and .readOnly (not $hasTmpMount) (not $hasTmpVolume) -}}
+addMount: {{ $add }}
+addVolume: {{ $add }}
+{{- end }}
