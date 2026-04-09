@@ -995,7 +995,31 @@ function buildEnvironmentVariables(
         }
 
         try {
-          const targetContainer = pod.spec?.containers?.find(c => c.name === containerName);
+          const allContainers: any[] = [
+            ...(pod.spec?.containers || []),
+            ...(pod.spec?.initContainers || []),
+            ...(pod.spec?.ephemeralContainers || []),
+          ];
+
+          const templateSpec = (pod.spec as any)?.template?.spec;
+          if (templateSpec) {
+            allContainers.push(
+              ...(templateSpec.containers || []),
+              ...(templateSpec.initContainers || []),
+              ...(templateSpec.ephemeralContainers || [])
+            );
+          }
+
+          const jobTemplateSpec = (pod.spec as any)?.jobTemplate?.spec?.template?.spec;
+          if (jobTemplateSpec) {
+            allContainers.push(
+              ...(jobTemplateSpec.containers || []),
+              ...(jobTemplateSpec.initContainers || []),
+              ...(jobTemplateSpec.ephemeralContainers || [])
+            );
+          }
+
+          const targetContainer = allContainers.find(c => c.name === containerName);
           if (!targetContainer) {
             throw new Error(`Container ${containerName} not found`);
           }
