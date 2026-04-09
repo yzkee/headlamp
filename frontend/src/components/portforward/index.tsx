@@ -347,7 +347,7 @@ export default function PortForwardingList() {
             })
             .catch(error => {
               setPortForwardInAction(null);
-              console.log('Error starting port forward:', error);
+              console.error('Error starting port forward:', error);
             });
         }}
       />
