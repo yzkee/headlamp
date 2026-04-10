@@ -210,6 +210,8 @@
   "Memory Usage": "Utilisation de la mémoire",
   "{{ available }} units": "{{ available }} unités",
   "CPU Usage": "Utilisation du CPU",
+  "{{ used }} / {{ total }} Pods": "",
+  "Pod Usage": "",
   "{{ numReady }} / {{ numItems }} Requested": "{{ numReady }} / {{ numItems }} Demandé(s)",
   "{{ numReady }} / {{ numItems }} Ready": "{{ numReady }} / {{ numItems }} Ready",
   "Recent clusters": "Groupes récents",
