@@ -263,6 +263,10 @@ export const useSidebarItems = (sidebarName: string = DefaultSidebars.IN_CLUSTER
             name: 'storageClasses',
             label: t('glossary|Storage Classes'),
           },
+          {
+            name: 'volumeAttributesClasses',
+            label: t('glossary|Volume Attributes Classes'),
+          },
         ],
       },
       {

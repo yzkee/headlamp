@@ -53,6 +53,7 @@ import ServiceAccountDetails from '../../serviceaccount/Details';
 import StatefulSetDetails from '../../statefulset/Details';
 import VolumeClaimDetails from '../../storage/ClaimDetails';
 import StorageClassDetails from '../../storage/ClassDetails';
+import VolumeAttributesClassDetails from '../../storage/VolumeAttributesClassDetails';
 import VolumeDetails from '../../storage/VolumeDetails';
 import VpaDetails from '../../verticalPodAutoscaler/Details';
 import MutatingWebhookConfigList from '../../webhookconfiguration/MutatingWebhookConfigDetails';
@@ -92,6 +93,7 @@ const kindComponentMap: Record<
   StatefulSet: StatefulSetDetails,
   PersistentVolumeClaim: VolumeClaimDetails,
   StorageClass: StorageClassDetails,
+  VolumeAttributesClass: VolumeAttributesClassDetails,
   PersistentVolume: VolumeDetails,
   VerticalPodAutoscaler: VpaDetails,
   MutatingWebhookConfiguration: MutatingWebhookConfigList,
