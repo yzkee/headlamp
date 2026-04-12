@@ -186,6 +186,7 @@ export interface PodListProps {
   reflectTableInURL?: SimpleTableProps['reflectInURL'];
   noNamespaceFilter?: boolean;
   errors?: ApiError[] | null;
+  hideCreateButton?: boolean;
 }
 
 export function PodListRenderer(props: PodListProps) {
@@ -196,6 +197,7 @@ export function PodListRenderer(props: PodListProps) {
     reflectTableInURL = 'pods',
     noNamespaceFilter,
     errors,
+    hideCreateButton,
   } = props;
   const { t } = useTranslation(['glossary', 'translation']);
 
@@ -227,7 +229,9 @@ export function PodListRenderer(props: PodListProps) {
       title={t('Pods')}
       headerProps={{
         noNamespaceFilter,
-        titleSideActions: [<CreateResourceButton resourceClass={Pod} key="create-pod-button" />],
+        titleSideActions: hideCreateButton
+          ? []
+          : [<CreateResourceButton resourceClass={Pod} key="create-pod-button" />],
       }}
       hideColumns={hideColumns}
       errors={errors}
