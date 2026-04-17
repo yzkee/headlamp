@@ -1729,6 +1729,7 @@ export function OwnedPodsSection(props: OwnedPodsSectionProps) {
   });
   const onlyOneNamespace = !!resource.metadata.namespace || resource.kind === 'Namespace';
   const hideNamespaceFilter = onlyOneNamespace || noSearch;
+  const clearGlobalNamespaceFilterOnMount = onlyOneNamespace;
 
   return (
     <PodListRenderer
@@ -1737,6 +1738,7 @@ export function OwnedPodsSection(props: OwnedPodsSectionProps) {
       errors={errors}
       metrics={podMetrics}
       noNamespaceFilter={hideNamespaceFilter}
+      clearGlobalNamespaceFilterOnMount={clearGlobalNamespaceFilterOnMount}
       hideCreateButton
     />
   );
