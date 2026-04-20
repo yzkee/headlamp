@@ -213,6 +213,8 @@
   "CPU Usage": "CPU Usage",
   "{{ used }} / {{ total }} Pods": "{{ used }} / {{ total }} Pods",
   "Pod Usage": "Pod Usage",
+  "Ephemeral Storage Usage": "Ephemeral Storage Usage",
+  "Unable to fetch ephemeral storage usage from kubelet.": "Unable to fetch ephemeral storage usage from kubelet.",
   "{{ numReady }} / {{ numItems }} Requested": "{{ numReady }} / {{ numItems }} Requested",
   "{{ numReady }} / {{ numItems }} Ready": "{{ numReady }} / {{ numItems }} Ready",
   "Recent clusters": "Recent clusters",
