@@ -536,3 +536,303 @@ func TestStoreK8sResponseInCache(t *testing.T) {
 		})
 	}
 }
+
+// TestGetResponseBody_PlainEncoding verifies that non-gzip bodies are
+// returned as-is without any decompression.
+func TestGetResponseBody_PlainEncoding(t *testing.T) {
+	tests := []struct {
+		name         string
+		body         []byte
+		encoding     string
+		expectedBody string
+	}{
+		{
+			name:         "plain text body with no encoding",
+			body:         []byte("hello world"),
+			encoding:     "",
+			expectedBody: "hello world",
+		},
+		{
+			name:         "json body with identity encoding",
+			body:         []byte(`{"kind":"PodList"}`),
+			encoding:     "identity",
+			expectedBody: `{"kind":"PodList"}`,
+		},
+		{
+			name:         "empty body with no encoding",
+			body:         []byte{},
+			encoding:     "",
+			expectedBody: "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			body, err := k8cache.GetResponseBody(tc.body, tc.encoding)
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expectedBody, body)
+		})
+	}
+}
+
+// TestFilterHeaderForCache_NonGzip verifies that when encoding is not gzip,
+// all headers (including Content-Encoding) are passed through unchanged.
+func TestFilterHeaderForCache_NonGzip(t *testing.T) {
+	tests := []struct {
+		name           string
+		responseHeader http.Header
+		encoding       string
+		expectedHeader http.Header
+	}{
+		{
+			name: "non-gzip encoding keeps all headers intact",
+			responseHeader: http.Header{
+				"Content-Type":     {"application/json"},
+				"Content-Encoding": {"identity"},
+				"X-Custom-Header":  {"value1"},
+			},
+			encoding: "identity",
+			expectedHeader: http.Header{
+				"Content-Type":     {"application/json"},
+				"Content-Encoding": {"identity"},
+				"X-Custom-Header":  {"value1"},
+			},
+		},
+		{
+			name: "no encoding keeps all headers intact",
+			responseHeader: http.Header{
+				"Content-Type": {"text/plain"},
+				"X-Request-Id": {"abc-123"},
+			},
+			encoding: "",
+			expectedHeader: http.Header{
+				"Content-Type": {"text/plain"},
+				"X-Request-Id": {"abc-123"},
+			},
+		},
+		{
+			name:           "empty headers with no encoding",
+			responseHeader: http.Header{},
+			encoding:       "",
+			expectedHeader: http.Header{},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			result := k8cache.FilterHeaderForCache(tc.responseHeader, tc.encoding)
+			assert.Equal(t, tc.expectedHeader, result)
+		})
+	}
+}
+
+// TestLoadFromCache_Misses covers cache-miss and permission-denied paths
+// that are absent from the existing tests.
+func TestLoadFromCache_Misses(t *testing.T) {
+	tests := []struct {
+		name         string
+		seedKey      string
+		seedValue    string
+		lookupKey    string
+		isAllowed    bool
+		expectLoaded bool
+	}{
+		{
+			name:         "cache miss returns false with no error",
+			seedKey:      "other-key",
+			seedValue:    `{"Body":"data","StatusCode":200}`,
+			lookupKey:    "missing-key",
+			isAllowed:    true,
+			expectLoaded: false,
+		},
+		{
+			name:         "cache hit but isAllowed=false returns false",
+			seedKey:      "my-key",
+			seedValue:    `{"Body":"secret","StatusCode":200}`,
+			lookupKey:    "my-key",
+			isAllowed:    false,
+			expectLoaded: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			mockCache := NewMockCache()
+			err := mockCache.Set(context.Background(), tc.seedKey, tc.seedValue)
+			assert.NoError(t, err)
+
+			w := httptest.NewRecorder()
+			r := httptest.NewRequestWithContext(
+				context.Background(), http.MethodGet, "/api/v1/pods", nil,
+			)
+
+			loaded, err := k8cache.LoadFromCache(mockCache, tc.isAllowed, tc.lookupKey, w, r)
+			assert.Equal(t, tc.expectLoaded, loaded)
+			assert.NoError(t, err)
+		})
+	}
+}
+
+func TestLoadFromCache_MissesEdgeCases(t *testing.T) {
+	tests := []struct {
+		name         string
+		seedKey      string
+		seedValue    string
+		lookupKey    string
+		expectLoaded bool
+		expectError  bool
+	}{
+		{
+			name:         "cache hit with whitespace-only body returns false",
+			seedKey:      "blank-key",
+			seedValue:    "   ",
+			lookupKey:    "blank-key",
+			expectLoaded: false,
+			expectError:  false,
+		},
+		{
+			name:         "cache hit with invalid JSON returns error",
+			seedKey:      "bad-json",
+			seedValue:    `not-valid-json`,
+			lookupKey:    "bad-json",
+			expectLoaded: false,
+			expectError:  true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			mockCache := NewMockCache()
+			err := mockCache.Set(context.Background(), tc.seedKey, tc.seedValue)
+			assert.NoError(t, err)
+
+			w := httptest.NewRecorder()
+			r := httptest.NewRequestWithContext(
+				context.Background(), http.MethodGet, "/api/v1/pods", nil,
+			)
+
+			loaded, err := k8cache.LoadFromCache(mockCache, true, tc.lookupKey, w, r)
+			assert.Equal(t, tc.expectLoaded, loaded)
+
+			if tc.expectError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+// TestStoreK8sResponseInCache_SkipSelfSubjectRulesReview verifies that
+// responses for selfsubjectrulesreviews are never written to the cache.
+func TestStoreK8sResponseInCache_SkipSelfSubjectRulesReview(t *testing.T) {
+	mockCache := NewMockCache()
+	targetURL := &url.URL{Path: "/api/v1/selfsubjectrulesreviews"}
+
+	rw := httptest.NewRecorder()
+	rcw := k8cache.NewResponseCapture(rw)
+
+	r := httptest.NewRequestWithContext(
+		context.Background(), http.MethodGet, targetURL.Path, nil,
+	)
+
+	err := k8cache.StoreK8sResponseInCache(mockCache, targetURL, rcw, r, "skip-key")
+	assert.NoError(t, err)
+
+	// Key must NOT have been written to the cache.
+	_, getErr := mockCache.Get(context.Background(), "skip-key")
+	assert.Error(t, getErr, "selfsubjectrulesreviews response should never be cached")
+}
+
+// TestStoreK8sResponseInCache_GzipBody verifies that a gzip-compressed
+// response body is correctly decompressed before being stored.
+func TestStoreK8sResponseInCache_GzipBody(t *testing.T) {
+	mockCache := NewMockCache()
+	targetURL := &url.URL{Path: "/api/v1/pods"}
+
+	rw := httptest.NewRecorder()
+	rcw := k8cache.NewResponseCapture(rw)
+
+	// Write a gzip-compressed body into the capture writer.
+	var buf bytes.Buffer
+
+	gz := gzip.NewWriter(&buf)
+	_, _ = gz.Write([]byte(`{"kind":"PodList","items":[]}`))
+	_ = gz.Close()
+
+	rcw.Header().Set("Content-Encoding", "gzip")
+	rcw.WriteHeader(http.StatusOK)
+	_, _ = rcw.Write(buf.Bytes())
+
+	r := httptest.NewRequestWithContext(
+		context.Background(), http.MethodGet, targetURL.Path, nil,
+	)
+
+	err := k8cache.StoreK8sResponseInCache(mockCache, targetURL, rcw, r, "gzip-key")
+	assert.NoError(t, err)
+
+	// The stored value must exist and must NOT contain the Content-Encoding header.
+	stored, getErr := mockCache.Get(context.Background(), "gzip-key")
+	assert.NoError(t, getErr)
+	assert.NotEmpty(t, stored)
+	assert.NotContains(t, stored, "Content-Encoding")
+}
+
+// TestStoreK8sResponseInCache_FailureBodyNotCached ensures responses
+// whose JSON body contains "Failure" (e.g. k8s error objects) are
+// not written to cache.
+func TestStoreK8sResponseInCache_FailureBodyNotCached(t *testing.T) {
+	mockCache := NewMockCache()
+	targetURL := &url.URL{Path: "/api/v1/pods"}
+
+	rw := httptest.NewRecorder()
+	rcw := k8cache.NewResponseCapture(rw)
+
+	failureBody := `{"kind":"Status","status":"Failure","message":"Forbidden"}`
+
+	rcw.WriteHeader(http.StatusForbidden)
+	_, _ = rcw.Write([]byte(failureBody))
+
+	r := httptest.NewRequestWithContext(
+		context.Background(), http.MethodGet, targetURL.Path, nil,
+	)
+
+	err := k8cache.StoreK8sResponseInCache(mockCache, targetURL, rcw, r, "failure-key")
+	assert.NoError(t, err)
+
+	// Key must NOT have been written to the cache.
+	_, getErr := mockCache.Get(context.Background(), "failure-key")
+	assert.Error(t, getErr, "Failure responses should never be cached")
+}
+
+// TestExtractNamespace_QueryStringOnNamespacedURL verifies that query
+// parameters are stripped correctly even when a namespace is present.
+func TestExtractNamespace_QueryStringOnNamespacedURL(t *testing.T) {
+	tests := []struct {
+		name              string
+		rawURL            string
+		expectedNamespace string
+		expectedKind      string
+	}{
+		{
+			name:              "namespaced resource with query string",
+			rawURL:            "/api/v1/namespaces/prod/pods?labelSelector=app%3Dnginx",
+			expectedNamespace: "prod",
+			expectedKind:      "pods",
+		},
+		{
+			name:              "cluster-scoped resource with multiple query params",
+			rawURL:            "/api/v1/nodes?limit=500&continue=token123",
+			expectedNamespace: "",
+			expectedKind:      "nodes",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			namespace, kind := k8cache.ExtractNamespace(tc.rawURL)
+			assert.Equal(t, tc.expectedNamespace, namespace)
+			assert.Equal(t, tc.expectedKind, kind)
+		})
+	}
+}
