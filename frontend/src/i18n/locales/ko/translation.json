@@ -265,6 +265,7 @@
   "Open Issue on GitHub": "",
   "Find": "찾기",
   "Download": "다운로드",
+  "Reconnect": "",
   "No results": "결과 없음",
   "Too many matches": "일치 항목이 너무 많습니다",
   "{{ currentIndex }} of {{ totalResults }}": "{{ totalResults }} 중 {{ currentIndex }}",
