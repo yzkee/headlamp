@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import MoreVertIcon from '@mui/icons-material/MoreVert';
+import { Icon } from '@iconify/react';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import { useTheme } from '@mui/material/styles';
@@ -278,7 +278,7 @@ export default function Table<RowItem extends Record<string, any>>({
     autoResetAll: false,
     icons: {
       ...tableProps.icons,
-      MoreHorizIcon: MoreVertIcon,
+      MoreHorizIcon: () => <Icon icon="mdi:more-vert" />,
     },
     onPaginationChange: (updater: any) => {
       if (!tableProps.data?.length) return;
