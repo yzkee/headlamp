@@ -48,7 +48,7 @@ spec:
                   {{- $svc = .backend.service }}
                 {{- end }}
                 {{- if $svc.name }}
-                name: {{ tpl $svc.name $ }}
+                name: {{ tpl $svc.name $ | trim | quote }}
                 {{- else }}
                 name: {{ $fullName }}
                 {{- end }}

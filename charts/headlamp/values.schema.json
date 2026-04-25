@@ -364,6 +364,7 @@
               },
               "protocol": {
                 "type": "string",
+                "enum": ["TCP", "UDP", "SCTP"],
                 "description": "Protocol (TCP/UDP/SCTP). Defaults to TCP"
               },
               "nodePort": {

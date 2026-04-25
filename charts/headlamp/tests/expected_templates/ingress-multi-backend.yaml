@@ -176,6 +176,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: headlamp-other
+                name: "headlamp-other"
                 port:
                   number: 8080
