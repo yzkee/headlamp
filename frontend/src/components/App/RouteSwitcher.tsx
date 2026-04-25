@@ -69,8 +69,8 @@ export default function RouteSwitcher(props: { requiresToken: () => boolean }) {
               exact={!!route.exact}
               clusters={clusters}
               requiresToken={props.requiresToken}
-              children={<RouteComponent route={route} key={getCluster()} />}
-              key={`${getCluster()}`}
+              children={<RouteComponent route={route} key={`${route.path}-${getCluster()}`} />}
+              key={`${route.path}-${getCluster()}`}
             />
           )
         )}
