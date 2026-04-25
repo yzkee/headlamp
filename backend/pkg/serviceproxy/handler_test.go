@@ -382,7 +382,7 @@ func TestGetServiceFromCluster(t *testing.T) {
 				cs = fake.NewClientset()
 			}
 
-			ps, status, err := getServiceFromCluster(cs, tt.namespace, tt.serviceName)
+			ps, status, err := getServiceFromCluster(context.Background(), cs, tt.namespace, tt.serviceName)
 
 			assert.Equal(t, tt.expectedStatus, status)
 
