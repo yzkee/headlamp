@@ -29,7 +29,7 @@ import (
 	dynamicfake "k8s.io/client-go/dynamic/fake"
 )
 
-func TestDeleteKeys(t *testing.T) {
+func TestDeleteKeys(t *testing.T) { //nolint:funlen
 	tests := []struct {
 		name            string
 		beforemockCache *MockCache
@@ -78,6 +78,48 @@ func TestDeleteKeys(t *testing.T) {
 			aftermockCache: &MockCache{
 				store: map[string]string{
 					"apps+deployments+default+test-context": "value-2",
+				},
+			},
+		},
+		{ //nolint:exhaustruct
+			name: "empty key does not panic",
+			beforemockCache: &MockCache{ //nolint:exhaustruct
+				store: map[string]string{
+					"+pods+default+test-context": "value-1",
+				},
+			},
+			key: "",
+			aftermockCache: &MockCache{ //nolint:exhaustruct
+				store: map[string]string{
+					"+pods+default+test-context": "value-1",
+				},
+			},
+		},
+		{ //nolint:exhaustruct
+			name: "malformed key with fewer than 4 parts does not panic",
+			beforemockCache: &MockCache{ //nolint:exhaustruct
+				store: map[string]string{
+					"+pods+default+test-context": "value-1",
+				},
+			},
+			key: "partial+key",
+			aftermockCache: &MockCache{ //nolint:exhaustruct
+				store: map[string]string{
+					"+pods+default+test-context": "value-1",
+				},
+			},
+		},
+		{ //nolint:exhaustruct
+			name: "exactly 3-part key is treated as malformed",
+			beforemockCache: &MockCache{ //nolint:exhaustruct
+				store: map[string]string{
+					"+pods+default+test-context": "value-1",
+				},
+			},
+			key: "group+kind+ns",
+			aftermockCache: &MockCache{ //nolint:exhaustruct
+				store: map[string]string{
+					"+pods+default+test-context": "value-1",
 				},
 			},
 		},
