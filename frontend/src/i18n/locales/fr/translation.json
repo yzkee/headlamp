@@ -265,6 +265,7 @@
   "Open Issue on GitHub": "Ouvrir un ticket sur GitHub",
   "Find": "Trouver",
   "Download": "Télécharger",
+  "Reconnect": "",
   "No results": "Aucun résultat",
   "Too many matches": "Trop de correspondances",
   "{{ currentIndex }} of {{ totalResults }}": "{{ currentIndex }} sur {{ totalResults }}",

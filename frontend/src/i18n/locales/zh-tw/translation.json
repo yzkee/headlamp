@@ -265,6 +265,7 @@
   "Open Issue on GitHub": "在 GitHub 上開啟 Issue",
   "Find": "查詢",
   "Download": "下載",
+  "Reconnect": "",
   "No results": "無結果",
   "Too many matches": "符合過多",
   "{{ currentIndex }} of {{ totalResults }}": "{{ currentIndex }} / {{ totalResults }}",

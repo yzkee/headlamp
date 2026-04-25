@@ -219,7 +219,7 @@ export function LogViewer(props: LogViewerProps) {
       >
         {showReconnectButton && (
           <Button onClick={handleReconnect} color="info" variant="contained">
-            Reconnect
+            {t('translation|Reconnect')}
           </Button>
         )}
         <div

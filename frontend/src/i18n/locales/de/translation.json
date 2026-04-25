@@ -265,6 +265,7 @@
   "Open Issue on GitHub": "",
   "Find": "Finden",
   "Download": "Herunterladen",
+  "Reconnect": "",
   "No results": "Keine Ergebnisse",
   "Too many matches": "Zu viele Treffer",
   "{{ currentIndex }} of {{ totalResults }}": "{{ currentIndex }} von {{ totalResults }}",
