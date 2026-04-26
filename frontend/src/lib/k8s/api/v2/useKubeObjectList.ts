@@ -140,23 +140,23 @@ export function useWatchKubeObjectLists<K extends KubeObject>({
   /** Which clusters and namespaces to watch */
   lists: Array<{ cluster: string; namespace?: string; resourceVersion: string }>;
 }) {
-  if (getWebsocketMultiplexerEnabled()) {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    return useWatchKubeObjectListsMultiplexed({
-      kubeObjectClass,
-      endpoint,
-      lists,
-      queryParams,
-    });
-  } else {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    return useWatchKubeObjectListsLegacy({
-      kubeObjectClass,
-      endpoint,
-      lists,
-      queryParams,
-    });
-  }
+  const multiplexerEnabled = getWebsocketMultiplexerEnabled();
+
+  useWatchKubeObjectListsMultiplexed({
+    kubeObjectClass,
+    endpoint,
+    lists,
+    queryParams,
+    enabled: multiplexerEnabled,
+  });
+
+  useWatchKubeObjectListsLegacy({
+    kubeObjectClass,
+    endpoint,
+    lists,
+    queryParams,
+    enabled: !multiplexerEnabled,
+  });
 }
 
 /**
@@ -175,11 +175,13 @@ function useWatchKubeObjectListsMultiplexed<K extends KubeObject>({
   endpoint,
   lists,
   queryParams,
+  enabled = true,
 }: {
   kubeObjectClass: (new (...args: any) => K) & typeof KubeObject<any>;
   endpoint?: KubeObjectEndpoint | null;
   lists: Array<{ cluster: string; namespace?: string; resourceVersion: string }>;
   queryParams?: QueryParameters;
+  enabled?: boolean;
 }): void {
   const client = useQueryClient();
 
@@ -262,7 +264,7 @@ function useWatchKubeObjectListsMultiplexed<K extends KubeObject>({
 
   // Set up WebSocket subscriptions
   useEffect(() => {
-    if (!endpoint || connections.length === 0) {
+    if (!enabled || !endpoint || connections.length === 0) {
       return;
     }
 
@@ -293,7 +295,7 @@ function useWatchKubeObjectListsMultiplexed<K extends KubeObject>({
     return () => {
       cleanups.forEach(cleanup => cleanup());
     };
-  }, [connections, endpoint, handleUpdate]);
+  }, [connections, enabled, endpoint, handleUpdate]);
 }
 
 /**
@@ -309,6 +311,7 @@ function useWatchKubeObjectListsLegacy<K extends KubeObject>({
   endpoint,
   lists,
   queryParams,
+  enabled = true,
 }: {
   /** KubeObject class of the watched resource list */
   kubeObjectClass: (new (...args: any) => K) & typeof KubeObject<any>;
@@ -318,6 +321,7 @@ function useWatchKubeObjectListsLegacy<K extends KubeObject>({
   endpoint?: KubeObjectEndpoint | null;
   /** Which clusters and namespaces to watch */
   lists: Array<{ cluster: string; namespace?: string; resourceVersion: string }>;
+  enabled?: boolean;
 }) {
   const client = useQueryClient();
 
@@ -360,7 +364,7 @@ function useWatchKubeObjectListsLegacy<K extends KubeObject>({
   }, [lists, kubeObjectClass, endpoint]);
 
   useWebSockets<KubeListUpdateEvent<K>>({
-    enabled: !!endpoint,
+    enabled: enabled && !!endpoint,
     connections,
   });
 }
