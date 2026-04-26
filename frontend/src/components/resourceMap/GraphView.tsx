@@ -107,6 +107,10 @@ interface GraphViewContentProps {
 
 const defaultFiltersValue: GraphFilter[] = [];
 
+interface GraphViewInternalProps extends Omit<GraphViewContentProps, 'defaultSources'> {
+  sources: GraphSource[];
+}
+
 const ChipGroup = styled(Box)({
   display: 'flex',
 
@@ -124,11 +128,9 @@ const ChipGroup = styled(Box)({
 function GraphViewContent({
   height,
   defaultNodeSelection,
-  defaultSources,
+  sources,
   defaultFilters = defaultFiltersValue,
-}: GraphViewContentProps) {
-  const allSources = useGetAllSources();
-  const sources = defaultSources ?? allSources;
+}: GraphViewInternalProps) {
   const { t } = useTranslation();
   const dispatch = useDispatch();
 
@@ -473,7 +475,7 @@ export function GraphView(props: GraphViewContentProps) {
     <StrictMode>
       <ReactFlowProvider>
         <GraphSourceManager sources={sources} relations={propsRelations}>
-          <GraphViewContent {...props} defaultSources={sources} />
+          <GraphViewContent {...props} sources={sources} />
         </GraphSourceManager>
       </ReactFlowProvider>
     </StrictMode>
