@@ -185,6 +185,7 @@ export interface PodListProps {
   hideColumns?: ('namespace' | 'restarts')[];
   reflectTableInURL?: SimpleTableProps['reflectInURL'];
   noNamespaceFilter?: boolean;
+  clearGlobalNamespaceFilterOnMount?: boolean;
   errors?: ApiError[] | null;
   hideCreateButton?: boolean;
 }
@@ -196,6 +197,7 @@ export function PodListRenderer(props: PodListProps) {
     hideColumns = [],
     reflectTableInURL = 'pods',
     noNamespaceFilter,
+    clearGlobalNamespaceFilterOnMount,
     errors,
     hideCreateButton,
   } = props;
@@ -229,6 +231,7 @@ export function PodListRenderer(props: PodListProps) {
       title={t('Pods')}
       headerProps={{
         noNamespaceFilter,
+        clearGlobalNamespaceFilterOnMount,
         titleSideActions: hideCreateButton
           ? []
           : [<CreateResourceButton resourceClass={Pod} key="create-pod-button" />],
