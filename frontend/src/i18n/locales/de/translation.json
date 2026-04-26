@@ -213,6 +213,8 @@
   "CPU Usage": "CPU-Nutzung",
   "{{ used }} / {{ total }} Pods": "",
   "Pod Usage": "",
+  "Ephemeral Storage Usage": "",
+  "Unable to fetch ephemeral storage usage from kubelet.": "",
   "{{ numReady }} / {{ numItems }} Requested": "{{ numReady }} / {{ numItems }} Angefordert",
   "{{ numReady }} / {{ numItems }} Ready": "{{ numReady }} / {{ numItems }} Bereit",
   "Recent clusters": "Aktuelle Cluster",

@@ -213,6 +213,8 @@
   "CPU Usage": "CPU பயன்பாடு",
   "{{ used }} / {{ total }} Pods": "",
   "Pod Usage": "",
+  "Ephemeral Storage Usage": "",
+  "Unable to fetch ephemeral storage usage from kubelet.": "",
   "{{ numReady }} / {{ numItems }} Requested": "{{ numReady }} / {{ numItems }} கோரப்பட்டது",
   "{{ numReady }} / {{ numItems }} Ready": "{{ numReady }} / {{ numItems }} தயார்",
   "Recent clusters": "சமீபத்திய க்ளஸ்டர்கள்",

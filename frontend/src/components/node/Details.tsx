@@ -26,7 +26,9 @@ import { useDispatch } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import { apply } from '../../lib/k8s/api/v1/apply';
 import { drainNode, drainNodeStatus } from '../../lib/k8s/api/v1/drainNode';
-import type { KubeContainer, KubeMetrics } from '../../lib/k8s/cluster';
+import type { ApiError } from '../../lib/k8s/api/v2/ApiError';
+import type { KubeNodeSummaryStats } from '../../lib/k8s/api/v2/nodeSummaryApi';
+import { KubeContainer, KubeMetrics } from '../../lib/k8s/cluster';
 import Node from '../../lib/k8s/node';
 import type { KubePod } from '../../lib/k8s/pod';
 import Pod from '../../lib/k8s/pod';
@@ -35,7 +37,12 @@ import { getCluster, timeAgo } from '../../lib/util';
 import { DefaultHeaderAction } from '../../redux/actionButtonsSlice';
 import { clusterAction } from '../../redux/clusterActionSlice';
 import { AppDispatch } from '../../redux/stores/store';
-import { CpuCircularChart, MemoryCircularChart, PodCapacityCircularChart } from '../cluster/Charts';
+import {
+  CpuCircularChart,
+  EphemeralStorageCircularChart,
+  MemoryCircularChart,
+  PodCapacityCircularChart,
+} from '../cluster/Charts';
 import ActionButton from '../common/ActionButton';
 import ConfirmDialog from '../common/ConfirmDialog';
 import { StatusLabelProps } from '../common/Label';
@@ -66,6 +73,7 @@ export default function NodeDetails(props: { name?: string; cluster?: string }) 
 
   const { enqueueSnackbar } = useSnackbar();
   const [nodeMetrics, metricsError] = Node.useMetrics();
+  const [nodeSummaryStats, nodeSummaryError] = Node.useNodeSummaryStats(name, cluster);
   const [isupdatingNodeScheduleProperty, setisUpdatingNodeScheduleProperty] = React.useState(false);
   const [isNodeDrainInProgress, setisNodeDrainInProgress] = React.useState(false);
   const [nodeFromAPI, nodeError] = Node.useGet(name);
@@ -218,7 +226,14 @@ export default function NodeDetails(props: { name?: string; cluster?: string }) 
         cluster={cluster}
         error={nodeError}
         headerSection={item => (
-          <ChartsSection node={item} pods={nodePods} metrics={nodeMetrics} noMetrics={noMetrics} />
+          <ChartsSection
+            node={item}
+            pods={nodePods}
+            metrics={nodeMetrics}
+            noMetrics={noMetrics}
+            summaryStats={nodeSummaryStats}
+            summaryError={nodeSummaryError}
+          />
         )}
         withEvents
         actions={item => {
@@ -312,11 +327,13 @@ interface ChartsSectionProps {
   node: Node | null;
   pods: Pod[] | null;
   metrics: KubeMetrics[] | null;
+  summaryStats: KubeNodeSummaryStats | null;
+  summaryError: ApiError | null;
   noMetrics?: boolean;
 }
 
 function ChartsSection(props: ChartsSectionProps) {
-  const { node, pods, metrics, noMetrics } = props;
+  const { node, pods, metrics, summaryStats, summaryError, noMetrics } = props;
   const { t } = useTranslation('glossary');
 
   function getUptime() {
@@ -368,6 +385,13 @@ function ChartsSection(props: ChartsSectionProps) {
         </Box>
         <Box>
           <PodCapacityCircularChart node={node} pods={pods} />
+        </Box>
+        <Box>
+          <EphemeralStorageCircularChart
+            node={node}
+            summaryStats={summaryStats}
+            summaryError={summaryError}
+          />
         </Box>
       </Box>
     </Box>

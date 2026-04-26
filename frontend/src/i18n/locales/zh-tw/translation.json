@@ -213,6 +213,8 @@
   "CPU Usage": "CPU 使用",
   "{{ used }} / {{ total }} Pods": "",
   "Pod Usage": "",
+  "Ephemeral Storage Usage": "",
+  "Unable to fetch ephemeral storage usage from kubelet.": "",
   "{{ numReady }} / {{ numItems }} Requested": "{{ numReady }} / {{ numItems }} 已請求",
   "{{ numReady }} / {{ numItems }} Ready": "{{ numReady }} / {{ numItems }} 已準備好",
   "Recent clusters": "最近的叢集",
