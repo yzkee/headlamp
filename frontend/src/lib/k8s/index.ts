@@ -62,6 +62,7 @@ import Service from './service';
 import ServiceAccount from './serviceAccount';
 import StatefulSet from './statefulSet';
 import StorageClass from './storageClass';
+import VolumeAttributesClass from './volumeAttributesClass';
 
 export const ResourceClasses = {
   ClusterRole,
@@ -99,6 +100,7 @@ export const ResourceClasses = {
   ServiceAccount,
   StatefulSet,
   StorageClass,
+  VolumeAttributesClass,
   Gateway,
   GatewayClass,
   HTTPRoute,
@@ -482,3 +484,4 @@ export * as service from './service';
 export * as serviceAccount from './serviceAccount';
 export * as statefulSet from './statefulSet';
 export * as storageClass from './storageClass';
+export * as volumeAttributesClass from './volumeAttributesClass';
