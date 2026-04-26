@@ -46,7 +46,12 @@ import (
 // also empty namespace.
 func DeleteKeys(key string, k8scache cache.Cache[string]) {
 	_ = k8scache.Delete(context.Background(), key)
+
 	keyPart := strings.Split(key, "+")
+	if len(keyPart) < 4 {
+		return // malformed key; nothing to namespace-strip
+	}
+
 	keyPart[2] = ""
 	key = strings.Join(keyPart, "+")
 	_ = k8scache.Delete(context.Background(), key)
@@ -63,7 +68,15 @@ func HandleNonGETCacheInvalidation(k8scache cache.Cache[string], w http.Response
 		return nil
 	}
 
-	key, _ := GenerateKey(r.URL, contextKey)
+	key, err := GenerateKey(r.URL, contextKey)
+	if err != nil {
+		logger.Log(logger.LevelWarn, nil, err, "could not generate cache key; skipping invalidation")
+
+		next.ServeHTTP(w, r)
+
+		return ErrHandled
+	}
+
 	DeleteKeys(key, k8scache)
 
 	freshURL := *r.URL
