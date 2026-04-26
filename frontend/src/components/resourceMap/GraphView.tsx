@@ -124,10 +124,11 @@ const ChipGroup = styled(Box)({
 function GraphViewContent({
   height,
   defaultNodeSelection,
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  defaultSources = useGetAllSources(),
+  defaultSources,
   defaultFilters = defaultFiltersValue,
 }: GraphViewContentProps) {
+  const allSources = useGetAllSources();
+  const sources = defaultSources ?? allSources;
   const { t } = useTranslation();
   const dispatch = useDispatch();
 
@@ -305,7 +306,7 @@ function GraphViewContent({
                 <NamespacesAutocomplete />
 
                 <GraphSourcesView
-                  sources={defaultSources}
+                  sources={sources}
                   selectedSources={selectedSources}
                   toggleSource={toggleSelection}
                   sourceData={sourceData ?? new Map()}
@@ -454,10 +455,11 @@ function CustomThemeProvider({ children }: { children: ReactNode }) {
  * @returns
  */
 export function GraphView(props: GraphViewContentProps) {
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  const propsSources = props.defaultSources ?? useGetAllSources();
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  const propsRelations = props.defaultRelations ?? useGetAllRelations();
+  const allSources = useGetAllSources();
+  const allRelations = useGetAllRelations();
+
+  const propsSources = props.defaultSources ?? allSources;
+  const propsRelations = props.defaultRelations ?? allRelations;
 
   // Load plugin defined sources
   const pluginGraphSources = useTypedSelector(state => state.graphView.graphSources);
