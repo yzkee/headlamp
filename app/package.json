@@ -148,6 +148,10 @@
         "to": "frontend/i18n/locales"
       },
       {
+        "from": "assets/",
+        "to": "assets/"
+      },
+      {
         "from": "../.plugins",
         "to": ".plugins"
       },
