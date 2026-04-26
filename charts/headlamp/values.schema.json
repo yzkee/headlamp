@@ -459,6 +459,10 @@
                 "type": "array",
                 "items": {
                   "type": "object",
+                  "required": [
+                    "path",
+                    "type"
+                  ],
                   "properties": {
                     "path": {
                       "type": "string"
@@ -486,7 +490,29 @@
                                 "name": {
                                   "type": "string"
                                 }
-                              }
+                              },
+                              "oneOf": [
+                                {
+                                  "required": [
+                                    "number"
+                                  ],
+                                  "not": {
+                                    "required": [
+                                      "name"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "required": [
+                                    "name"
+                                  ],
+                                  "not": {
+                                    "required": [
+                                      "number"
+                                    ]
+                                  }
+                                }
+                              ]
                             }
                           }
                         }
