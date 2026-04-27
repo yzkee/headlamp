@@ -363,6 +363,8 @@
     },
     "event": {
       "default": [Function],
+      "useEventListForClusters": [Function],
+      "useEventWarningList": [Function],
     },
     "getVersion": [Function],
     "ingress": {
