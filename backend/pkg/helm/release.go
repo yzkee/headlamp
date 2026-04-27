@@ -178,6 +178,8 @@ func (h *Handler) ListRelease(clientConfig clientcmd.ClientConfig, w http.Respon
 		Releases: releases,
 	}
 
+	w.Header().Set("Content-Type", "application/json")
+
 	err = json.NewEncoder(w).Encode(res)
 	if err != nil {
 		logger.Log(logger.LevelError, map[string]string{"request": "list_releases"},
@@ -186,8 +188,6 @@ func (h *Handler) ListRelease(clientConfig clientcmd.ClientConfig, w http.Respon
 
 		return
 	}
-
-	w.Header().Set("Content-Type", "application/json")
 }
 
 type GetReleaseRequest struct {
@@ -252,6 +252,7 @@ func (h *Handler) GetRelease(clientConfig clientcmd.ClientConfig, w http.Respons
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
 	err = json.NewEncoder(w).Encode(result)
@@ -262,8 +263,6 @@ func (h *Handler) GetRelease(clientConfig clientcmd.ClientConfig, w http.Respons
 
 		return
 	}
-
-	w.Header().Set("Content-Type", "application/json")
 }
 
 type GetReleaseHistoryRequest struct {
@@ -324,6 +323,7 @@ func (h *Handler) GetReleaseHistory(clientConfig clientcmd.ClientConfig, w http.
 		Releases: result,
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
 	err = json.NewEncoder(w).Encode(resp)
@@ -334,8 +334,6 @@ func (h *Handler) GetReleaseHistory(clientConfig clientcmd.ClientConfig, w http.
 
 		return
 	}
-
-	w.Header().Set("Content-Type", "application/json")
 }
 
 type UninstallReleaseRequest struct {
@@ -406,6 +404,7 @@ func (h *Handler) UninstallRelease(clientConfig clientcmd.ClientConfig, w http.R
 		"message": "uninstall request accepted",
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusAccepted)
 
 	err = json.NewEncoder(w).Encode(response)
@@ -416,8 +415,6 @@ func (h *Handler) UninstallRelease(clientConfig clientcmd.ClientConfig, w http.R
 
 		return
 	}
-
-	w.Header().Set("Content-Type", "application/json")
 }
 
 func (h *Handler) uninstallRelease(req UninstallReleaseRequest, actionConfig *action.Configuration) {
@@ -503,6 +500,7 @@ func (h *Handler) RollbackRelease(clientConfig clientcmd.ClientConfig, w http.Re
 		"message": "rollback request accepted",
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusAccepted)
 
 	err = json.NewEncoder(w).Encode(response)
@@ -512,8 +510,6 @@ func (h *Handler) RollbackRelease(clientConfig clientcmd.ClientConfig, w http.Re
 
 		return
 	}
-
-	w.Header().Set("Content-Type", "application/json")
 }
 
 func (h *Handler) rollbackRelease(req RollbackReleaseRequest, actionConfig *action.Configuration) {
@@ -563,6 +559,7 @@ func (h *Handler) returnResponse(w http.ResponseWriter, reqName string, statusCo
 		"message": message,
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 
 	err := json.NewEncoder(w).Encode(response)
@@ -570,8 +567,6 @@ func (h *Handler) returnResponse(w http.ResponseWriter, reqName string, statusCo
 		handleError(w, reqName, err, "encoding response", http.StatusInternalServerError)
 		return
 	}
-
-	w.Header().Set("Content-Type", "application/json")
 }
 
 func (h *Handler) InstallRelease(clientConfig clientcmd.ClientConfig, w http.ResponseWriter, r *http.Request) {
@@ -935,6 +930,7 @@ func (h *Handler) GetActionStatus(clientConfig clientcmd.ClientConfig, w http.Re
 		response["message"] = "action failed with error: " + errMsg
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusAccepted)
 
 	err = json.NewEncoder(w).Encode(response)
@@ -944,6 +940,4 @@ func (h *Handler) GetActionStatus(clientConfig clientcmd.ClientConfig, w http.Re
 
 		return
 	}
-
-	w.Header().Set("Content-Type", "application/json")
 }
