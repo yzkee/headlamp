@@ -17,16 +17,20 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/kubernetes-sigs/headlamp/backend/pkg/k8cache"
+	"github.com/kubernetes-sigs/headlamp/backend/pkg/kubeconfig"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic/dynamicinformer"
 	dynamicfake "k8s.io/client-go/dynamic/fake"
+	api "k8s.io/client-go/tools/clientcmd/api"
 )
 
 func TestDeleteKeys(t *testing.T) { //nolint:funlen
@@ -430,4 +434,178 @@ func TestRunInformerToWatch_OldResource(t *testing.T) {
 	checkEviction("Delete")
 
 	close(stopCh)
+}
+
+// GetKindAndVerb — missing / empty mux "api" var  (0% branch today)
+
+// TestGetKindAndVerb_NoMuxVars exercises the early-return path where the
+// "api" mux variable is absent from the request context.
+func TestGetKindAndVerb_NoMuxVars(t *testing.T) {
+	req := httptest.NewRequestWithContext(
+		context.Background(), http.MethodGet, "/api/v1/pods", nil,
+	)
+	// No mux.SetURLVars → mux.Vars returns empty map → ok==false branch.
+	kind, verb := k8cache.GetKindAndVerb(req)
+	assert.Equal(t, "", kind)
+	assert.Equal(t, "unknown", verb)
+}
+
+// TestGetKindAndVerb_EmptyAPIVar covers the branch where the "api" mux var
+// is present but set to an empty string.
+func TestGetKindAndVerb_EmptyAPIVar(t *testing.T) {
+	req := httptest.NewRequestWithContext(
+		context.Background(), http.MethodGet, "/", nil,
+	)
+	req = mux.SetURLVars(req, map[string]string{"api": ""})
+
+	kind, verb := k8cache.GetKindAndVerb(req)
+	assert.Equal(t, "", kind)
+	assert.Equal(t, "unknown", verb)
+}
+
+// IsAllowed — "could not determine resource or verb" guard branch
+
+// TestIsAllowed_EmptyKind drives the `last == ""` guard inside IsAllowed
+// by sending a request with no mux "api" variable so that
+// GetKindAndVerb returns ("", "unknown").
+func TestIsAllowed_EmptyKind(t *testing.T) {
+	k := &kubeconfig.Context{
+		ClusterID: "/home/user/.kubeconfig+kind-auth-test",
+		Cluster:   &api.Cluster{Server: "https://127.0.0.1:19999"},
+		AuthInfo:  &api.AuthInfo{Token: "tok"},
+		KubeContext: &api.Context{
+			Cluster:  "kind-auth-test",
+			AuthInfo: "default",
+		},
+		Name: "kind-auth-test",
+	}
+
+	req := httptest.NewRequestWithContext(
+		context.Background(), http.MethodGet, "/api/v1/pods", nil,
+	)
+	// No mux vars → GetKindAndVerb returns ("", "unknown") →
+	// IsAllowed must return (false, non-nil error).
+	allowed, err := k8cache.IsAllowed(k, req)
+	assert.False(t, allowed)
+	assert.Error(t, err)
+}
+
+// ServeFromCacheOrForwardToK8s — StoreK8sResponseInCache error path
+
+// errOnWriteCache wraps MockCache and makes SetWithTTL always return an
+// error, triggering the error-logging branch in ServeFromCacheOrForwardToK8s.
+type errOnWriteCache struct {
+	*MockCache
+}
+
+func (e *errOnWriteCache) SetWithTTL(_ context.Context, _, _ string, _ time.Duration) error {
+	return assert.AnError
+}
+
+// TestServeFromCacheOrForwardToK8s_StoreError ensures the function handles
+// a cache-write failure gracefully without panicking.
+func TestServeFromCacheOrForwardToK8s_StoreError(t *testing.T) {
+	badCache := &errOnWriteCache{MockCache: NewMockCache()}
+	nextCalls := 0
+	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		nextCalls++
+
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"kind":"PodList"}`))
+	})
+
+	requestPath := "/clusters/kind-kind/api/v1/pods"
+	cacheKey := "store-err-key"
+
+	w1 := httptest.NewRecorder()
+	rcw1 := k8cache.NewResponseCapture(w1)
+	r1 := httptest.NewRequestWithContext(
+		context.Background(), http.MethodGet, requestPath, nil,
+	)
+
+	k8cache.ServeFromCacheOrForwardToK8s(badCache, false, next, cacheKey, w1, r1, rcw1)
+	assert.Equal(t, http.StatusOK, w1.Code)
+
+	w2 := httptest.NewRecorder()
+	rcw2 := k8cache.NewResponseCapture(w2)
+	r2 := httptest.NewRequestWithContext(
+		context.Background(), http.MethodGet, requestPath, nil,
+	)
+
+	k8cache.ServeFromCacheOrForwardToK8s(badCache, false, next, cacheKey, w2, r2, rcw2)
+	assert.Equal(t, http.StatusOK, w2.Code)
+	assert.Equal(t, 2, nextCalls, "next must be called each time when cache write fails")
+
+	_, err := badCache.Get(context.Background(), cacheKey)
+	assert.Error(t, err, "failed cache write must not persist the key")
+}
+
+// HandleNonGETCacheInvalidation — three branches currently at 0%
+
+// TestHandleNonGETCacheInvalidation_GETSkipped verifies that GET requests
+// return nil immediately without touching the cache or calling next.
+func TestHandleNonGETCacheInvalidation_GETSkipped(t *testing.T) {
+	mockCache := NewMockCache()
+	called := false
+	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		called = true
+	})
+
+	w := httptest.NewRecorder()
+	r := httptest.NewRequestWithContext(
+		context.Background(), http.MethodGet,
+		"/clusters/kind/api/v1/pods", nil,
+	)
+
+	err := k8cache.HandleNonGETCacheInvalidation(mockCache, w, r, next, "ctx-key")
+	assert.NoError(t, err)
+	assert.False(t, called, "next must not be called for GET requests")
+}
+
+// TestHandleNonGETCacheInvalidation_BypassURLExcluded verifies that a POST
+// on a URL containing "/selfsubjectrulesreviews" is NOT invalidated because
+// IsAuthBypassURL returns false for those paths — the function returns nil.
+func TestHandleNonGETCacheInvalidation_BypassURLExcluded(t *testing.T) {
+	mockCache := NewMockCache()
+	called := false
+	next := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		called = true
+
+		w.WriteHeader(http.StatusOK)
+	})
+
+	w := httptest.NewRecorder()
+	targetURL := &url.URL{Path: "/clusters/kind/api/v1/selfsubjectrulesreviews"}
+	r := httptest.NewRequestWithContext(
+		context.Background(), http.MethodPost, targetURL.String(), nil,
+	)
+	r.URL = targetURL
+
+	err := k8cache.HandleNonGETCacheInvalidation(mockCache, w, r, next, "ctx-key")
+	assert.NoError(t, err)
+	assert.False(t, called, "next must not be called for excluded URLs")
+}
+
+// TestHandleNonGETCacheInvalidation_PostOnNormalURL exercises the full
+// invalidation path: POST on a normal (non-excluded) URL →
+// IsAuthBypassURL returns true → delete stale keys → forward request →
+// cache fresh GET → return ErrHandled.
+func TestHandleNonGETCacheInvalidation_PostOnNormalURL(t *testing.T) {
+	mockCache := NewMockCache()
+
+	next := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"kind":"PodList"}`))
+	})
+
+	w := httptest.NewRecorder()
+	targetURL := &url.URL{Path: "/clusters/kind/api/v1/pods"}
+	r := httptest.NewRequestWithContext(
+		context.Background(), http.MethodPost, targetURL.String(), nil,
+	)
+	r.URL = targetURL
+
+	// IsAuthBypassURL("/…/pods") == true → full invalidation → ErrHandled.
+	err := k8cache.HandleNonGETCacheInvalidation(mockCache, w, r, next, "ctx")
+	assert.ErrorIs(t, err, k8cache.ErrHandled)
 }
