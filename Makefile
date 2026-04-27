@@ -98,6 +98,14 @@ app-tsc:
 	cd app && npm install
 	cd app && npm run tsc
 
+app/node_modules/.package-lock.json: app/package-lock.json
+	cd app && npm ci
+
+.PHONY: app-i18n-check
+app-i18n-check: app/node_modules/.package-lock.json
+	@echo "Checking app translations. If this fails use: 'npm run i18n' in the app/ folder"
+	cd app && npm run i18n-check
+
 .PHONY: backend
 backend:
 	cd backend && go build $(BUILD_VERSION_FLAGS) -o ./headlamp-server${SERVER_EXE_EXT} ./cmd

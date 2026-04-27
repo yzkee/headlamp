@@ -67,6 +67,7 @@
     "app:test:unit": "cd app && npm run test",
     "app:test:e2e": "cd app/e2e-tests && npm run test",
     "app:tsc": "cd app && npm run tsc",
+    "app:i18n-check": "cd app && npm run i18n-check",
     "app:format": "cd app && npm run format",
     "app:lint": "cd app && npm run lint",
     "app:lint:fix": "cd app && npm run lint-fix",
