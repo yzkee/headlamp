@@ -546,7 +546,7 @@ export function usePrefersColorScheme() {
     return 'light';
   }
 
-  return value;
+  return value ? 'dark' : 'light';
 }
 
 /**
