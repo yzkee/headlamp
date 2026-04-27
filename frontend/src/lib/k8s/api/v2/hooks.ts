@@ -179,7 +179,7 @@ export function useKubeObject<K extends KubeObject>({
 
   useWebSocket<KubeListUpdateEvent<K>>({
     url: () =>
-      makeUrl([KubeObjectEndpoint.toUrl(endpoint!)], {
+      makeUrl([KubeObjectEndpoint.toUrl(endpoint!, namespace)], {
         ...cleanedUpQueryParams,
         watch: 1,
         fieldSelector: `metadata.name=${name}`,
