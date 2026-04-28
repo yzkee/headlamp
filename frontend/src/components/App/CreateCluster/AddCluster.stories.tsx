@@ -114,7 +114,10 @@ export const WithPluginCatalog: Story = {
 
         const didSetProcess = React.useRef(false);
         if (!didSetProcess.current) {
-          (window as any).process = { type: 'renderer' };
+          (window as any).process = {
+            ...(originalProcess.current ?? {}),
+            type: 'renderer',
+          };
           didSetProcess.current = true;
         }
         React.useEffect(() => {
