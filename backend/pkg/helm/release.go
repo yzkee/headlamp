@@ -233,7 +233,7 @@ func (h *Handler) GetRelease(clientConfig clientcmd.ClientConfig, w http.Respons
 
 	// check if release exists
 	_, err = actionConfig.Releases.Deployed(req.Name)
-	if err == driver.ErrReleaseNotFound {
+	if errors.Is(err, driver.ErrReleaseNotFound) {
 		logger.Log(logger.LevelError, map[string]string{"releaseName": req.Name, "request": "get_release"},
 			err, "release not found")
 		http.Error(w, err.Error(), http.StatusNotFound)
@@ -300,7 +300,7 @@ func (h *Handler) GetReleaseHistory(clientConfig clientcmd.ClientConfig, w http.
 
 	// check if release exists
 	_, err = actionConfig.Releases.Deployed(req.Name)
-	if err == driver.ErrReleaseNotFound {
+	if errors.Is(err, driver.ErrReleaseNotFound) {
 		logger.Log(logger.LevelError, map[string]string{"releaseName": req.Name, "request": "get_release_history"},
 			err, "release not found")
 		http.Error(w, err.Error(), http.StatusNotFound)
@@ -379,7 +379,7 @@ func (h *Handler) UninstallRelease(clientConfig clientcmd.ClientConfig, w http.R
 
 	// check if release exists
 	_, err = actionConfig.Releases.Deployed(req.Name)
-	if err == driver.ErrReleaseNotFound {
+	if errors.Is(err, driver.ErrReleaseNotFound) {
 		logger.Log(logger.LevelError, map[string]string{"releaseName": req.Name, "request": "uninstall_release"},
 			err, "release not found")
 		http.Error(w, err.Error(), http.StatusNotFound)
@@ -476,7 +476,7 @@ func (h *Handler) RollbackRelease(clientConfig clientcmd.ClientConfig, w http.Re
 
 	// check if release exists
 	_, err = actionConfig.Releases.Deployed(req.Name)
-	if err == driver.ErrReleaseNotFound {
+	if errors.Is(err, driver.ErrReleaseNotFound) {
 		logger.Log(logger.LevelError, map[string]string{"releaseName": req.Name},
 			err, "release not found")
 		http.Error(w, err.Error(), http.StatusNotFound)
@@ -785,7 +785,7 @@ func (h *Handler) UpgradeRelease(clientConfig clientcmd.ClientConfig, w http.Res
 
 	// check if release exists
 	_, err = actionConfig.Releases.Deployed(req.Name)
-	if err == driver.ErrReleaseNotFound {
+	if errors.Is(err, driver.ErrReleaseNotFound) {
 		handleError(w, req.Name, err, "release not found", http.StatusNotFound)
 		return
 	}
