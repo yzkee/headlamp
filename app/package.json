@@ -18,6 +18,7 @@
     "dev-only-app": "npm run compile-electron -- --dev && cross-env ELECTRON_DEV=1 ELECTRON_START_URL=http://localhost:3000 EXTERNAL_SERVER=true electron .",
     "format": "cd .. && npm run frontend:format",
     "i18n": "npx --no-install i18next ./electron/main.ts -c ./electron/i18next-parser.config.ts",
+    "i18n-check": "npm run i18n -- --fail-on-update",
     "lint": "cd .. && npm run frontend:lint",
     "lint-fix": "cd .. && npm run frontend:lint:fix",
     "package": "npm run build && electron-builder build --publish never",
