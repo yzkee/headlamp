@@ -2,9 +2,11 @@ package k8cache
 
 import (
 	"context"
+	"time"
 
 	"github.com/kubernetes-sigs/headlamp/backend/pkg/cache"
 	"github.com/kubernetes-sigs/headlamp/backend/pkg/kubeconfig"
+	"k8s.io/client-go/kubernetes"
 )
 
 // ExportedRunWatcher exposes runWatcher for testing.
@@ -51,4 +53,37 @@ func RegistryLoaded(key string) (watcher, cancel bool) {
 	_, cancel = contextCancel.Load(key)
 
 	return
+}
+
+// ResetClientsetCache clears the clientset cache for test isolation.
+func ResetClientsetCache() {
+	mu.Lock()
+	defer mu.Unlock()
+
+	clientsetCache = make(map[string]*CachedClientSet)
+}
+
+// SeedClientsetCache populates the clientset cache with dummy entries for testing.
+func SeedClientsetCache(key string, lastUsed time.Time) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	clientsetCache[key] = &CachedClientSet{
+		clientset: &kubernetes.Clientset{},
+		lastUsed:  lastUsed,
+	}
+}
+
+// ManualEvictExpiredClientsets triggers the eviction logic immediately for testing.
+func ManualEvictExpiredClientsets() {
+	evictExpiredClientsets()
+}
+
+// ClientsetCacheLen returns the current number of entries in the
+// clientset cache. It is intended for use in tests.
+func ClientsetCacheLen() int {
+	mu.Lock()
+	defer mu.Unlock()
+
+	return len(clientsetCache)
 }
