@@ -54,6 +54,19 @@ export default {
                 { status: 404 }
               )
           ),
+          http.get('http://localhost:4466/apis/autoscaling.k8s.io/v1', () =>
+            HttpResponse.json(
+              {
+                kind: 'Status',
+                apiVersion: 'v1',
+                status: 'Failure',
+                reason: 'NotFound',
+                message: 'the server could not find the requested resource',
+                code: 404,
+              },
+              { status: 404 }
+            )
+          ),
         ],
       },
     },
