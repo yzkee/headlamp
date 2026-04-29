@@ -35,6 +35,11 @@ import (
 	"github.com/kubernetes-sigs/headlamp/backend/pkg/logger"
 )
 
+const (
+	apiPathSegment  = "api"
+	apisPathSegment = "apis"
+)
+
 // CachedResponseData stores information such as StatusCode, Headers, and Body.
 // It helps cache responses efficiently and serve them from the cache.
 type CachedResponseData struct {
@@ -76,14 +81,14 @@ func GetAPIGroup(path string) (apiGroup, version string, err error) {
 	parts := strings.Split(path, "/")
 
 	switch {
-	case len(parts) >= 4 && parts[3] == "api":
+	case len(parts) >= 4 && parts[3] == apiPathSegment:
 		// Core API group
 		apiGroup = ""
 
 		if len(parts) >= 5 {
 			version = parts[4]
 		}
-	case len(parts) >= 4 && parts[3] == "apis":
+	case len(parts) >= 4 && parts[3] == apisPathSegment:
 		// Named API group
 		if len(parts) >= 5 {
 			apiGroup = parts[4]
@@ -111,7 +116,21 @@ func ExtractNamespace(rawURL string) (string, string) {
 	var namespace, kind string
 
 	urls := strings.Split(rawURL, "/")
+
 	n := len(urls)
+	apiIdx := -1
+
+	// Kubernetes API paths either start directly at /api (index 1)
+	// or are proxied via /clusters/{name}/api (index 3)
+	if n > 1 && (urls[1] == apiPathSegment || urls[1] == apisPathSegment) {
+		apiIdx = 1
+	} else if n > 3 && urls[1] == "clusters" && (urls[3] == apiPathSegment || urls[3] == apisPathSegment) {
+		apiIdx = 3
+	}
+
+	if apiIdx == -1 {
+		return "", ""
+	}
 
 	for i := 0; i < n-1; i++ {
 		if urls[i] == "namespaces" {
@@ -120,7 +139,7 @@ func ExtractNamespace(rawURL string) (string, string) {
 		}
 	}
 
-	if len(urls) > 2 {
+	if n > 2 {
 		kind = urls[n-1]
 	}
 
