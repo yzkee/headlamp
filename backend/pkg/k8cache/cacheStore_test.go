@@ -253,6 +253,8 @@ func TestGetAPIGroup(t *testing.T) {
 
 // TestExtractNamespace verifies namespace extraction from different kinds
 // of URLs, including valid, empty, and malformed ones.
+//
+//nolint:funlen
 func TestExtractNamespace(t *testing.T) {
 	tests := []struct {
 		name       string
@@ -295,6 +297,24 @@ func TestExtractNamespace(t *testing.T) {
 			urlPath:    url.URL{Path: "/api/v1/namespaces/dev/services/"},
 			namespaces: "dev",
 			kind:       "services",
+		},
+		{
+			name:       "internal cluster URL without API group",
+			urlPath:    url.URL{Path: "/clusters/production-cluster"},
+			namespaces: "",
+			kind:       "",
+		},
+		{
+			name:       "internal cluster URL with literal api segment",
+			urlPath:    url.URL{Path: "/clusters/api/overview"},
+			namespaces: "",
+			kind:       "",
+		},
+		{
+			name:       "internal plugin URL without API group",
+			urlPath:    url.URL{Path: "/plugins/my-custom-plugin"},
+			namespaces: "",
+			kind:       "",
 		},
 	}
 	for _, tc := range tests {
