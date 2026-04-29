@@ -25,7 +25,7 @@ import { isBackstage } from '../../../helpers/isBackstage';
 import { isElectron } from '../../../helpers/isElectron';
 import { useClustersConf, useClustersVersion } from '../../../lib/k8s';
 import { Cluster } from '../../../lib/k8s/cluster';
-import Event from '../../../lib/k8s/event';
+import { useEventWarningList } from '../../../lib/k8s/event';
 import { createRouteURL } from '../../../lib/router/createRouteURL';
 import { PageGrid } from '../../common/Resource';
 import SectionBox from '../../common/SectionBox';
@@ -58,7 +58,7 @@ interface HomeComponentProps {
 }
 
 function useWarningSettingsPerCluster(clusterNames: string[]) {
-  const warningsMap = Event.useWarningList(clusterNames);
+  const warningsMap = useEventWarningList(clusterNames);
   const [warningLabels, setWarningLabels] = React.useState<{ [cluster: string]: string }>({});
   const maxWarnings = 50;
 
