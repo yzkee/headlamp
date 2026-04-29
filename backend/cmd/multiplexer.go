@@ -739,6 +739,10 @@ func (m *Multiplexer) sendCompleteMessage(conn *Connection, clientConn *WSConnLo
 }
 
 // sendDataMessage sends the actual data message to the client.
+//
+// Lock ordering note: writeMu is released before acquiring mu to
+// maintain a consistent lock order (mu → writeMu) with updateStatus
+// and prevent a lock-order inversion deadlock.
 func (m *Multiplexer) sendDataMessage(
 	conn *Connection,
 	clientConn *WSConnLock,
@@ -748,9 +752,10 @@ func (m *Multiplexer) sendDataMessage(
 	dataMsg := m.createWrapperMessage(conn, messageType, message)
 
 	conn.writeMu.Lock()
-	defer conn.writeMu.Unlock()
+	err := clientConn.WriteJSON(dataMsg)
+	conn.writeMu.Unlock()
 
-	if err := clientConn.WriteJSON(dataMsg); err != nil {
+	if err != nil {
 		return err
 	}
 

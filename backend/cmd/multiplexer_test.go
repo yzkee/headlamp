@@ -1570,3 +1570,101 @@ func TestSendDataMessage(t *testing.T) {
 	err = m.sendDataMessage(conn, clientConn, websocket.TextMessage, textMsg)
 	assert.NoError(t, err) // Should return nil even for closed connection
 }
+
+// runConcurrentLockStress fires updateStatus and sendDataMessage
+// simultaneously for n iterations to surface lock-order deadlocks.
+func runConcurrentLockStress(
+	m *Multiplexer,
+	conn *Connection,
+	clientConn *WSConnLock,
+	iterations int,
+) <-chan struct{} {
+	finished := make(chan struct{})
+
+	go func() {
+		defer close(finished)
+
+		var start sync.WaitGroup
+
+		for i := 0; i < iterations; i++ {
+			start.Add(1)
+
+			var wg sync.WaitGroup
+
+			wg.Add(2)
+
+			go func() {
+				defer wg.Done()
+
+				start.Wait()
+
+				conn.updateStatus(StateConnected, nil)
+			}()
+
+			go func() {
+				defer wg.Done()
+
+				start.Wait()
+
+				_ = m.sendDataMessage(conn, clientConn, websocket.TextMessage, []byte("test"))
+			}()
+
+			// Release both goroutines simultaneously.
+			start.Done()
+
+			wg.Wait()
+		}
+	}()
+
+	return finished
+}
+
+// TestConcurrentUpdateStatusAndSendDataMessage is a regression test that verifies
+// updateStatus and sendDataMessage can run concurrently without deadlocking.
+//
+// Before the fix, sendDataMessage acquired writeMu then mu (nested), while
+// updateStatus acquired mu then writeMu, creating a lock-order inversion
+// (ABBA deadlock). The fix changed sendDataMessage to acquire each lock
+// sequentially (writeMu → unlock → mu → unlock), eliminating the nested
+// acquisition entirely.
+func TestConcurrentUpdateStatusAndSendDataMessage(t *testing.T) {
+	m := NewMultiplexer(kubeconfig.NewContextStore())
+
+	clientConn, clientServer := createTestWebSocketConnection()
+	defer clientServer.Close()
+
+	conn := createTestConnection("test-cluster", "test-user", "/api/v1/pods", "", clientConn)
+
+	// Drain messages from the client side so writes don't block on a full buffer.
+	done := make(chan struct{})
+
+	go func() {
+		defer close(done)
+
+		for {
+			var msg json.RawMessage
+			if err := clientConn.ReadJSON(&msg); err != nil {
+				return
+			}
+		}
+	}()
+
+	// Clean up the reader goroutine so it does not leak after the test.
+	t.Cleanup(func() {
+		_ = clientConn.conn.Close()
+
+		<-done
+	})
+
+	// Run updateStatus and sendDataMessage concurrently.
+	// If the lock order is inverted, this will deadlock and the test will
+	// exceed its timeout.
+	finished := runConcurrentLockStress(m, conn, clientConn, 50)
+
+	select {
+	case <-finished:
+		// Success: no deadlock.
+	case <-time.After(5 * time.Second):
+		t.Fatal("deadlock detected: concurrent updateStatus and sendDataMessage blocked for 5s")
+	}
+}
