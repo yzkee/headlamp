@@ -301,7 +301,13 @@ export function PodDebugTerminal(props: PodDebugTerminalProps) {
           }
           return true;
         }
-      } catch {}
+      } catch (e) {
+        console.debug('PodDebugTerminal: failed to parse server error channel data', {
+          channel,
+          text,
+          error: e,
+        });
+      }
     }
     return false;
   }
@@ -314,7 +320,13 @@ export function PodDebugTerminal(props: PodDebugTerminalProps) {
         if (error.code === 500 && error.status === 'Failure' && error.reason === 'InternalError') {
           return true;
         }
-      } catch {}
+      } catch (e) {
+        console.debug('PodDebugTerminal: failed to parse server error channel data', {
+          channel,
+          text,
+          error: e,
+        });
+      }
     }
     // Windows container Error
     if (channel === Channel.StdOut) {

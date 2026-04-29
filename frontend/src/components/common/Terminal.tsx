@@ -381,7 +381,13 @@ export default function Terminal(props: TerminalProps) {
         if (_.isEmpty(error.metadata) && error.status === 'Success') {
           return true;
         }
-      } catch {}
+      } catch (e) {
+        console.debug('Terminal: failed to parse server error channel data', {
+          channel,
+          text,
+          error: e,
+        });
+      }
     }
     return false;
   }
@@ -394,7 +400,13 @@ export default function Terminal(props: TerminalProps) {
         if (error.code === 500 && error.status === 'Failure' && error.reason === 'InternalError') {
           return true;
         }
-      } catch {}
+      } catch (e) {
+        console.debug('Terminal: failed to parse server error channel data', {
+          channel,
+          text,
+          error: e,
+        });
+      }
     }
     // Windows container Error
     if (channel === 1) {
