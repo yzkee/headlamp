@@ -336,7 +336,6 @@ func handlePortForwardError(
 	pfDetails *portForward,
 	logParams map[string]string,
 	errMsg string,
-	isReady bool,
 ) error {
 	logger.Log(logger.LevelError, logParams, errors.New(errMsg), "portforward error")
 
@@ -345,10 +344,6 @@ func handlePortForwardError(
 
 	portforwardstore(cache, *pfDetails)
 	safeCloseChan(pfDetails.closeChan)
-
-	if isReady {
-		return nil
-	}
 
 	return errors.New(errMsg)
 }
@@ -380,14 +375,22 @@ func handlePortForwardReadiness(
 	case <-readyChan:
 		if errOut.String() != "" {
 			return handlePortForwardError(cache, pfDetails, logParams,
-				fmt.Sprintf("portforward failed to start, stderr: %s", errOut.String()), false)
+				fmt.Sprintf("portforward failed, stderr: %s", errOut.String()))
 		}
 
 		handlePortForwardSuccess(cache, pfDetails, logParams)
-	case err := <-forwardErrChan:
-		return handlePortForwardError(cache, pfDetails, logParams, err.Error(), false)
+	case err, ok := <-forwardErrChan:
+		if !ok {
+			return handlePortForwardError(cache, pfDetails, logParams, "portforward stopped before ready")
+		}
+
+		if err == nil {
+			return handlePortForwardError(cache, pfDetails, logParams, "portforward failed: nil error received")
+		}
+
+		return handlePortForwardError(cache, pfDetails, logParams, err.Error())
 	case <-time.After(PortForwardReadinessTimeout):
-		return handlePortForwardError(cache, pfDetails, logParams, "timeout waiting for portforward to become ready", false)
+		return handlePortForwardError(cache, pfDetails, logParams, "timeout waiting for portforward to be ready")
 	case <-pfDetails.closeChan:
 		msg := "portforward stopped before becoming ready"
 
