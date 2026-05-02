@@ -17,13 +17,76 @@ limitations under the License.
 package portforward
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/kubernetes-sigs/headlamp/backend/pkg/cache"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+// TestHandlePortForwardReadiness tests handlePortForwardReadiness function.
+func TestHandlePortForwardReadiness(t *testing.T) {
+	c := cache.New[interface{}]()
+	logParams := map[string]string{"id": "id"}
+	errOut := &bytes.Buffer{}
+
+	t.Run("closed_channel", func(t *testing.T) {
+		pfDetails := &portForward{
+			ID:        "id",
+			Cluster:   "cluster",
+			closeChan: make(chan struct{}, 1),
+			Status:    RUNNING,
+		}
+		readyChan := make(chan struct{}, 1)
+
+		forwardErrChan := make(chan error, 1)
+		close(forwardErrChan)
+
+		err := handlePortForwardReadiness(c, pfDetails, readyChan, errOut, logParams, forwardErrChan)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "stopped before ready")
+		assert.Equal(t, STOPPED, pfDetails.Status)
+	})
+
+	t.Run("nil_error", func(t *testing.T) {
+		pfDetails := &portForward{
+			ID:        "id",
+			Cluster:   "cluster",
+			closeChan: make(chan struct{}, 1),
+			Status:    RUNNING,
+		}
+		readyChan := make(chan struct{}, 1)
+
+		forwardErrChan := make(chan error, 1)
+		forwardErrChan <- nil
+
+		err := handlePortForwardReadiness(c, pfDetails, readyChan, errOut, logParams, forwardErrChan)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "nil error received")
+		assert.Equal(t, STOPPED, pfDetails.Status)
+	})
+
+	t.Run("actual_error", func(t *testing.T) {
+		pfDetails := &portForward{
+			ID:        "id",
+			Cluster:   "cluster",
+			closeChan: make(chan struct{}, 1),
+			Status:    RUNNING,
+		}
+		readyChan := make(chan struct{}, 1)
+
+		forwardErrChan := make(chan error, 1)
+		forwardErrChan <- fmt.Errorf("some error")
+
+		err := handlePortForwardReadiness(c, pfDetails, readyChan, errOut, logParams, forwardErrChan)
+		assert.Error(t, err)
+		assert.Equal(t, "some error", err.Error())
+		assert.Equal(t, STOPPED, pfDetails.Status)
+	})
+}
 
 // TestPortforwardKeyGenerator tests portforwardKeyGenerator function.
 func TestPortforwardKeyGenerator(t *testing.T) {
