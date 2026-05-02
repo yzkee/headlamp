@@ -105,6 +105,7 @@
   "Hosts": "ホスト",
   "Jobs": "ジョブ",
   "Completions": "完了",
+  "Job Sets": "",
   "Lease": "リース",
   "LimitRange": "制限範囲",
   "Ingress": "イングレス",
