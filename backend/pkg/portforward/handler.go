@@ -437,8 +437,6 @@ func runAndMonitorPortForward(
 			case forwardErrChan <- err:
 			default:
 			}
-
-			safeCloseChan(pfDetails.closeChan)
 		} else {
 			logger.Log(logger.LevelInfo, logParams, nil, "ForwardPorts() exited.")
 
@@ -452,6 +450,7 @@ func runAndMonitorPortForward(
 			}
 		}
 
+		safeCloseChan(pfDetails.closeChan)
 		close(forwardErrChan)
 	}()
 
