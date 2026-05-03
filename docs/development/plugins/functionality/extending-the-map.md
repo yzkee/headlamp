@@ -67,6 +67,7 @@ const mySource = {
         {
           id: myResource.metadata.uid, // ID should be unique
           kubeObject: new KubeObject(myResource),
+          status: "warning", // Optional: "success", "warning", or "error"
           // Optionally provide a custom details component to be shown when node is selected
           detailsComponent: ({ node }) => {
             return (
@@ -87,6 +88,10 @@ const mySource = {
   },
 };
 ```
+
+When `status` is provided, the node participates in the map's warning/error badge and the
+"Status: Error or Warning" filter. If `status` is omitted, Headlamp falls back to its default
+status detection for Kubernetes objects.
 
 Then to register it call `registerMapSource`
 
