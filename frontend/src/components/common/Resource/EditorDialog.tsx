@@ -383,7 +383,7 @@ export default function EditorDialog(props: EditorDialogProps) {
   function makeEditor() {
     const language = originalCodeRef.current.format || 'yaml';
     return (
-      <Box height="100%">
+      <Box height="100%" id={editorId}>
         {useSimpleEditor ? (
           <SimpleEditor language={language} value={code.code} onChange={onChange} />
         ) : (
@@ -431,6 +431,7 @@ export default function EditorDialog(props: EditorDialogProps) {
   }
 
   const dialogTitleId = useId('editor-dialog-title-');
+  const editorId = useId('editor-textarea-');
 
   const content = !item ? (
     <Loader title={t('Loading editor')} />
@@ -547,7 +548,7 @@ export default function EditorDialog(props: EditorDialogProps) {
             confirmDescription={t(
               'This will discard your changes in the editor. Do you want to proceed?'
             )}
-            // @todo: aria-controls should point to the textarea id
+            aria-controls={editorId}
           >
             {t('translation|Undo Changes')}
           </ConfirmButton>
@@ -564,7 +565,7 @@ export default function EditorDialog(props: EditorDialogProps) {
             color="primary"
             variant="contained"
             disabled={originalCodeRef.current.code === code.code || !!error}
-            // @todo: aria-controls should point to the textarea id
+            aria-controls={editorId}
           >
             {saveLabel || t('translation|Save & Apply')}
           </Button>
