@@ -9,6 +9,8 @@ Map view displays cluster resource on a graph. Plugins can extend this graph by 
 
 **Node** represents a Kubernetes resource. **Edges** connect different **nodes**, for example ReplicaSet connects to Pods it owns.
 
+Node and edge IDs should be stable and unique. When multiple selected sources return the same node or edge ID, Headlamp renders the first graph element for that ID.
+
 <figure>
 
 ![Screenshot of a Map with one ReplicaSet node connected to three Pods it owns](./images/map-rs-and-pods.png)
