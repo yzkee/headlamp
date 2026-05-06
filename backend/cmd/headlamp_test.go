@@ -2240,3 +2240,131 @@ func TestHelmRouteReleaseHandlerTokenExtraction(t *testing.T) {
 	assert.Equal(t, testToken, capturedBearerToken,
 		"clientConfig bearer token should be set from cookie in non-OIDC in-cluster deployment")
 }
+
+func TestAllowedHosts(t *testing.T) {
+	hosts := allowedHosts("localhost", 4466)
+
+	assert.True(t, hosts["localhost:4466"])
+	assert.True(t, hosts["127.0.0.1:4466"])
+	assert.True(t, hosts["[::1]:4466"])
+	assert.True(t, hosts["localhost"])
+	assert.True(t, hosts["127.0.0.1"])
+	assert.True(t, hosts["::1"])
+	assert.False(t, hosts["evil.example.com:4466"])
+	assert.False(t, hosts["attacker-rebind.example.com:4466"])
+}
+
+func TestAllowedHosts_CustomAddr(t *testing.T) {
+	hosts := allowedHosts("10.0.0.5", 8080)
+
+	assert.True(t, hosts["localhost:8080"])
+	assert.True(t, hosts["127.0.0.1:8080"])
+	assert.True(t, hosts["10.0.0.5:8080"])
+	assert.True(t, hosts["10.0.0.5"])
+	assert.False(t, hosts["evil.example.com:8080"])
+}
+
+func TestAllowedHosts_IPv6Unbracketed(t *testing.T) {
+	// listen-addr provided without brackets should still produce valid entries.
+	hosts := allowedHosts("::1", 4466)
+
+	assert.True(t, hosts["[::1]:4466"])
+	assert.True(t, hosts["::1"])
+}
+
+func TestNormalizeHost(t *testing.T) {
+	tests := []struct {
+		raw  string
+		want string
+	}{
+		{"localhost:4466", "localhost:4466"},
+		{"LOCALHOST:4466", "localhost:4466"},
+		{"LocalHost", "localhost"},
+		{"127.0.0.1:4466", "127.0.0.1:4466"},
+		{"[::1]:4466", "[::1]:4466"},
+		// Bracketed IPv6 without port — brackets must be stripped.
+		{"[::1]", "::1"},
+		// Long-form IPv6 with port — must be compressed to canonical form.
+		{"[0:0:0:0:0:0:0:1]:4466", "[::1]:4466"},
+		// Long-form IPv6 without port.
+		{"[0:0:0:0:0:0:0:1]", "::1"},
+		{"", ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.raw, func(t *testing.T) {
+			assert.Equal(t, tt.want, normalizeHost(tt.raw))
+		})
+	}
+}
+
+func TestIsLoopbackAddr(t *testing.T) {
+	tests := []struct {
+		addr string
+		want bool
+	}{
+		{"localhost", true},
+		{"127.0.0.1", true},
+		{"127.0.0.2", true},
+		{"127.0.1.1", true},
+		{"::1", true},
+		{"[::1]", true},
+		{"0.0.0.0", false},
+		{"10.0.0.5", false},
+		{"", false},
+		{"headlamp.mycompany.com", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.addr, func(t *testing.T) {
+			assert.Equal(t, tt.want, isLoopbackAddr(tt.addr))
+		})
+	}
+}
+
+func TestHostValidationMiddleware(t *testing.T) {
+	inner := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+
+	middleware := hostValidationMiddleware("localhost", 4466)
+	handler := middleware(inner)
+
+	tests := []struct {
+		name       string
+		host       string
+		wantStatus int
+	}{
+		{"localhost with port", "localhost:4466", http.StatusOK},
+		{"127.0.0.1 with port", "127.0.0.1:4466", http.StatusOK},
+		{"ipv6 loopback with port", "[::1]:4466", http.StatusOK},
+		{"ipv6 loopback long form with port", "[0:0:0:0:0:0:0:1]:4466", http.StatusOK},
+		{"ipv6 loopback without port", "[::1]", http.StatusOK},
+		{"ipv6 loopback long form without port", "[0:0:0:0:0:0:0:1]", http.StatusOK},
+		{"localhost without port", "localhost", http.StatusOK},
+		{"uppercase localhost", "LOCALHOST:4466", http.StatusOK},
+		{"mixed case localhost", "LocalHost:4466", http.StatusOK},
+		{"unknown external host", "evil.example.com:4466", http.StatusForbidden},
+		{"attacker domain", "attacker-rebind.example.com:4466", http.StatusForbidden},
+		{"empty host", "", http.StatusForbidden},
+		{"wrong port", "localhost:9999", http.StatusForbidden},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			target := "/config"
+			if tt.host != "" {
+				target = "http://" + tt.host + "/config"
+			}
+
+			req := httptest.NewRequestWithContext(context.Background(), "GET", target, nil)
+
+			req.Host = tt.host
+			rr := httptest.NewRecorder()
+
+			handler.ServeHTTP(rr, req)
+
+			assert.Equal(t, tt.wantStatus, rr.Code)
+		})
+	}
+}
