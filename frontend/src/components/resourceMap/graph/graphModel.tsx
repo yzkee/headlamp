@@ -85,6 +85,58 @@ export interface GraphEdge {
 }
 
 /**
+ * Deduplicates graph nodes and edges by ID.
+ *
+ * When duplicate nodes or edges are found, the first graph element is preserved.
+ *
+ * @param nodes - list of graph Nodes
+ * @param edges - list of graph Edges
+ * @returns graph elements with unique node and edge IDs
+ */
+export function deduplicateGraphElements(nodes: GraphNode[], edges: GraphEdge[]) {
+  return {
+    nodes: deduplicateGraphNodes(nodes),
+    edges: deduplicateGraphEdges(edges),
+  };
+}
+
+/**
+ * Deduplicates graph nodes by ID, preserving the first node for each ID.
+ *
+ * @param nodes - list of graph Nodes
+ * @returns graph Nodes with unique IDs
+ */
+function deduplicateGraphNodes(nodes: GraphNode[]): GraphNode[] {
+  const nodesById = new Map<string, GraphNode>();
+
+  nodes.forEach(node => {
+    if (!nodesById.has(node.id)) {
+      nodesById.set(node.id, node);
+    }
+  });
+
+  return Array.from(nodesById.values());
+}
+
+/**
+ * Deduplicates graph edges by ID, preserving the first edge for each ID.
+ *
+ * @param edges - list of graph Edges
+ * @returns graph Edges with unique IDs
+ */
+export function deduplicateGraphEdges(edges: GraphEdge[]): GraphEdge[] {
+  const edgesById = new Map<string, GraphEdge>();
+
+  edges.forEach(edge => {
+    if (!edgesById.has(edge.id)) {
+      edgesById.set(edge.id, edge);
+    }
+  });
+
+  return Array.from(edgesById.values());
+}
+
+/**
  * Graph Source defines a group of Nodes and Edges
  * that can be loaded on the Map
  *
