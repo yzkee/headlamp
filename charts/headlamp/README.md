@@ -359,6 +359,7 @@ volumeMounts:
 | nodeSelector | object | `{}` | Node labels for pod assignment |
 | tolerations | list | `[]` | Pod tolerations |
 | affinity | object | `{}` | Pod affinity settings |
+| hostAliases | list | `[]` | Optional list of host/IP mappings injected into the pod's /etc/hosts. Useful when an external host (e.g. an OIDC issuer behind cluster ingress) is not resolvable via cluster DNS. |
 | topologySpreadConstraints | list | `[]` | Topology spread constraints for pod assignment |
 | podAnnotations | object | `{}` | Pod annotations |
 | podLabels | object | `{}` | Pod labels |

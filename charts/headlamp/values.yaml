@@ -349,6 +349,9 @@ tolerations: []
 # -- Affinity settings for pod assignment
 affinity: {}
 
+# -- Host aliases to add to the pod's /etc/hosts file
+hostAliases: []
+
 # -- Topology Spread Constraints for pod assignment
 topologySpreadConstraints: []
 #  - maxSkew: 1
