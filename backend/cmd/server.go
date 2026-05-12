@@ -136,7 +136,7 @@ func buildTelemetryConfig(conf *config.Config) config.Config {
 func createHeadlampConfig(conf *config.Config) *HeadlampConfig {
 	cache := cache.New[interface{}]()
 	kubeConfigStore := kubeconfig.NewContextStore()
-	multiplexer := NewMultiplexer(kubeConfigStore)
+	multiplexer := NewMultiplexer(kubeConfigStore, conf.InCluster && conf.UnsafeUseServiceAccountToken)
 
 	cfg := &headlampconfig.HeadlampConfig{
 		HeadlampCFG:               buildHeadlampCFG(conf, kubeConfigStore),
@@ -283,6 +283,10 @@ func handleCacheAuthorization(
 	kContext *kubeconfig.Context,
 	key string,
 ) bool {
+	if c.shouldUseUnsafeServiceAccountTokenForContext(kContext) {
+		clearRequestAuthorization(r)
+	}
+
 	isAllowed, authErr := k8cache.IsAllowed(kContext, r)
 	if authErr != nil {
 		k8cache.ServeFromCacheOrForwardToK8s(k8sResponseCache, isAllowed, next, key, w, r, rcw)

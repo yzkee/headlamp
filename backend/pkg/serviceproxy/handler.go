@@ -16,7 +16,12 @@ import (
 )
 
 // RequestHandler is an HTTP handler that proxies requests to a Kubernetes service.
-func RequestHandler(kubeConfigStore kubeconfig.ContextStore, w http.ResponseWriter, r *http.Request) {
+func RequestHandler(
+	kubeConfigStore kubeconfig.ContextStore,
+	unsafeUseServiceAccountToken bool,
+	w http.ResponseWriter,
+	r *http.Request,
+) {
 	clusterName, namespace, name, requestURI := parseInfoFromRequest(r)
 
 	defer disableResponseCaching(w)
@@ -29,12 +34,18 @@ func RequestHandler(kubeConfigStore kubeconfig.ContextStore, w http.ResponseWrit
 		return
 	}
 
-	bearerToken, err := getAuthToken(r, clusterName)
-	if err != nil {
-		logger.Log(logger.LevelError, nil, err, "failed to get auth token")
-		w.WriteHeader(http.StatusUnauthorized)
+	bearerToken := ""
 
-		return
+	if !shouldUseUnsafeServiceAccountToken(ctx, unsafeUseServiceAccountToken) {
+		token, err := getAuthToken(r, clusterName)
+		if err != nil {
+			logger.Log(logger.LevelError, nil, err, "failed to get auth token")
+			w.WriteHeader(http.StatusUnauthorized)
+
+			return
+		}
+
+		bearerToken = token
 	}
 
 	// Get a ClientSet with the auth token
@@ -57,6 +68,10 @@ func RequestHandler(kubeConfigStore kubeconfig.ContextStore, w http.ResponseWrit
 	conn := NewConnection(ps)
 
 	handleServiceProxy(conn, requestURI, w)
+}
+
+func shouldUseUnsafeServiceAccountToken(ctx *kubeconfig.Context, unsafeUseServiceAccountToken bool) bool {
+	return unsafeUseServiceAccountToken && ctx.UsesInClusterServiceAccountToken()
 }
 
 func parseInfoFromRequest(r *http.Request) (string, string, string, string) {

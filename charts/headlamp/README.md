@@ -94,6 +94,11 @@ $ helm upgrade my-headlamp headlamp/headlamp \
 | config.tlsCertPath | string | `""`                  | Certificate for serving TLS                                               |
 | config.tlsKeyPath  | string | `""`                  | Key for serving TLS                                                       |
 
+When `config.unsafeUseServiceAccountToken` is enabled, the token file must be
+mounted and readable in the Headlamp container. The default path is provided by
+`automountServiceAccountToken`; custom paths require a matching projected
+volume or volume mount.
+
 ### OIDC Configuration
 
 | Key | Type | Default | Description |

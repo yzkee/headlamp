@@ -184,6 +184,14 @@
           "type": "string",
           "description": "Default image to use when creating pod debug containers"
         },
+        "unsafeUseServiceAccountToken": {
+          "type": "boolean",
+          "description": "UNSAFE: authenticate every user as the pod's service account in-cluster mode"
+        },
+        "serviceAccountTokenPath": {
+          "type": "string",
+          "description": "Path to the service account token file when unsafeUseServiceAccountToken is enabled"
+        },
         "oidc": {
           "type": "object",
           "description": "OIDC configuration",
