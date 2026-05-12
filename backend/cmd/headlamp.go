@@ -521,13 +521,26 @@ func createHeadlampHandler(ctx context.Context, config *HeadlampConfig) http.Han
 
 	// In-cluster
 	if config.UseInCluster {
+		if config.UnsafeUseServiceAccountToken {
+			logger.Log(
+				logger.LevelWarn,
+				nil,
+				nil,
+				"UNSAFE: authenticating all users with the pod's service account token. "+
+					"This disables per-user auth and is only safe behind an auth proxy.",
+			)
+		}
+
 		context, err := kubeconfig.GetInClusterContext(
 			config.InClusterContextName,
 			config.OidcIdpIssuerURL,
 			config.OidcClientID, config.OidcClientSecret,
 			strings.Join(config.OidcScopes, ","),
 			config.OidcSkipTLSVerify,
-			config.OidcCACert)
+			config.OidcCACert,
+			config.UnsafeUseServiceAccountToken,
+			config.ServiceAccountTokenPath,
+		)
 		if err != nil {
 			logger.Log(logger.LevelError, nil, err, "Failed to get in-cluster context")
 		}

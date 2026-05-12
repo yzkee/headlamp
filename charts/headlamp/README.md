@@ -85,6 +85,8 @@ $ helm upgrade my-headlamp headlamp/headlamp \
 | config.inCluster   | bool   | `true`                | Run Headlamp in-cluster                                                   |
 | config.baseURL     | string | `""`                  | Base URL path for Headlamp UI                                             |
 | config.sessionTTL  | int    | `86400`               | The time in seconds for the internal session to remain valid (Default: 86400/24h, Min: 1 , Max: 31536000/1yr) |
+| config.unsafeUseServiceAccountToken | bool | `false` | UNSAFE: authenticate every user as the pod's service account when running in-cluster. Only safe behind an auth proxy |
+| config.serviceAccountTokenPath | string | `""` | Path to the service account token file. Used only when `unsafeUseServiceAccountToken` is true |
 | config.pluginsDir  | string | `"/headlamp/plugins"` | Directory to load Headlamp plugins from                                   |
 | config.enableHelm  | bool   | `false`               | Enable Helm operations like install, upgrade and uninstall of Helm charts |
 | config.podDebugImage | string | `""`                | Default image to use when creating pod debug containers                    |

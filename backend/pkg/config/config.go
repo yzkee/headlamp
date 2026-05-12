@@ -42,44 +42,46 @@ type Config struct {
 	// NoBrowser disables automatically opening the default browser when running
 	// a locally embedded Headlamp binary (non in-cluster with spa.UseEmbeddedFiles == true).
 	// It has no effect in in-cluster mode or when running without embedded frontend.
-	NoBrowser                 bool   `koanf:"no-browser"`
-	CacheEnabled              bool   `koanf:"cache-enabled"`
-	EnableHelm                bool   `koanf:"enable-helm"`
-	EnableDynamicClusters     bool   `koanf:"enable-dynamic-clusters"`
-	AllowKubeconfigChanges    bool   `koanf:"allow-kubeconfig-changes"`
-	ListenAddr                string `koanf:"listen-addr"`
-	WatchPluginsChanges       bool   `koanf:"watch-plugins-changes"`
-	Port                      uint   `koanf:"port"`
-	KubeConfigPath            string `koanf:"kubeconfig"`
-	SkippedKubeContexts       string `koanf:"skipped-kube-contexts"`
-	StaticDir                 string `koanf:"html-static-dir"`
-	PluginsDir                string `koanf:"plugins-dir"`
-	UserPluginsDir            string `koanf:"user-plugins-dir"`
-	BaseURL                   string `koanf:"base-url"`
-	SessionTTL                int    `koanf:"session-ttl"`
-	PodDebugImage             string `koanf:"pod-debug-image"`
-	ProxyURLs                 string `koanf:"proxy-urls"`
-	OidcClientID              string `koanf:"oidc-client-id"`
-	OidcValidatorClientID     string `koanf:"oidc-validator-client-id"`
-	OidcClientSecret          string `koanf:"oidc-client-secret"`
-	OidcIdpIssuerURL          string `koanf:"oidc-idp-issuer-url"`
-	OidcCallbackURL           string `koanf:"oidc-callback-url"`
-	OidcValidatorIdpIssuerURL string `koanf:"oidc-validator-idp-issuer-url"`
-	OidcScopes                string `koanf:"oidc-scopes"`
-	OidcUseAccessToken        bool   `koanf:"oidc-use-access-token"`
-	OidcUseCookie             bool   `koanf:"oidc-use-cookie"`
-	OidcSkipTLSVerify         bool   `koanf:"oidc-skip-tls-verify"`
-	OidcCAFile                string `koanf:"oidc-ca-file"`
-	MeUsernamePath            string `koanf:"me-username-path"`
-	MeEmailPath               string `koanf:"me-email-path"`
-	MeGroupsPath              string `koanf:"me-groups-path"`
-	MeUserInfoURL             string `koanf:"me-user-info-url"`
-	OidcUsePKCE               bool   `koanf:"oidc-use-pkce"`
-	ProxyAuthEnabled          bool   `koanf:"proxy-auth"`
-	ProxyAuthUsernameHeader   string `koanf:"proxy-auth-username-header"`
-	ProxyAuthGroupHeader      string `koanf:"proxy-auth-group-header"`
-	ProxyAuthEmailHeader      string `koanf:"proxy-auth-email-header"`
-	ProxyAuthTokenHeader      string `koanf:"proxy-auth-token-header"`
+	NoBrowser                    bool   `koanf:"no-browser"`
+	CacheEnabled                 bool   `koanf:"cache-enabled"`
+	EnableHelm                   bool   `koanf:"enable-helm"`
+	EnableDynamicClusters        bool   `koanf:"enable-dynamic-clusters"`
+	AllowKubeconfigChanges       bool   `koanf:"allow-kubeconfig-changes"`
+	ListenAddr                   string `koanf:"listen-addr"`
+	WatchPluginsChanges          bool   `koanf:"watch-plugins-changes"`
+	Port                         uint   `koanf:"port"`
+	KubeConfigPath               string `koanf:"kubeconfig"`
+	SkippedKubeContexts          string `koanf:"skipped-kube-contexts"`
+	StaticDir                    string `koanf:"html-static-dir"`
+	PluginsDir                   string `koanf:"plugins-dir"`
+	UserPluginsDir               string `koanf:"user-plugins-dir"`
+	BaseURL                      string `koanf:"base-url"`
+	SessionTTL                   int    `koanf:"session-ttl"`
+	PodDebugImage                string `koanf:"pod-debug-image"`
+	ProxyURLs                    string `koanf:"proxy-urls"`
+	OidcClientID                 string `koanf:"oidc-client-id"`
+	OidcValidatorClientID        string `koanf:"oidc-validator-client-id"`
+	OidcClientSecret             string `koanf:"oidc-client-secret"`
+	OidcIdpIssuerURL             string `koanf:"oidc-idp-issuer-url"`
+	OidcCallbackURL              string `koanf:"oidc-callback-url"`
+	OidcValidatorIdpIssuerURL    string `koanf:"oidc-validator-idp-issuer-url"`
+	OidcScopes                   string `koanf:"oidc-scopes"`
+	OidcUseAccessToken           bool   `koanf:"oidc-use-access-token"`
+	OidcUseCookie                bool   `koanf:"oidc-use-cookie"`
+	OidcSkipTLSVerify            bool   `koanf:"oidc-skip-tls-verify"`
+	OidcCAFile                   string `koanf:"oidc-ca-file"`
+	MeUsernamePath               string `koanf:"me-username-path"`
+	MeEmailPath                  string `koanf:"me-email-path"`
+	MeGroupsPath                 string `koanf:"me-groups-path"`
+	MeUserInfoURL                string `koanf:"me-user-info-url"`
+	OidcUsePKCE                  bool   `koanf:"oidc-use-pkce"`
+	ProxyAuthEnabled             bool   `koanf:"proxy-auth"`
+	ProxyAuthUsernameHeader      string `koanf:"proxy-auth-username-header"`
+	ProxyAuthGroupHeader         string `koanf:"proxy-auth-group-header"`
+	ProxyAuthEmailHeader         string `koanf:"proxy-auth-email-header"`
+	ProxyAuthTokenHeader         string `koanf:"proxy-auth-token-header"`
+	UnsafeUseServiceAccountToken bool   `koanf:"unsafe-use-service-account-token"`
+	ServiceAccountTokenPath      string `koanf:"service-account-token-path"`
 	// telemetry configs
 	ServiceName        string   `koanf:"service-name"`
 	ServiceVersion     *string  `koanf:"service-version"`
@@ -117,6 +119,10 @@ func (c *Config) Validate() error {
 
 	// Extracted to keep Validate's cognitive complexity within the linter limit.
 	c.warnRedundantThemeDefaults()
+
+	if err := c.validateServiceAccountTokenFlags(); err != nil {
+		return err
+	}
 
 	// OIDC TLS verification warning.
 	if c.OidcSkipTLSVerify {
@@ -166,6 +172,20 @@ func (c *Config) Validate() error {
 			(c.OTLPEndpoint == nil || *c.OTLPEndpoint == "") {
 			return errors.New("otlp-endpoint must be configured when use-otlp-http is enabled")
 		}
+	}
+
+	return nil
+}
+
+func (c *Config) validateServiceAccountTokenFlags() error {
+	if !c.InCluster && (c.UnsafeUseServiceAccountToken || c.ServiceAccountTokenPath != "") {
+		return errors.New("--unsafe-use-service-account-token and --service-account-token-path " +
+			"flags are only meant to be used with --in-cluster")
+	}
+
+	if c.ServiceAccountTokenPath != "" && !c.UnsafeUseServiceAccountToken {
+		return errors.New("--service-account-token-path requires " +
+			"--unsafe-use-service-account-token to be enabled")
 	}
 
 	return nil
@@ -490,6 +510,12 @@ func addGeneralFlags(f *flag.FlagSet) {
 	f.String("default-light-theme", "", "Default theme to use when user prefers light mode")
 	f.String("default-dark-theme", "", "Default theme to use when user prefers dark mode")
 	f.String("force-theme", "", "Force a specific theme, overriding user preferences")
+	f.Bool("unsafe-use-service-account-token", false,
+		"UNSAFE: use the pod's service account token to authenticate all users in-cluster. "+
+			"Disables per-user auth; only safe behind an auth proxy")
+	f.String("service-account-token-path", "",
+		"Path to the service account token. "+
+			"Only used when --unsafe-use-service-account-token is set and in-cluster")
 }
 
 func addOIDCFlags(f *flag.FlagSet) {
