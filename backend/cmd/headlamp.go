@@ -1098,17 +1098,6 @@ func tokenFromCookie(r *http.Request, clusterName string) string {
 	return ""
 }
 
-func bearerTokenValue(token string) string {
-	token = strings.TrimSpace(token)
-
-	const bearerPrefix = "Bearer "
-	if len(token) >= len(bearerPrefix) && strings.EqualFold(token[:len(bearerPrefix)], bearerPrefix) {
-		return strings.TrimSpace(token[len(bearerPrefix):])
-	}
-
-	return token
-}
-
 func (c *HeadlampConfig) requestTokenForContext(
 	r *http.Request,
 	clusterName string,
@@ -1118,7 +1107,7 @@ func (c *HeadlampConfig) requestTokenForContext(
 		return ""
 	}
 
-	token := bearerTokenValue(r.Header.Get("Authorization"))
+	token := auth.BearerTokenValue(r.Header.Get("Authorization"))
 	if token == "" {
 		token = tokenFromCookie(r, clusterName)
 	}
@@ -1136,7 +1125,7 @@ func applyRequestTokenToContext(r *http.Request, clusterName string, context *ku
 		setTokenFromCookie(r, clusterName)
 	}
 
-	bearerToken := bearerTokenValue(r.Header.Get("Authorization"))
+	bearerToken := auth.BearerTokenValue(r.Header.Get("Authorization"))
 	if bearerToken == "" {
 		return
 	}

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -96,7 +95,7 @@ func getAuthToken(r *http.Request, clusterName string) (string, error) {
 		return "", fmt.Errorf("unauthorized")
 	}
 
-	bearerToken := strings.TrimPrefix(authToken, "Bearer ")
+	bearerToken := auth.BearerTokenValue(authToken)
 	if bearerToken == "" {
 		return "", fmt.Errorf("unauthorized")
 	}

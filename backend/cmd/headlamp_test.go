@@ -2781,41 +2781,6 @@ func TestOidcUseCookieLogic(t *testing.T) {
 	}
 }
 
-func TestBearerTokenValue(t *testing.T) {
-	tests := []struct {
-		name   string
-		header string
-		want   string
-	}{
-		{
-			name:   "raw token",
-			header: "raw-token",
-			want:   "raw-token",
-		},
-		{
-			name:   "bearer token",
-			header: "Bearer raw-token",
-			want:   "raw-token",
-		},
-		{
-			name:   "case insensitive bearer token",
-			header: "bearer raw-token",
-			want:   "raw-token",
-		},
-		{
-			name:   "trim whitespace",
-			header: "  Bearer   raw-token  ",
-			want:   "raw-token",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.want, bearerTokenValue(tt.header))
-		})
-	}
-}
-
 // TestHelmRouteReleaseHandlerTokenExtraction verifies that helmRouteReleaseHandler
 // sets the Authorization header and propagates the bearer token into the clientConfig
 // in a non-OIDC in-cluster deployment where OidcConf is nil. This is a regression
