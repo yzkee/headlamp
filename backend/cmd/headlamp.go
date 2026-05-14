@@ -1090,12 +1090,44 @@ func (c *HeadlampConfig) shouldUseUnsafeServiceAccountTokenForContext(kContext *
 	return c.shouldUseUnsafeServiceAccountToken() && kContext.UsesInClusterServiceAccountToken()
 }
 
-func (c *HeadlampConfig) requestTokenForContext(r *http.Request, kContext *kubeconfig.Context) string {
+func tokenFromCookie(r *http.Request, clusterName string) string {
+	if cookieToken, err := auth.GetTokenFromCookie(r, clusterName); err == nil && cookieToken != "" {
+		return cookieToken
+	}
+
+	return ""
+}
+
+func bearerTokenValue(token string) string {
+	token = strings.TrimSpace(token)
+
+	const bearerPrefix = "Bearer "
+	if len(token) >= len(bearerPrefix) && strings.EqualFold(token[:len(bearerPrefix)], bearerPrefix) {
+		return strings.TrimSpace(token[len(bearerPrefix):])
+	}
+
+	return token
+}
+
+func (c *HeadlampConfig) requestTokenForContext(
+	r *http.Request,
+	clusterName string,
+	kContext *kubeconfig.Context,
+) string {
 	if c.shouldUseUnsafeServiceAccountTokenForContext(kContext) {
 		return ""
 	}
 
-	return r.Header.Get("Authorization")
+	token := bearerTokenValue(r.Header.Get("Authorization"))
+	if token == "" {
+		token = tokenFromCookie(r, clusterName)
+	}
+
+	if token == "" && kContext != nil && kContext.Name != clusterName {
+		token = tokenFromCookie(r, kContext.Name)
+	}
+
+	return token
 }
 
 func applyRequestTokenToContext(r *http.Request, clusterName string, context *kubeconfig.Context) {
@@ -1104,13 +1136,10 @@ func applyRequestTokenToContext(r *http.Request, clusterName string, context *ku
 		setTokenFromCookie(r, clusterName)
 	}
 
-	bearerToken := r.Header.Get("Authorization")
+	bearerToken := bearerTokenValue(r.Header.Get("Authorization"))
 	if bearerToken == "" {
 		return
 	}
-
-	// Remove "Bearer " prefix if present
-	bearerToken = strings.TrimPrefix(bearerToken, "Bearer ")
 
 	if context.AuthInfo == nil {
 		context.AuthInfo = &api.AuthInfo{}
@@ -2811,7 +2840,7 @@ func (c *HeadlampConfig) handleNodeDrain(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	token := c.requestTokenForContext(r, ctxtProxy)
+	token := c.requestTokenForContext(r, drainPayload.Cluster, ctxtProxy)
 
 	clientset, err := ctxtProxy.ClientSetWithToken(token)
 	if err != nil {

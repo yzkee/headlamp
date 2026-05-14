@@ -96,9 +96,6 @@ type Connection struct {
 	// usesServiceAccountToken is true when Token was loaded from the
 	// in-cluster service account token file.
 	usesServiceAccountToken bool
-	// serviceAccountTokenFile is the token file used when
-	// usesServiceAccountToken is true.
-	serviceAccountTokenFile string
 	// Authentication token.
 	Token *string
 }
@@ -343,7 +340,6 @@ func (m *Multiplexer) establishClusterConnection(
 	connection := m.createConnection(clusterID, userID, path, query, clientConn, authToken)
 	if m.unsafeUseServiceAccountToken && clusterContext.UsesInClusterServiceAccountToken() {
 		connection.usesServiceAccountToken = true
-		connection.serviceAccountTokenFile = clusterContext.AuthInfo.TokenFile
 	}
 
 	wsURL := createWebSocketURL(config.Host, path, query)
@@ -659,22 +655,15 @@ func (m *Multiplexer) refreshConnectionToken(conn *Connection, requestToken *str
 		return nil
 	}
 
-	authToken := requestToken
-
 	if conn.usesServiceAccountToken {
-		token, err := m.readServiceAccountToken(conn.serviceAccountTokenFile)
-		if err != nil {
-			return err
-		}
-
-		authToken = &token
+		return nil
 	}
 
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
-	if authToken != nil && (conn.Token == nil || *conn.Token != *authToken) {
-		conn.Token = authToken
+	if conn.Token == nil || *conn.Token != *requestToken {
+		conn.Token = requestToken
 	}
 
 	return nil

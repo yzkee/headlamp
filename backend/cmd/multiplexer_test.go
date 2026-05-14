@@ -1375,25 +1375,23 @@ func TestGetOrCreateConnection_TokenRefresh(t *testing.T) {
 	assert.Equal(t, &newToken, conn2.Token, "Token should be updated to the new value")
 }
 
-func TestGetOrCreateConnectionRefreshesServiceAccountTokenFromFile(t *testing.T) {
+func TestGetOrCreateConnectionDoesNotOverwriteServiceAccountToken(t *testing.T) {
 	store := kubeconfig.NewContextStore()
 	m := NewMultiplexer(store, true)
-	tokenFile := writeTestTokenFile(t)
 
 	clientConn, clientServer := createTestWebSocketConnection()
 	defer clientServer.Close()
 
-	staleServiceAccountToken := "stale-service-account-token"
+	serviceAccountToken := "service-account-token"
 	conn := m.createConnection(
 		"test-cluster",
 		"test-user",
 		"/api/v1/pods",
 		"watch=true",
 		clientConn,
-		&staleServiceAccountToken,
+		&serviceAccountToken,
 	)
 	conn.usesServiceAccountToken = true
-	conn.serviceAccountTokenFile = tokenFile
 
 	connKey := m.createConnectionKey(conn.ClusterID, conn.Path, conn.UserID)
 	m.connections[connKey] = conn
@@ -1412,7 +1410,7 @@ func TestGetOrCreateConnectionRefreshesServiceAccountTokenFromFile(t *testing.T)
 	require.NoError(t, err)
 	assert.Equal(t, conn, refreshedConn)
 	require.NotNil(t, refreshedConn.Token)
-	assert.Equal(t, testServiceAccountToken, *refreshedConn.Token)
+	assert.Equal(t, serviceAccountToken, *refreshedConn.Token)
 }
 
 func TestReconnect_WithToken(t *testing.T) {

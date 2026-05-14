@@ -865,6 +865,96 @@ func TestDrainNodeAllPodsDeletedSuccessfully(t *testing.T) {
 	assert.Equal(t, "success", status)
 }
 
+func TestHandleNodeDrainUsesRequestedClusterCookieForCustomNamedContext(t *testing.T) { //nolint:funlen
+	const (
+		originalCluster = "original-cluster"
+		customCluster   = "custom-cluster"
+		nodeName        = "node-a"
+		testToken       = "custom-cluster-token"
+	)
+
+	authHeaders := make(chan string, 3)
+	kubeAPI := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		select {
+		case authHeaders <- r.Header.Get("Authorization"):
+		default:
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+
+		switch {
+		case r.Method == http.MethodGet && r.URL.Path == "/api/v1/nodes/"+nodeName:
+			_ = json.NewEncoder(w).Encode(&corev1.Node{
+				ObjectMeta: metav1.ObjectMeta{Name: nodeName},
+			})
+		case r.Method == http.MethodPut && r.URL.Path == "/api/v1/nodes/"+nodeName:
+			_ = json.NewEncoder(w).Encode(&corev1.Node{
+				ObjectMeta: metav1.ObjectMeta{Name: nodeName},
+			})
+		case r.Method == http.MethodGet && r.URL.Path == "/api/v1/pods":
+			_ = json.NewEncoder(w).Encode(&corev1.PodList{})
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	t.Cleanup(kubeAPI.Close)
+
+	kubeConfigStore := kubeconfig.NewContextStore()
+	err := kubeConfigStore.AddContext(&kubeconfig.Context{
+		Name: originalCluster,
+		KubeContext: &api.Context{
+			Cluster:  originalCluster,
+			AuthInfo: originalCluster,
+			Extensions: map[string]k8sruntime.Object{
+				"headlamp_info": &kubeconfig.CustomObject{CustomName: customCluster},
+			},
+		},
+		Cluster: &api.Cluster{
+			Server:                kubeAPI.URL,
+			InsecureSkipTLSVerify: true,
+		},
+		AuthInfo: &api.AuthInfo{},
+		Source:   kubeconfig.InCluster,
+	})
+	require.NoError(t, err)
+
+	cfg := &HeadlampConfig{
+		HeadlampConfig: &headlampconfig.HeadlampConfig{
+			HeadlampCFG: &headlampconfig.HeadlampCFG{
+				UseInCluster:    true,
+				KubeConfigStore: kubeConfigStore,
+			},
+			Cache:            cache.New[interface{}](),
+			TelemetryConfig:  GetDefaultTestTelemetryConfig(),
+			TelemetryHandler: &telemetry.RequestHandler{},
+		},
+	}
+
+	req, err := makeJSONReq(http.MethodPost, "/drain-node", struct {
+		Cluster  string `json:"cluster"`
+		NodeName string `json:"nodeName"`
+	}{
+		Cluster:  customCluster,
+		NodeName: nodeName,
+	})
+	require.NoError(t, err)
+	req.AddCookie(&http.Cookie{
+		Name:  "headlamp-auth-" + customCluster + ".0",
+		Value: testToken,
+	})
+
+	rr := httptest.NewRecorder()
+	cfg.handleNodeDrain(rr, req)
+	require.Equal(t, http.StatusOK, rr.Code)
+
+	select {
+	case got := <-authHeaders:
+		assert.Equal(t, "Bearer "+testToken, got)
+	case <-time.After(2 * time.Second):
+		t.Fatal("timed out waiting for drain request to reach Kubernetes API")
+	}
+}
+
 func TestDeletePlugin(t *testing.T) {
 	// create temp dir for plugins
 	tempDir, err := os.MkdirTemp("", "plugins")
@@ -2688,6 +2778,41 @@ func TestOidcUseCookieLogic(t *testing.T) {
 
 	if got != want {
 		t.Errorf("got %q, want %q", got, want)
+	}
+}
+
+func TestBearerTokenValue(t *testing.T) {
+	tests := []struct {
+		name   string
+		header string
+		want   string
+	}{
+		{
+			name:   "raw token",
+			header: "raw-token",
+			want:   "raw-token",
+		},
+		{
+			name:   "bearer token",
+			header: "Bearer raw-token",
+			want:   "raw-token",
+		},
+		{
+			name:   "case insensitive bearer token",
+			header: "bearer raw-token",
+			want:   "raw-token",
+		},
+		{
+			name:   "trim whitespace",
+			header: "  Bearer   raw-token  ",
+			want:   "raw-token",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, bearerTokenValue(tt.header))
+		})
 	}
 }
 
