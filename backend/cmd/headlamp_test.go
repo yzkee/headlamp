@@ -108,19 +108,6 @@ func getResponseFromRestrictedEndpoint(handler http.Handler, method, url string,
 	return rr, nil
 }
 
-// getDefaultKubeConfigPathForTest is a test helper that wraps config.GetDefaultKubeConfigPath
-// and fails the test immediately if retrieving the default path returns an error.
-func getDefaultKubeConfigPathForTest(t *testing.T) string {
-	t.Helper()
-
-	path, err := config.GetDefaultKubeConfigPath()
-	if err != nil {
-		t.Fatalf("failed to get default kubeconfig path: %v", err)
-	}
-
-	return path
-}
-
 func TestGetConfigIncludesDefaultPodDebugImage(t *testing.T) {
 	c := &HeadlampConfig{
 		HeadlampConfig: &headlampconfig.HeadlampConfig{
@@ -593,13 +580,15 @@ func TestDrainAndCordonNode(t *testing.T) { //nolint:funlen
 
 	cache := cache.New[interface{}]()
 	kubeConfigStore := kubeconfig.NewContextStore()
+	kubeConfigPath := filepath.Join("headlamp_testdata", "kubeconfig")
+
 	tests := []test{
 		{
 			handler: createHeadlampHandler(context.Background(), &HeadlampConfig{
 				HeadlampConfig: &headlampconfig.HeadlampConfig{
 					HeadlampCFG: &headlampconfig.HeadlampCFG{
 						UseInCluster:    false,
-						KubeConfigPath:  getDefaultKubeConfigPathForTest(t),
+						KubeConfigPath:  kubeConfigPath,
 						KubeConfigStore: kubeConfigStore,
 					},
 					Cache:            cache,
@@ -829,16 +818,20 @@ func TestDeletePlugin(t *testing.T) {
 	cache := cache.New[interface{}]()
 	kubeConfigStore := kubeconfig.NewContextStore()
 
+	kubeConfigPath := filepath.Join("headlamp_testdata", "kubeconfig")
+
 	c := HeadlampConfig{
 		HeadlampConfig: &headlampconfig.HeadlampConfig{
 			HeadlampCFG: &headlampconfig.HeadlampCFG{
 				UseInCluster:    false,
-				KubeConfigPath:  getDefaultKubeConfigPathForTest(t),
+				KubeConfigPath:  kubeConfigPath,
 				PluginDir:       devPluginDir,
 				UserPluginDir:   userPluginDir,
 				KubeConfigStore: kubeConfigStore,
 			},
-			Cache: cache,
+			Cache:            cache,
+			TelemetryConfig:  GetDefaultTestTelemetryConfig(),
+			TelemetryHandler: &telemetry.RequestHandler{},
 		},
 	}
 
@@ -884,11 +877,13 @@ func TestHandleClusterAPI_XForwardedHost(t *testing.T) {
 
 	cache := cache.New[interface{}]()
 
+	kubeConfigPath := filepath.Join("headlamp_testdata", "kubeconfig")
+
 	c := HeadlampConfig{
 		HeadlampConfig: &headlampconfig.HeadlampConfig{
 			HeadlampCFG: &headlampconfig.HeadlampCFG{
 				UseInCluster:    false,
-				KubeConfigPath:  getDefaultKubeConfigPathForTest(t),
+				KubeConfigPath:  kubeConfigPath,
 				KubeConfigStore: kubeConfigStore,
 			},
 			Cache:            cache,
@@ -2059,7 +2054,7 @@ func newRealK8sHeadlampConfig(t *testing.T) (*HeadlampConfig, string) {
 
 		kubeConfigPath, err = config.GetDefaultKubeConfigPath()
 		if err != nil {
-			t.Fatalf("failed to get default kubeconfig path: %v", err)
+			t.Skipf("unable to determine default kubeconfig path, skipping real K8s integration test: %v", err)
 		}
 	}
 

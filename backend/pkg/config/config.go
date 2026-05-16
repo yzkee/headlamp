@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
-	"os/user"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -610,10 +609,10 @@ func defaultUserPluginDir() string {
 }
 
 func GetDefaultKubeConfigPath() (string, error) {
-	currentUser, err := user.Current()
+	homeDirectory, err := os.UserHomeDir()
 	if err != nil {
-		return "", fmt.Errorf("getting current user for kubeconfig path: %w", err)
+		return "", fmt.Errorf("failed to determine user home directory: %w", err)
 	}
 
-	return filepath.Join(currentUser.HomeDir, ".kube", "config"), nil
+	return filepath.Join(homeDirectory, ".kube", "config"), nil
 }
