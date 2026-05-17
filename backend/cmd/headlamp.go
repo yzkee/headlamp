@@ -108,6 +108,9 @@ type clientConfig struct {
 	IsDynamicClusterEnabled bool      `json:"isDynamicClusterEnabled"`
 	AllowKubeconfigChanges  bool      `json:"allowKubeconfigChanges"`
 	DefaultPodDebugImage    string    `json:"defaultPodDebugImage"`
+	DefaultLightTheme       string    `json:"defaultLightTheme,omitempty"`
+	DefaultDarkTheme        string    `json:"defaultDarkTheme,omitempty"`
+	ForceTheme              string    `json:"forceTheme,omitempty"`
 }
 
 type OauthConfig struct {
@@ -1975,6 +1978,9 @@ func (c *HeadlampConfig) getConfig(w http.ResponseWriter, r *http.Request) {
 		IsDynamicClusterEnabled: c.EnableDynamicClusters,
 		AllowKubeconfigChanges:  c.AllowKubeconfigChanges,
 		DefaultPodDebugImage:    c.PodDebugImage,
+		DefaultLightTheme:       c.DefaultLightTheme,
+		DefaultDarkTheme:        c.DefaultDarkTheme,
+		ForceTheme:              c.ForceTheme,
 	}
 
 	if err := json.NewEncoder(w).Encode(&clientConfig); err != nil {
