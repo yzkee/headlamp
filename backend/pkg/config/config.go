@@ -93,6 +93,18 @@ type Config struct {
 	// TLS config
 	TLSCertPath string `koanf:"tls-cert-path"`
 	TLSKeyPath  string `koanf:"tls-key-path"`
+	// Theme config
+	DefaultLightTheme string `koanf:"default-light-theme"`
+	DefaultDarkTheme  string `koanf:"default-dark-theme"`
+	ForceTheme        string `koanf:"force-theme"`
+}
+
+func (c *Config) warnRedundantThemeDefaults() {
+	if c.ForceTheme != "" && (c.DefaultLightTheme != "" || c.DefaultDarkTheme != "") {
+		logger.Log(logger.LevelWarn, nil, nil,
+			"force-theme is set together with default-light-theme/default-dark-theme, "+
+				"default themes will be ignored when force-theme is active")
+	}
 }
 
 func (c *Config) Validate() error {
@@ -102,6 +114,9 @@ func (c *Config) Validate() error {
 			"oidc-validator-client-id, oidc-validator-idp-issuer-url, flags are only " +
 			"meant to be used in inCluster mode or with --oidc-use-cookie")
 	}
+
+	// Extracted to keep Validate's cognitive complexity within the linter limit.
+	c.warnRedundantThemeDefaults()
 
 	// OIDC TLS verification warning.
 	if c.OidcSkipTLSVerify {
@@ -472,6 +487,9 @@ func addGeneralFlags(f *flag.FlagSet) {
 	f.Uint("port", defaultPort, "Port to listen from")
 	f.String("proxy-urls", "", "Allow proxy requests to specified URLs")
 	f.Bool("enable-helm", false, "Enable Helm operations")
+	f.String("default-light-theme", "", "Default theme to use when user prefers light mode")
+	f.String("default-dark-theme", "", "Default theme to use when user prefers dark mode")
+	f.String("force-theme", "", "Force a specific theme, overriding user preferences")
 }
 
 func addOIDCFlags(f *flag.FlagSet) {
