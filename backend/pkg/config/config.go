@@ -129,18 +129,8 @@ func (c *Config) Validate() error {
 		logger.Log(logger.LevelWarn, nil, nil, "oidc-skip-tls-verify is set, this is not safe for production")
 	}
 
-	// OIDC CA file validation.
-	if c.OidcCAFile != "" {
-		// Check if the file is a valid PEM file.
-		caFileContents, err := os.ReadFile(c.OidcCAFile)
-		if err != nil {
-			return fmt.Errorf("error reading oidc-ca-file: %w", err)
-		}
-
-		caCertPool := x509.NewCertPool()
-		if !caCertPool.AppendCertsFromPEM(caFileContents) {
-			return errors.New("invalid oidc-ca-file")
-		}
+	if err := c.validateOIDCCAFile(); err != nil {
+		return err
 	}
 
 	if c.BaseURL != "" && !strings.HasPrefix(c.BaseURL, "/") {
@@ -172,6 +162,24 @@ func (c *Config) Validate() error {
 			(c.OTLPEndpoint == nil || *c.OTLPEndpoint == "") {
 			return errors.New("otlp-endpoint must be configured when use-otlp-http is enabled")
 		}
+	}
+
+	return nil
+}
+
+func (c *Config) validateOIDCCAFile() error {
+	if c.OidcCAFile == "" {
+		return nil
+	}
+
+	caFileContents, err := os.ReadFile(c.OidcCAFile)
+	if err != nil {
+		return fmt.Errorf("error reading oidc-ca-file: %w", err)
+	}
+
+	caCertPool := x509.NewCertPool()
+	if !caCertPool.AppendCertsFromPEM(caFileContents) {
+		return errors.New("invalid oidc-ca-file")
 	}
 
 	return nil
