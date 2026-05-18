@@ -1435,6 +1435,10 @@ func TestOidcCallbackEmptyStateDoesNotLogStaleError(t *testing.T) {
 
 	scratch := t.TempDir()
 
+	// createHeadlampHandler overwrites config.StaticPluginDir from this env
+	// var, so set it deterministically rather than relying on the caller.
+	t.Setenv("HEADLAMP_STATIC_PLUGINS_DIR", scratch)
+
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 
@@ -1448,7 +1452,6 @@ func TestOidcCallbackEmptyStateDoesNotLogStaleError(t *testing.T) {
 				KubeConfigStore: kubeconfig.NewContextStore(),
 				PluginDir:       scratch,
 				UserPluginDir:   scratch,
-				StaticPluginDir: scratch,
 			},
 			Cache:            cache.New[interface{}](),
 			TelemetryConfig:  GetDefaultTestTelemetryConfig(),
