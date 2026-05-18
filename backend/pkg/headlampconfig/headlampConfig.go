@@ -53,7 +53,6 @@ type HeadlampCFG struct {
 	Insecure               bool
 	EnableHelm             bool
 	EnableDynamicClusters  bool
-	EnableClusterInventory bool
 	AllowKubeconfigChanges bool
 	WatchPluginsChanges    bool
 	Port                   uint
@@ -69,11 +68,6 @@ type HeadlampCFG struct {
 	BaseURL                string
 	ProxyURLs              []string
 
-	ClusterInventoryProviderFile          string
-	ClusterInventoryLabelSelector         string
-	ClusterInventoryRootReconcileInterval time.Duration
-	ClusterInventoryNoCRDCacheTTL         time.Duration
-
 	TLSCertPath                  string
 	TLSKeyPath                   string
 	SessionTTL                   int
@@ -84,4 +78,10 @@ type HeadlampCFG struct {
 	ForceTheme                   string
 	UnsafeUseServiceAccountToken bool
 	ServiceAccountTokenPath      string
+
+	EnableClusterInventory                bool
+	ClusterInventoryProviderFile          string
+	ClusterInventoryLabelSelector         string
+	ClusterInventoryRootReconcileInterval time.Duration
+	ClusterInventoryNoCRDCacheTTL         time.Duration
 }
