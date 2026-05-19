@@ -65,6 +65,7 @@ import (
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
@@ -503,6 +504,7 @@ func setupInClusterContext(config *HeadlampConfig) {
 func createHeadlampHandler(ctx context.Context, config *HeadlampConfig) http.Handler {
 	kubeConfigPath := config.KubeConfigPath
 
+	config.ServerCtx = ctx
 	config.StaticPluginDir = os.Getenv("HEADLAMP_STATIC_PLUGINS_DIR")
 
 	logger.Log(logger.LevelInfo, nil, nil, "Creating Headlamp handler")
@@ -2792,7 +2794,7 @@ func (c *HeadlampConfig) addClusterSetupRoute(r *mux.Router) {
 /*
 This function is used to handle the node drain request.
 */
-func (c *HeadlampConfig) handleNodeDrain(w http.ResponseWriter, r *http.Request) {
+func (c *HeadlampConfig) handleNodeDrain(w http.ResponseWriter, r *http.Request) { //nolint:funlen
 	ctx := r.Context()
 	_, span := telemetry.CreateSpan(ctx, r, "node-management", "handleNodeDrain")
 	c.TelemetryHandler.RecordRequestCount(ctx, r)
@@ -2852,19 +2854,37 @@ func (c *HeadlampConfig) handleNodeDrain(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	c.drainNode(clientset, drainPayload.NodeName, drainPayload.Cluster)
+	serverCtx := c.ServerCtx
+	if serverCtx == nil {
+		serverCtx = context.Background()
+	}
+
+	c.drainNode(serverCtx, clientset, drainPayload.NodeName, drainPayload.Cluster)
 }
 
-func (c *HeadlampConfig) drainNode(clientset kubernetes.Interface, nodeName string, cluster string) {
+func (c *HeadlampConfig) drainNode(
+	ctx context.Context,
+	clientset kubernetes.Interface,
+	nodeName string,
+	cluster string,
+) {
 	go func() {
+		if ctx.Err() != nil {
+			return
+		}
+
 		nodeClient := clientset.CoreV1().Nodes()
-		ctx := context.Background()
-		cacheKey := uuid.NewSHA1(uuid.Nil, []byte(nodeName+cluster)).String()
-		cacheItemTTL := DrainNodeCacheTTL * time.Minute
+		cacheKey := uuid.NewSHA1(uuid.Nil, []byte(nodeName+"\x00"+cluster)).String()
+		cacheItemTTL := DrainNodeCacheTTL * time.Second
 
 		node, err := nodeClient.Get(ctx, nodeName, v1.GetOptions{})
 		if err != nil {
+			if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+				return
+			}
+
 			_ = c.Cache.SetWithTTL(ctx, cacheKey, "error: "+err.Error(), cacheItemTTL)
+
 			return
 		}
 
@@ -2873,44 +2893,73 @@ func (c *HeadlampConfig) drainNode(clientset kubernetes.Interface, nodeName stri
 
 		_, err = nodeClient.Update(ctx, node, v1.UpdateOptions{})
 		if err != nil {
+			if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+				return
+			}
+
 			_ = c.Cache.SetWithTTL(ctx, cacheKey, "error: "+err.Error(), cacheItemTTL)
+
 			return
 		}
 
 		pods, err := clientset.CoreV1().Pods("").List(ctx,
 			v1.ListOptions{FieldSelector: "spec.nodeName=" + nodeName})
 		if err != nil {
+			if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+				return
+			}
+
 			_ = c.Cache.SetWithTTL(ctx, cacheKey, "error: "+err.Error(), cacheItemTTL)
+
 			return
 		}
 
-		var gracePeriod int64 = 0
-
-		var deleteErrors []string
-
-		for _, pod := range pods.Items {
-			// ignore daemonsets
-			if pod.Labels["kubernetes.io/created-by"] == "daemonset-controller" {
-				continue
-			}
-
-			if err := clientset.CoreV1().Pods(pod.Namespace).Delete(ctx,
-				pod.Name, v1.DeleteOptions{GracePeriodSeconds: &gracePeriod}); err != nil && !apierrors.IsNotFound(err) {
-				deleteErrors = append(deleteErrors, fmt.Sprintf("%s/%s: %v", pod.Namespace, pod.Name, err))
-			}
-		}
-
-		if len(deleteErrors) > 0 {
-			errMsg := fmt.Sprintf("error: failed to delete %d pod(s)", len(deleteErrors))
-			logger.Log(logger.LevelError, nil, nil,
-				fmt.Sprintf("node drain: failed to delete %d pod(s): %s",
-					len(deleteErrors), strings.Join(deleteErrors, "; ")))
-
-			_ = c.Cache.SetWithTTL(ctx, cacheKey, errMsg, cacheItemTTL)
-		} else {
-			_ = c.Cache.SetWithTTL(ctx, cacheKey, "success", cacheItemTTL)
-		}
+		c.drainNodePods(ctx, clientset, pods.Items, cacheKey, cacheItemTTL)
 	}()
+}
+
+func (c *HeadlampConfig) drainNodePods(
+	ctx context.Context,
+	clientset kubernetes.Interface,
+	pods []corev1.Pod,
+	cacheKey string,
+	cacheItemTTL time.Duration,
+) {
+	var gracePeriod int64 = 0
+
+	var deleteErrors []string
+
+	for _, pod := range pods {
+		if ctx.Err() != nil {
+			return
+		}
+
+		// ignore daemonsets
+		if pod.Labels["kubernetes.io/created-by"] == "daemonset-controller" {
+			continue
+		}
+
+		if err := clientset.CoreV1().Pods(pod.Namespace).Delete(ctx,
+			pod.Name, v1.DeleteOptions{GracePeriodSeconds: &gracePeriod}); err != nil &&
+			!apierrors.IsNotFound(err) && !errors.Is(err, context.Canceled) && !errors.Is(err, context.DeadlineExceeded) {
+			deleteErrors = append(deleteErrors, fmt.Sprintf("%s/%s: %v", pod.Namespace, pod.Name, err))
+		}
+	}
+
+	if ctx.Err() != nil {
+		return
+	}
+
+	if len(deleteErrors) > 0 {
+		errMsg := fmt.Sprintf("error: failed to delete %d pod(s)", len(deleteErrors))
+		logger.Log(logger.LevelError, nil, nil,
+			fmt.Sprintf("node drain: failed to delete %d pod(s): %s",
+				len(deleteErrors), strings.Join(deleteErrors, "; ")))
+
+		_ = c.Cache.SetWithTTL(ctx, cacheKey, errMsg, cacheItemTTL)
+	} else {
+		_ = c.Cache.SetWithTTL(ctx, cacheKey, "success", cacheItemTTL)
+	}
 }
 
 /*
@@ -2951,7 +3000,7 @@ func (c *HeadlampConfig) handleNodeDrainStatus(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	cacheKey := uuid.NewSHA1(uuid.Nil, []byte(drainPayload.NodeName+drainPayload.Cluster)).String()
+	cacheKey := uuid.NewSHA1(uuid.Nil, []byte(drainPayload.NodeName+"\x00"+drainPayload.Cluster)).String()
 
 	cacheItem, err := c.Cache.Get(ctx, cacheKey)
 	if err != nil {
