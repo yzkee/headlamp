@@ -142,6 +142,22 @@ class Node extends KubeObject<KubeNode> {
       .filter(key => key.startsWith(rolePrefix))
       .map(key => key.slice(rolePrefix.length));
   }
+
+  /**
+   * Returns the node pool name from well-known cloud provider labels.
+   * Supports GKE, AKS, EKS, kOps, and Cluster API.
+   */
+  getNodePool(): string {
+    const labels = this.metadata.labels ?? {};
+    return (
+      labels['cloud.google.com/gke-nodepool'] ??
+      labels['kubernetes.azure.com/agentpool'] ??
+      labels['eks.amazonaws.com/nodegroup'] ??
+      labels['kops.k8s.io/instancegroup'] ??
+      labels['cluster.x-k8s.io/deployment-name'] ??
+      ''
+    );
+  }
 }
 
 export default Node;
