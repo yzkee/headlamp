@@ -77,6 +77,49 @@ import (
 
 type HeadlampConfig struct {
 	*headlampconfig.HeadlampConfig
+	proxyURLMu        sync.Mutex
+	compiledProxyURLs []glob.Glob
+}
+
+func compileProxyURLPatterns(patterns []string) ([]glob.Glob, error) {
+	compiledProxyURLs := make([]glob.Glob, 0, len(patterns))
+
+	for _, pattern := range patterns {
+		g, err := glob.Compile(pattern)
+		if err != nil {
+			return nil, fmt.Errorf("compiling proxy URL pattern %q: %w", pattern, err)
+		}
+
+		compiledProxyURLs = append(compiledProxyURLs, g)
+	}
+
+	return compiledProxyURLs, nil
+}
+
+func (c *HeadlampConfig) proxyURLAllowed(proxyURL string) (bool, error) {
+	c.proxyURLMu.Lock()
+
+	if c.compiledProxyURLs == nil && len(c.ProxyURLs) > 0 {
+		compiledProxyURLs, err := compileProxyURLPatterns(c.ProxyURLs)
+		if err != nil {
+			c.proxyURLMu.Unlock()
+
+			return false, err
+		}
+
+		c.compiledProxyURLs = compiledProxyURLs
+	}
+
+	compiledProxyURLs := c.compiledProxyURLs
+	c.proxyURLMu.Unlock()
+
+	for _, g := range compiledProxyURLs {
+		if g.Match(proxyURL) {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 const DrainNodeCacheTTL = 20 // seconds
@@ -601,14 +644,12 @@ func createHeadlampHandler(ctx context.Context, config *HeadlampConfig) http.Han
 			return
 		}
 
-		isURLContainedInProxyURLs := false
+		isURLContainedInProxyURLs, err := config.proxyURLAllowed(url.String())
+		if err != nil {
+			logger.Log(logger.LevelError, map[string]string{"proxyURL": proxyURL}, err, "compiling proxy URL patterns")
+			http.Error(w, "failed to compile proxy URL patterns", http.StatusInternalServerError)
 
-		for _, proxyURL := range config.ProxyURLs {
-			g := glob.MustCompile(proxyURL)
-			if g.Match(url.String()) {
-				isURLContainedInProxyURLs = true
-				break
-			}
+			return
 		}
 
 		if !isURLContainedInProxyURLs {

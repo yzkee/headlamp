@@ -500,6 +500,29 @@ func TestExternalProxy(t *testing.T) {
 	}
 }
 
+func TestCompileProxyURLPatternsInvalidPattern(t *testing.T) {
+	_, err := compileProxyURLPatterns([]string{"["})
+
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "compiling proxy URL pattern")
+}
+
+func TestProxyURLAllowedCompilesConfiguredProxyURLs(t *testing.T) {
+	config := &HeadlampConfig{
+		HeadlampConfig: &headlampconfig.HeadlampConfig{
+			HeadlampCFG: &headlampconfig.HeadlampCFG{
+				ProxyURLs: []string{"https://example.com/*"},
+			},
+		},
+	}
+
+	allowed, err := config.proxyURLAllowed("https://example.com/api")
+
+	require.NoError(t, err)
+	assert.True(t, allowed)
+	assert.NotEmpty(t, config.compiledProxyURLs)
+}
+
 func TestExternalProxyForwarding(t *testing.T) {
 	// Create a new server for testing that returns a specific status and content type
 	proxyServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

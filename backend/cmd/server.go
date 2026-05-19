@@ -98,15 +98,21 @@ func buildHeadlampCFG(conf *config.Config, kubeConfigStore kubeconfig.ContextSto
 		WatchPluginsChanges:    conf.WatchPluginsChanges,
 		KubeConfigStore:        kubeConfigStore,
 		BaseURL:                conf.BaseURL,
-		ProxyURLs:              strings.Split(conf.ProxyURLs, ","),
-		TLSCertPath:            conf.TLSCertPath,
-		TLSKeyPath:             conf.TLSKeyPath,
-		SessionTTL:             conf.SessionTTL,
-		PodDebugImage:          conf.PodDebugImage,
-		OidcUseCookie:          conf.OidcUseCookie,
-		DefaultLightTheme:      conf.DefaultLightTheme,
-		DefaultDarkTheme:       conf.DefaultDarkTheme,
-		ForceTheme:             conf.ForceTheme,
+		ProxyURLs: func() []string {
+			if conf.ProxyURLs == "" {
+				return []string{}
+			}
+
+			return strings.Split(conf.ProxyURLs, ",")
+		}(),
+		TLSCertPath:       conf.TLSCertPath,
+		TLSKeyPath:        conf.TLSKeyPath,
+		SessionTTL:        conf.SessionTTL,
+		PodDebugImage:     conf.PodDebugImage,
+		OidcUseCookie:     conf.OidcUseCookie,
+		DefaultLightTheme: conf.DefaultLightTheme,
+		DefaultDarkTheme:  conf.DefaultDarkTheme,
+		ForceTheme:        conf.ForceTheme,
 	}
 }
 
@@ -167,8 +173,15 @@ func createHeadlampConfig(conf *config.Config) *HeadlampConfig {
 	cfg.ProxyAuthEmailHeader = conf.ProxyAuthEmailHeader
 	cfg.ProxyAuthTokenHeader = conf.ProxyAuthTokenHeader
 
+	compiledProxyURLs, err := compileProxyURLPatterns(cfg.ProxyURLs)
+	if err != nil {
+		logger.Log(logger.LevelError, nil, err, "failed to compile proxy URL patterns")
+		os.Exit(1)
+	}
+
 	return &HeadlampConfig{
-		HeadlampConfig: cfg,
+		HeadlampConfig:    cfg,
+		compiledProxyURLs: compiledProxyURLs,
 	}
 }
 
