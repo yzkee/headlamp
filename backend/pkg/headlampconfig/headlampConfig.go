@@ -1,6 +1,7 @@
 package headlampconfig
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/kubernetes-sigs/headlamp/backend/pkg/cache"
@@ -41,6 +42,7 @@ type HeadlampConfig struct {
 	ProxyAuthGroupHeader      string
 	ProxyAuthEmailHeader      string
 	ProxyAuthTokenHeader      string
+	ServerCtx                 context.Context
 }
 
 type HeadlampCFG struct {

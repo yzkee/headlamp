@@ -685,8 +685,8 @@ func TestDrainAndCordonNode(t *testing.T) { //nolint:funlen
 				status, http.StatusOK)
 		}
 
-		cacheKey := uuid.NewSHA1(uuid.Nil, []byte(drainNodePayload.NodeName+drainNodePayload.Cluster)).String()
-		cacheItemTTL := DrainNodeCacheTTL * time.Minute
+		cacheKey := uuid.NewSHA1(uuid.Nil, []byte(drainNodePayload.NodeName+"\x00"+drainNodePayload.Cluster)).String()
+		cacheItemTTL := DrainNodeCacheTTL * time.Second
 		ctx := context.Background()
 
 		err = cache.SetWithTTL(ctx, cacheKey, "success", cacheItemTTL)
@@ -766,10 +766,10 @@ func TestDrainNodePodDeletionFailure(t *testing.T) { //nolint:funlen
 		},
 	}
 
-	cacheKey := uuid.NewSHA1(uuid.Nil, []byte("test-node"+"test-cluster")).String()
+	cacheKey := uuid.NewSHA1(uuid.Nil, []byte("test-node"+"\x00"+"test-cluster")).String()
 	ctx := context.Background()
 
-	c.drainNode(fakeClient, "test-node", "test-cluster")
+	c.drainNode(ctx, fakeClient, "test-node", "test-cluster")
 
 	require.Eventually(t, func() bool {
 		cacheItem, err := testCache.Get(ctx, cacheKey)
@@ -829,10 +829,10 @@ func TestDrainNodeAllPodsDeletedSuccessfully(t *testing.T) {
 		},
 	}
 
-	cacheKey := uuid.NewSHA1(uuid.Nil, []byte("test-node"+"test-cluster")).String()
+	cacheKey := uuid.NewSHA1(uuid.Nil, []byte("test-node"+"\x00"+"test-cluster")).String()
 	ctx := context.Background()
 
-	c.drainNode(fakeClient, "test-node", "test-cluster")
+	c.drainNode(ctx, fakeClient, "test-node", "test-cluster")
 
 	require.Eventually(t, func() bool {
 		cacheItem, err := testCache.Get(ctx, cacheKey)
@@ -942,6 +942,45 @@ func TestHandleNodeDrainUsesRequestedClusterCookieForCustomNamedContext(t *testi
 	case <-time.After(2 * time.Second):
 		t.Fatal("timed out waiting for drain request to reach Kubernetes API")
 	}
+}
+
+func TestDrainNodeCancelledContextDoesNotWriteCache(t *testing.T) {
+	pod1 := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "pod-1",
+			Namespace: "default",
+		},
+		Spec: corev1.PodSpec{
+			NodeName: "test-node",
+		},
+	}
+
+	node := &corev1.Node{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test-node",
+		},
+	}
+
+	fakeClient := fake.NewClientset(node, pod1)
+
+	testCache := cache.New[interface{}]()
+	c := &HeadlampConfig{
+		HeadlampConfig: &headlampconfig.HeadlampConfig{
+			Cache: testCache,
+		},
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	cacheKey := uuid.NewSHA1(uuid.Nil, []byte("test-node"+"\x00"+"test-cluster")).String()
+
+	c.drainNode(ctx, fakeClient, "test-node", "test-cluster")
+
+	assert.Never(t, func() bool {
+		_, err := testCache.Get(context.Background(), cacheKey)
+		return err == nil
+	}, 100*time.Millisecond, 10*time.Millisecond, "cache should not be written when context is already cancelled")
 }
 
 func TestDeletePlugin(t *testing.T) {
