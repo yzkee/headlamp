@@ -1113,6 +1113,11 @@ func newInClusterContextFromConfig(
 	var oidcConf *OidcConfig
 
 	if oidcClientID != "" && oidcIssuerURL != "" && oidcScopes != "" {
+		var caCert *string
+		if oidcCACert != "" {
+			caCert = &oidcCACert
+		}
+
 		// client secret is optional for in-cluster OIDC configuration
 		oidcConf = &OidcConfig{
 			ClientID:      oidcClientID,
@@ -1120,7 +1125,7 @@ func newInClusterContextFromConfig(
 			IdpIssuerURL:  oidcIssuerURL,
 			Scopes:        strings.Split(oidcScopes, ","),
 			SkipTLSVerify: &oidcSkipTLSVerify,
-			CACert:        &oidcCACert,
+			CACert:        caCert,
 		}
 	}
 
