@@ -808,3 +808,13 @@ func TestProxyAuthFlagOverridesEnv(t *testing.T) {
 		assert.Equal(t, "X-Flag-Token", conf.ProxyAuthTokenHeader)
 	})
 }
+
+func TestGetDefaultKubeConfigPath(t *testing.T) {
+	tmpDir := t.TempDir()
+	t.Setenv("HOME", tmpDir)
+	t.Setenv("USERPROFILE", tmpDir)
+
+	path, err := config.GetDefaultKubeConfigPath()
+	require.NoError(t, err)
+	assert.Equal(t, filepath.Join(tmpDir, ".kube", "config"), path)
+}
