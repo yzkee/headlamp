@@ -335,6 +335,12 @@ export function PureAuthChooser({
           alignItems="center"
           style={{ cursor: 'pointer' }}
           onClick={handleBackButtonPress}
+          onKeyDown={e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              handleBackButtonPress();
+            }
+          }}
+          tabIndex={0}
           role="button"
         >
           <Box pt={0.5}>
