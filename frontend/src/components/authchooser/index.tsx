@@ -336,7 +336,11 @@ export function PureAuthChooser({
           style={{ cursor: 'pointer' }}
           onClick={handleBackButtonPress}
           onKeyDown={e => {
+            if (e.repeat) {
+              return;
+            }
             if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
               handleBackButtonPress();
             }
           }}
