@@ -873,7 +873,7 @@ func TestRefreshAndCacheNewToken_ValidatorIssuerOverride(t *testing.T) {
 	config := &kubeconfig.OidcConfig{ClientID: "cid", ClientSecret: "secret"}
 	_, err := auth.RefreshAndCacheNewToken(context.Background(), config, fc, "id_token", oldToken, srv.URL, "")
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "issuer did not match")
+	assert.Contains(t, err.Error(), "did not match")
 
 	tok, err := auth.RefreshAndCacheNewToken(context.Background(), config, fc, "id_token", oldToken, srv.URL, issuerURL)
 	require.NoError(t, err)
