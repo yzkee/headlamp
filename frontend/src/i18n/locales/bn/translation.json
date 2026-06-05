@@ -638,8 +638,6 @@
   "Max": "সর্বোচ্চ",
   "Min": "সর্বনিম্ন",
   "A namespace with this name already exists.": "এই নাম সহ একটি namespace ইতিমধ্যে বিদ্যমান।",
-  "Applying {{  newItemName  }}…": "Apply {{  newItemName  }}…",
-  "Cancelled applying  {{  newItemName  }}.": "আবেদন বাতিল  {{  newItemName  }}।",
   "Namespaces must be under 64 characters.": "namespace গুলি অবশ্যই 64 টি অক্ষরের অধীনে থাকতে হবে।",
   "Create Namespace": "namespace Create করুন",
   "To": "থেকে",
