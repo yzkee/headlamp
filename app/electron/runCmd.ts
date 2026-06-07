@@ -117,6 +117,7 @@ const COMMANDS_WITH_CONSENT = {
     'scriptjs headlamp_minikube/manage-minikube.js',
     'scriptjs minikube/manage-minikube.js',
   ],
+  headlamp_ai_assistant: ['gh auth', 'az account', 'az cognitiveservices'],
 };
 
 /**
@@ -141,6 +142,15 @@ export function addRunCmdConsent(pluginInfo: { name: string }): void {
   if (pluginIsMinikube) {
     commands = COMMANDS_WITH_CONSENT.headlamp_minikube;
   }
+
+  const pluginIsAiAssistant =
+    pluginInfo.name === 'headlamp_ai-assistant' ||
+    pluginInfo.name === 'headlamp_ai-assistantprerelease' ||
+    (process.env.NODE_ENV === 'development' && pluginInfo.name === 'ai-assistant');
+  if (pluginIsAiAssistant) {
+    commands = COMMANDS_WITH_CONSENT.headlamp_ai_assistant;
+  }
+
   for (const command of commands) {
     if (!settings.confirmedCommands[command]) {
       settings.confirmedCommands[command] = true;
@@ -166,6 +176,12 @@ export function removeRunCmdConsent(pluginName: string): void {
     pluginName === '@headlamp-k8s/minikube'
   ) {
     commands = COMMANDS_WITH_CONSENT.headlamp_minikube;
+  }
+  if (
+    pluginName === '@headlamp-k8s/ai-assistant' ||
+    pluginName === '@headlamp-k8s/ai-assistantprerelease'
+  ) {
+    commands = COMMANDS_WITH_CONSENT.headlamp_ai_assistant;
   }
   for (const command of commands) {
     delete settings.confirmedCommands[command];
@@ -351,6 +367,8 @@ export function setupRunCmdHandlers(mainWindow: BrowserWindow | null, ipcMain: E
     'runCmd-scriptjs-minikube/manage-minikube.js': cryptoRandom(),
     'runCmd-scriptjs-headlamp_minikube/manage-minikube.js': cryptoRandom(),
     'runCmd-scriptjs-headlamp_minikubeprerelease/manage-minikube.js': cryptoRandom(),
+    'runCmd-gh': cryptoRandom(),
+    'runCmd-az': cryptoRandom(),
   };
 
   ipcMain.on('request-plugin-permission-secrets', function giveSecrets() {
@@ -405,7 +423,7 @@ export function validateCommandData(eventData: CommandDataPartial): [boolean, st
     }
   }
 
-  const validCommands = ['minikube', 'az', 'scriptjs'];
+  const validCommands = ['minikube', 'az', 'scriptjs', 'gh'];
 
   if (!validCommands.includes(eventData.command)) {
     return [
