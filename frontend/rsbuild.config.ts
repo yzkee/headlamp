@@ -110,6 +110,15 @@ export default defineConfig({
         // 'monaco-editor': 'commonjs monaco-editor',
         // 'monaco-editor/esm/vs/editor/common/services/editorSimpleWorker': 'commonjs monaco-editor/esm/vs/editor/common/services/editorSimpleWorker',
       },
+      // Ignore monaco-editor's dynamic require() warning (unreachable in ESM build)
+      ignoreWarnings: [
+        {
+          module:
+            /monaco-editor[\\/]esm[\\/]vs[\\/]editor[\\/]common[\\/]services[\\/]editorSimpleWorker\.js/,
+          message:
+            /Critical dependency: require function is used in a way in which dependencies cannot be statically extracted/,
+        },
+      ],
     },
   },
 
