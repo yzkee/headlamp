@@ -220,8 +220,8 @@ config:
 `plugins[]` is for Cluster Inventory access provider binaries, not Headlamp UI
 plugins. Each entry renders as a Kubernetes `image` volume and is mounted
 read-only into the Headlamp container. If an access provider `execConfig.command`
-is configured, the command's parent directory must match one of the
-absolute `plugins[].mountPath` values.
+is configured, the command must be under one of the absolute
+`plugins[].mountPath` values.
 
 ### Deployment Configuration
 
