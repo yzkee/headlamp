@@ -58,10 +58,10 @@ config:
             provideClusterInfo: true
     plugins:
       - name: secretreader
-        image: registry.k8s.io/cluster-inventory-api/secretreader:v0.1.3
+        image: registry.k8s.io/cluster-inventory-api/secretreader:v0.1.3@sha256:ec3090dc166aa2b42fb35d714d161c417d8b27bbc463404c8f615f5f4c610a1d
         mountPath: /access-plugins/secretreader
       - name: kubeconfig-secretreader
-        image: registry.k8s.io/cluster-inventory-api/kubeconfig-secretreader:v0.1.3
+        image: registry.k8s.io/cluster-inventory-api/kubeconfig-secretreader:v0.1.3@sha256:b92966cc6e4ac78002a63862921022a71d54956826f6e4febcb7247495eb98c0
         mountPath: /access-plugins/kubeconfig-secretreader
 ```
 
