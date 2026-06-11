@@ -47,7 +47,6 @@ import * as K8s from '../lib/k8s';
 import * as ApiProxy from '../lib/k8s/apiProxy';
 import * as Crd from '../lib/k8s/crd';
 import * as Notification from '../lib/notification';
-import * as queryClient from '../lib/queryClient';
 import * as Router from '../lib/router';
 import * as Utils from '../lib/util';
 import { eventAction, HeadlampEventType } from '../redux/headlampEventSlice';
@@ -105,7 +104,6 @@ window.pluginLib = {
   ...registryToExport,
   Activity,
   stateless,
-  queryClient,
 };
 
 // backwards compat.

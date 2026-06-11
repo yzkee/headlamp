@@ -537,9 +537,7 @@
       "default": [Function],
     },
   },
-  "Lodash": Function {
-    "default": [Function],
-  },
+  "Lodash": "Present",
   "MonacoEditor": "Present",
   "MuiCore": "Present",
   "MuiLab": "Present",
@@ -619,9 +617,6 @@
   "clusterAction": [Function],
   "default": [Function],
   "getHeadlampAPIHeaders": [Function],
-  "queryClient": {
-    "queryClient": QueryClient {},
-  },
   "registerAddClusterProvider": [Function],
   "registerAppBarAction": [Function],
   "registerAppLogo": [Function],
