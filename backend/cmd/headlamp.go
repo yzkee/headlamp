@@ -2211,11 +2211,14 @@ func parseClusterFromKubeConfig(kubeConfigs []string) ([]Cluster, []error) {
 	}
 
 	if len(setupErrors) > 0 {
-		logger.Log(logger.LevelError, nil, setupErrors, "setting up contexts from kubeconfig")
-		return nil, setupErrors
+		if len(clusters) == 0 {
+			logger.Log(logger.LevelError, nil, setupErrors, "setting up contexts from kubeconfig")
+		} else {
+			logger.Log(logger.LevelWarn, nil, setupErrors, "setting up contexts from kubeconfig")
+		}
 	}
 
-	return clusters, nil
+	return clusters, setupErrors
 }
 
 func (c *HeadlampConfig) getConfig(w http.ResponseWriter, r *http.Request) {
