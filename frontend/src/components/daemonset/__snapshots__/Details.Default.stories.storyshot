@@ -644,16 +644,6 @@
                         <p
                           class="MuiTypography-root MuiTypography-body1 css-cwic1g-MuiTypography-root"
                         >
-                          http-get, path: undefined, port: undefined,
-    scheme: undefined
-                        </p>
-                      </div>
-                      <div
-                        class="MuiBox-root css-2rlxtj"
-                      >
-                        <p
-                          class="MuiTypography-root MuiTypography-body1 css-cwic1g-MuiTypography-root"
-                        >
                           exec[/bin/gadgettracermanager -liveness]
                         </p>
                       </div>
