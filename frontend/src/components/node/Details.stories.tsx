@@ -20,7 +20,12 @@ import { TestContext } from '../../test';
 import Details from './Details';
 import { NODE_DETAILED_DATA, NODE_METRICS_DATA } from './storyHelper';
 
-const emptyList = { kind: 'List', apiVersion: 'v1', metadata: {}, items: [] };
+const emptyList = {
+  kind: 'List',
+  apiVersion: 'v1',
+  metadata: { resourceVersion: '1' },
+  items: [],
+};
 
 const podMetricsList = {
   kind: 'PodMetricsList',
