@@ -19,9 +19,9 @@ import { Meta, StoryFn } from '@storybook/react';
 import { http, HttpResponse } from 'msw';
 import { TestContext } from '../../test';
 import List from './List';
-import { DAEMONSET_DUMMY_DATA } from './storyHelper';
+import { DAEMONSET_DUMMY_LIST } from './storyHelper';
 
-const objList = DAEMONSET_DUMMY_DATA;
+const objList = DAEMONSET_DUMMY_LIST;
 
 export default {
   title: 'DaemonSet/List',

@@ -16,12 +16,10 @@
 
 import { Meta, StoryFn } from '@storybook/react';
 import { http, HttpResponse } from 'msw';
+import { KubeObjectInterface } from '../../lib/k8s/KubeObject';
 import { TestContext } from '../../test';
 import Details from './Details';
-import { DAEMONSET_DUMMY_DATA, DAEMONSET_NO_TOLERATIONS } from './storyHelper';
-
-const daemonSet = DAEMONSET_DUMMY_DATA[0];
-const namespace = daemonSet.metadata.namespace ?? 'gadget';
+import { DAEMONSET_DUMMY, DAEMONSET_NO_TOLERATIONS } from './storyHelper';
 
 const emptyList = { kind: 'List', apiVersion: 'v1', metadata: {}, items: [] };
 
@@ -36,65 +34,64 @@ const podMetricsList = {
 // controller revisions the details view pulls in are all queried under the
 // DaemonSet's namespace. The collection path is also handled because the
 // details view fires a watch on it in addition to the get-by-name request.
-const commonHandlers = [
-  http.get(`http://localhost:4466/apis/apps/v1/namespaces/${namespace}/daemonsets`, () =>
-    HttpResponse.json(emptyList)
-  ),
-  http.get(`http://localhost:4466/api/v1/namespaces/${namespace}/pods`, () =>
-    HttpResponse.json(emptyList)
-  ),
-  http.get(`http://localhost:4466/apis/metrics.k8s.io/v1beta1/namespaces/${namespace}/pods`, () =>
-    HttpResponse.json(podMetricsList)
-  ),
-  http.get(`http://localhost:4466/api/v1/namespaces/${namespace}/events`, () =>
-    HttpResponse.json(emptyList)
-  ),
-  http.get(`http://localhost:4466/apis/apps/v1/namespaces/${namespace}/controllerrevisions`, () =>
-    HttpResponse.json(emptyList)
-  ),
-];
-
-export default {
-  title: 'daemonset/DaemonSetDetailsView',
-  component: Details,
-  argTypes: {},
-  decorators: [
-    Story => (
-      <TestContext routerMap={{ namespace, name: 'gadget' }}>
-        <Story />
-      </TestContext>
+function commonHandlers(namespace: string) {
+  return [
+    http.get(`http://localhost:4466/apis/apps/v1/namespaces/${namespace}/daemonsets`, () =>
+      HttpResponse.json(emptyList)
     ),
-  ],
-} as Meta;
+    http.get(`http://localhost:4466/api/v1/namespaces/${namespace}/pods`, () =>
+      HttpResponse.json(emptyList)
+    ),
+    http.get(`http://localhost:4466/apis/metrics.k8s.io/v1beta1/namespaces/${namespace}/pods`, () =>
+      HttpResponse.json(podMetricsList)
+    ),
+    http.get(`http://localhost:4466/api/v1/namespaces/${namespace}/events`, () =>
+      HttpResponse.json(emptyList)
+    ),
+    http.get(`http://localhost:4466/apis/apps/v1/namespaces/${namespace}/controllerrevisions`, () =>
+      HttpResponse.json(emptyList)
+    ),
+  ];
+}
 
 const Template: StoryFn = () => <Details />;
 
-export const Default = Template.bind({});
-Default.parameters = {
-  msw: {
-    handlers: {
-      story: [
-        http.get(
-          `http://localhost:4466/apis/apps/v1/namespaces/${namespace}/daemonsets/gadget`,
-          () => HttpResponse.json(daemonSet)
-        ),
-        ...commonHandlers,
-      ],
-    },
-  },
-};
+// Build a story whose router param and get-by-name handler both match the
+// DaemonSet's own name and namespace, so the mocked route stays realistic.
+function makeStory(daemonSet: KubeObjectInterface) {
+  const namespace = daemonSet.metadata.namespace ?? 'gadget';
+  const name = daemonSet.metadata.name;
 
-export const NoTolerations = Template.bind({});
-NoTolerations.parameters = {
-  msw: {
-    handlers: {
-      story: [
-        http.get(
-          `http://localhost:4466/apis/apps/v1/namespaces/${namespace}/daemonsets/gadget`,
-          () => HttpResponse.json(DAEMONSET_NO_TOLERATIONS)
-        ),
-        ...commonHandlers,
-      ],
+  const story = Template.bind({});
+  story.decorators = [
+    Story => (
+      <TestContext routerMap={{ namespace, name }}>
+        <Story />
+      </TestContext>
+    ),
+  ];
+  story.parameters = {
+    msw: {
+      handlers: {
+        story: [
+          http.get(
+            `http://localhost:4466/apis/apps/v1/namespaces/${namespace}/daemonsets/${name}`,
+            () => HttpResponse.json(daemonSet)
+          ),
+          ...commonHandlers(namespace),
+        ],
+      },
     },
-  },
-};
+  };
+  return story;
+}
+
+export default {
+  title: 'DaemonSet/Details',
+  component: Details,
+  argTypes: {},
+} as Meta;
+
+export const Default = makeStory(DAEMONSET_DUMMY);
+
+export const NoTolerations = makeStory(DAEMONSET_NO_TOLERATIONS);
