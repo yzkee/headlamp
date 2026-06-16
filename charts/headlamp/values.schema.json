@@ -184,6 +184,10 @@
           "type": "string",
           "description": "Default image to use when creating pod debug containers"
         },
+        "nodeShellImage": {
+          "type": "string",
+          "description": "Default image to use when creating node shell pods"
+        },
         "unsafeUseServiceAccountToken": {
           "type": "boolean",
           "description": "UNSAFE: authenticate every user as the pod's service account in-cluster mode"

@@ -127,6 +127,8 @@ config:
   watchPlugins: false
   # -- Default image to use when creating pod debug containers. If empty, Headlamp uses its built-in default.
   podDebugImage: ""
+  # -- Default image to use when creating node shell pods. If empty, Headlamp uses its built-in default.
+  nodeShellImage: ""
   # tlsCertPath: "/headlamp-cert/headlamp-ca.crt"
   # tlsKeyPath: "/headlamp-cert/headlamp-tls.key"
   clusterInventory:
