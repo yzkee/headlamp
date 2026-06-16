@@ -670,7 +670,9 @@
     "handleDataBaseError": [Function],
     "handleDatabaseUpgrade": [Function],
     "isEqualClusterConfigs": [Function],
+    "mergeStatelessConfigState": [Function],
     "storeStatelessClusterKubeconfig": [Function],
+    "toStatelessConfigState": [Function],
   },
   "useTranslation": [Function],
 }
