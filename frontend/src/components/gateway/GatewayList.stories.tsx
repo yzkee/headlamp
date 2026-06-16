@@ -75,7 +75,7 @@ BrokenSpec.parameters = {
           })
         ),
         http.get('http://localhost:4466/apis/gateway.networking.k8s.io/v1beta1/gateways', () =>
-          HttpResponse.error()
+          HttpResponse.json({ message: 'Not Found' }, { status: 404 })
         ),
       ],
     },
