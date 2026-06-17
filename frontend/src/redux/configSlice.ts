@@ -59,6 +59,11 @@ export interface ConfigState {
    */
   defaultPodDebugImage: string;
   /**
+   * Default image used for node shell pods when no per-cluster override is configured.
+   * An empty string indicates that no default image is configured.
+   */
+  defaultNodeShellImage: string;
+  /**
    * Theme configuration from the backend server.
    */
   defaultLightTheme?: string;
@@ -157,6 +162,7 @@ export const initialState: ConfigState = {
   isDynamicClusterEnabled: false,
   allowKubeconfigChanges: false,
   defaultPodDebugImage: '',
+  defaultNodeShellImage: '',
   settings: {
     tableRowsPerPageOptions:
       storedSettings.tableRowsPerPageOptions ?? defaultTableRowsPerPageOptions,
@@ -182,6 +188,7 @@ const configSlice = createSlice({
         isDynamicClusterEnabled?: boolean;
         allowKubeconfigChanges?: boolean;
         defaultPodDebugImage?: string;
+        defaultNodeShellImage?: string;
         defaultLightTheme?: string;
         defaultDarkTheme?: string;
         forceTheme?: string;
@@ -196,6 +203,9 @@ const configSlice = createSlice({
       }
       if (action.payload.defaultPodDebugImage !== undefined) {
         state.defaultPodDebugImage = action.payload.defaultPodDebugImage;
+      }
+      if (action.payload.defaultNodeShellImage !== undefined) {
+        state.defaultNodeShellImage = action.payload.defaultNodeShellImage;
       }
       state.defaultLightTheme = action.payload.defaultLightTheme;
       state.defaultDarkTheme = action.payload.defaultDarkTheme;

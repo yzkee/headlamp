@@ -175,6 +175,28 @@ func TestGetConfigIncludesDefaultPodDebugImage(t *testing.T) {
 	assert.Equal(t, "registry.example.com/debug:latest", config.DefaultPodDebugImage)
 }
 
+func TestGetConfigIncludesDefaultNodeShellImage(t *testing.T) {
+	c := &HeadlampConfig{
+		HeadlampConfig: &headlampconfig.HeadlampConfig{
+			HeadlampCFG: &headlampconfig.HeadlampCFG{
+				KubeConfigStore: kubeconfig.NewContextStore(),
+				NodeShellImage:  "registry.example.com/shell:latest",
+			},
+		},
+	}
+
+	req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/config", nil)
+	recorder := httptest.NewRecorder()
+
+	c.getConfig(recorder, req)
+
+	var config clientConfig
+
+	err := json.Unmarshal(recorder.Body.Bytes(), &config)
+	require.NoError(t, err)
+	assert.Equal(t, "registry.example.com/shell:latest", config.DefaultNodeShellImage)
+}
+
 //nolint:gocognit,funlen
 func TestDynamicClusters(t *testing.T) {
 	if os.Getenv("HEADLAMP_RUN_INTEGRATION_TESTS") != "true" {

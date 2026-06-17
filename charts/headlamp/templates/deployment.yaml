@@ -269,6 +269,9 @@ spec:
             {{- with .Values.config.podDebugImage }}
             - "-pod-debug-image={{ . }}"
             {{- end }}
+            {{- with .Values.config.nodeShellImage }}
+            - "-node-shell-image={{ . }}"
+            {{- end }}
             {{- if and .Values.config.inCluster .Values.config.unsafeUseServiceAccountToken }}
             - "-unsafe-use-service-account-token"
             {{- end }}
