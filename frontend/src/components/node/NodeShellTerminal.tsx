@@ -29,7 +29,7 @@ import { stream, StreamResultsCb } from '../../lib/k8s/api/v1/streamingApi';
 import Node from '../../lib/k8s/node';
 import { KubePod } from '../../lib/k8s/pod';
 import { Channel, useTerminalStream, XTerminalConnected } from '../../lib/k8s/useTerminalStream';
-import { useTypedSelector } from '../../redux/hooks';
+import store from '../../redux/stores/store';
 
 interface NodeShellTerminalProps {
   item: Node;
@@ -104,7 +104,7 @@ function uniqueString() {
   return res;
 }
 
-async function shell(item: Node, onExec: StreamResultsCb, defaultImage: string) {
+async function shell(item: Node, onExec: StreamResultsCb) {
   const cluster = getCluster();
   if (!cluster) {
     return {};
@@ -112,6 +112,7 @@ async function shell(item: Node, onExec: StreamResultsCb, defaultImage: string) 
 
   const clusterSettings = loadClusterSettings(cluster);
   const config = clusterSettings.nodeShellTerminal;
+  const defaultImage = store.getState().config.defaultNodeShellImage;
   const linuxImage = config?.linuxImage || defaultImage || DEFAULT_NODE_SHELL_LINUX_IMAGE;
   const namespace = config?.namespace || DEFAULT_NODE_SHELL_NAMESPACE;
   const podName = `node-debugger-${item.getName()}-${uniqueString()}`;
@@ -145,13 +146,12 @@ export function NodeShellTerminal(props: NodeShellTerminalProps) {
   const [terminalContainerRef, setTerminalContainerRef] = useState<HTMLElement | null>(null);
   const exitSentRef = useRef(false);
   const pendingExitRef = useRef(false);
-  const defaultNodeShellImage = useTypedSelector(state => state.config.defaultNodeShellImage);
 
   const { xtermRef, streamRef, send } = useTerminalStream({
     containerRef: terminalContainerRef,
     connectStream: async onDataCallback => {
       xtermRef.current?.xterm.writeln('Trying to open a shell');
-      const { stream } = await shell(item, onDataCallback, defaultNodeShellImage);
+      const { stream } = await shell(item, onDataCallback);
       return {
         stream,
       };
