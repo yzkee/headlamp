@@ -562,7 +562,7 @@ export default function EditorDialog(props: EditorDialogProps) {
                 label: t('translation|Documentation'),
                 component: (
                   <Box sx={{ height: '100%', overflowY: 'auto' }}>
-                    <DocsViewer docSpecs={docSpecs} />
+                    <DocsViewer docSpecs={Array.isArray(docSpecs) ? docSpecs : []} />
                   </Box>
                 ),
               },
