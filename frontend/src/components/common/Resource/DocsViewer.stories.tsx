@@ -125,7 +125,7 @@ NoMatchingDocumentation.args = {
 
 export const ErrorDocumentation = Template.bind({});
 ErrorDocumentation.args = {
-  docSpecs: [{}],
+  docSpecs: [{ apiVersion: '', kind: '' }],
 };
 ErrorDocumentation.parameters = {
   msw: {
