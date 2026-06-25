@@ -202,6 +202,20 @@ func TestGetAPIGroup(t *testing.T) {
 			expectedError:    nil,
 		},
 		{
+			name:             "return empty apiGroup from direct API path",
+			urlPath:          "/api/v1/pods",
+			expectedAPIGroup: "",
+			expectedVersion:  "v1",
+			expectedError:    nil,
+		},
+		{
+			name:             "return non-empty apiGroup from direct API path",
+			urlPath:          "/apis/apps/v1/deployments",
+			expectedAPIGroup: "apps",
+			expectedVersion:  "v1",
+			expectedError:    nil,
+		},
+		{
 			name:             "core discovery path with trailing slash",
 			urlPath:          "/clusters/kind-kind/api/",
 			expectedAPIGroup: "",
@@ -308,6 +322,12 @@ func TestExtractNamespace(t *testing.T) {
 			kind:       "services",
 		},
 		{
+			name:       "valid namespaced resource with multiple trailing slashes",
+			urlPath:    url.URL{Path: "/api/v1/namespaces/dev/services//"},
+			namespaces: "dev",
+			kind:       "services",
+		},
+		{
 			name:       "internal cluster URL without API group",
 			urlPath:    url.URL{Path: "/clusters/production-cluster"},
 			namespaces: "",
@@ -335,6 +355,66 @@ func TestExtractNamespace(t *testing.T) {
 	}
 }
 
+func TestIsKubernetesAPIPath(t *testing.T) {
+	tests := []struct {
+		name     string
+		path     string
+		expected bool
+	}{
+		{
+			name:     "proxied core resource path",
+			path:     "/clusters/kind-kind/api/v1/pods",
+			expected: true,
+		},
+		{
+			name:     "proxied named resource path",
+			path:     "/clusters/kind-kind/apis/apps/v1/deployments",
+			expected: true,
+		},
+		{
+			name:     "direct core resource path",
+			path:     "/api/v1/pods",
+			expected: true,
+		},
+		{
+			name:     "direct named resource path",
+			path:     "/apis/apps/v1/deployments",
+			expected: true,
+		},
+		{
+			name:     "direct core api root",
+			path:     "/api",
+			expected: true,
+		},
+		{
+			name:     "proxied named api root with trailing slash",
+			path:     "/clusters/kind-kind/apis/",
+			expected: true,
+		},
+		{
+			name:     "proxied discovery path",
+			path:     "/clusters/kind-kind/api/",
+			expected: true,
+		},
+		{
+			name:     "proxied healthz path",
+			path:     "/clusters/kind-kind/healthz",
+			expected: false,
+		},
+		{
+			name:     "proxied version path",
+			path:     "/clusters/kind-kind/version",
+			expected: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, k8cache.IsKubernetesAPIPath(tc.path))
+		})
+	}
+}
+
 // TestGenerateKey ensures the generated key is valid for both normal
 // and empty cluster name scenarios.
 //
@@ -357,6 +437,13 @@ func TestGenerateKey(t *testing.T) {
 		{
 			name:        "key with empty apiGroup",
 			urlPath:     url.URL{Path: "/clusters/kind-kind/api/v1/namespaces/test-kube/pods"},
+			contextKey:  "kind-kind",
+			expectedKey: "+pods+test-kube+kind-kind",
+			expectedErr: nil,
+		},
+		{
+			name:        "key with direct api path",
+			urlPath:     url.URL{Path: "/api/v1/namespaces/test-kube/pods"},
 			contextKey:  "kind-kind",
 			expectedKey: "+pods+test-kube+kind-kind",
 			expectedErr: nil,
