@@ -15,7 +15,7 @@
  */
 
 import '../../../i18n/config';
-import { DiffEditor, Editor } from '@monaco-editor/react';
+import { DiffEditor, Editor, Monaco } from '@monaco-editor/react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import DialogActions from '@mui/material/DialogActions';
@@ -27,6 +27,7 @@ import Switch from '@mui/material/Switch';
 import Typography from '@mui/material/Typography';
 import * as yaml from 'js-yaml';
 import _ from 'lodash';
+import type { editor } from 'monaco-editor';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDispatch } from 'react-redux';
@@ -110,6 +111,7 @@ export default function EditorDialog(props: EditorDialogProps) {
     selectOnLineNumbers: true,
     readOnly: isReadOnly(),
     automaticLayout: true,
+    fixedOverflowWidgets: true,
   };
   const initialCode = typeof item === 'string' ? item : yaml.dump(item || {});
   const originalCodeRef = React.useRef({ code: initialCode, format: item ? 'yaml' : '' });
@@ -140,6 +142,42 @@ export default function EditorDialog(props: EditorDialogProps) {
 
   const dispatchCreateEvent = useEventCallback(HeadlampEventType.CREATE_RESOURCE);
   const dispatch: AppDispatch = useDispatch();
+
+  const monacoRef = React.useRef<Monaco | null>(null);
+  const editorRef = React.useRef<editor.IStandaloneCodeEditor | null>(null);
+
+  function handleEditorDidMount(
+    editorInstance: editor.IStandaloneCodeEditor,
+    monacoInstance: Monaco
+  ) {
+    editorRef.current = editorInstance;
+    monacoRef.current = monacoInstance;
+  }
+
+  React.useEffect(() => {
+    // Avoid holding onto disposed Monaco instances when switching editors/unmounting.
+    if (useSimpleEditor) {
+      editorRef.current = null;
+      monacoRef.current = null;
+    }
+
+    return () => {
+      window.clearTimeout(lastCodeCheckHandler.current);
+      editorRef.current = null;
+      monacoRef.current = null;
+    };
+  }, [useSimpleEditor]);
+
+  React.useEffect(() => {
+    if (useSimpleEditor || error) {
+      return;
+    }
+
+    const model = editorRef.current?.getModel();
+    if (monacoRef.current && model) {
+      monacoRef.current.editor.setModelMarkers(model, 'headlamp-yaml-parse', []);
+    }
+  }, [error, useSimpleEditor]);
 
   function isKubeObjectIsh(item: any): item is KubeObjectIsh {
     return item && typeof item === 'object' && !Array.isArray(item) && 'metadata' in item;
@@ -231,6 +269,44 @@ export default function EditorDialog(props: EditorDialogProps) {
       if (error !== (err?.message || '')) {
         setError(err?.message || '');
       }
+
+      if (!useSimpleEditor && monacoRef.current && editorRef.current) {
+        const model = editorRef.current.getModel?.();
+        if (model) {
+          const mark = (err as any)?.mark;
+          const reason = (err as any)?.reason;
+
+          if (mark && typeof mark.line === 'number' && typeof mark.column === 'number') {
+            const lineNumber = mark.line + 1;
+            const lineCount =
+              typeof model.getLineCount === 'function' ? model.getLineCount() : lineNumber;
+            const safeLineNumber = Math.min(Math.max(lineNumber, 1), lineCount);
+            const maxColumn =
+              typeof model.getLineMaxColumn === 'function'
+                ? model.getLineMaxColumn(safeLineNumber)
+                : mark.column + 2;
+            const safeMaxColumn = Math.max(maxColumn, 1);
+            const startColumn = Math.min(
+              Math.max(mark.column + 1, 1),
+              Math.max(safeMaxColumn - 1, 1)
+            );
+            const endColumn = Math.min(startColumn + 1, safeMaxColumn);
+
+            monacoRef.current.editor.setModelMarkers(model, 'headlamp-yaml-parse', [
+              {
+                startLineNumber: safeLineNumber,
+                startColumn,
+                endLineNumber: safeLineNumber,
+                endColumn,
+                message: reason || err?.message || t('Invalid YAML'),
+                severity: monacoRef.current.MarkerSeverity.Error,
+              },
+            ]);
+          } else {
+            monacoRef.current.editor.setModelMarkers(model, 'headlamp-yaml-parse', []);
+          }
+        }
+      }
     }, 500); // ms
 
     setCode(currentCode => ({ code: value as string, format: currentCode.format }));
@@ -275,8 +351,13 @@ export default function EditorDialog(props: EditorDialogProps) {
         res.obj = yaml.loadAll(code) as KubeObjectInterface[];
         res.obj = res.obj.filter(obj => !!obj);
         return res;
-      } catch (e) {
-        res.error = new Error((e as Error).message || t('Invalid YAML'));
+      } catch (e: any) {
+        const err = new Error((e as Error).message || t('Invalid YAML')) as any;
+        if (e instanceof yaml.YAMLException && e.mark) {
+          err.mark = e.mark;
+          err.reason = e.reason;
+        }
+        res.error = err;
       }
     }
 
@@ -305,6 +386,13 @@ export default function EditorDialog(props: EditorDialogProps) {
     window.clearTimeout(lastCodeCheckHandler.current);
     setCode(originalCodeRef.current);
     setError('');
+    if (monacoRef.current && editorRef.current) {
+      const model =
+        typeof editorRef.current.getModel === 'function' ? editorRef.current.getModel() : null;
+      if (model) {
+        monacoRef.current.editor.setModelMarkers(model, 'headlamp-yaml-parse', []);
+      }
+    }
   }
 
   const applyFunc = async (
@@ -434,13 +522,14 @@ export default function EditorDialog(props: EditorDialogProps) {
             value={code.code}
             options={editorOptions}
             onChange={onChange}
-            height="100%"
-            onMount={editor => {
+            onMount={(editor, monaco) => {
+              handleEditorDidMount(editor, monaco);
               const textarea = editor.getDomNode()?.querySelector('textarea');
               if (textarea && editorId) {
                 textarea.id = editorId;
               }
             }}
+            height="100%"
           />
         )}
       </Box>
