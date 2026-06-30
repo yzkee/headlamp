@@ -16,7 +16,7 @@
 
 import Collapse from '@mui/material/Collapse';
 import List from '@mui/material/List';
-import ListItem, { ListItemProps } from '@mui/material/ListItem';
+import { ListItemProps } from '@mui/material/ListItem';
 import React, { memo } from 'react';
 import { generatePath } from 'react-router';
 import { formatClusterPathParam, getClusterPrefixedPath } from '../../lib/cluster';
@@ -65,7 +65,7 @@ export interface SidebarItemProps extends ListItemProps, SidebarEntry {
   isCR?: boolean;
 }
 
-const SidebarItem = memo((props: SidebarItemProps) => {
+const SidebarItemBase = memo((props: SidebarItemProps & { clusters?: string[] }) => {
   const {
     label,
     name,
@@ -82,9 +82,9 @@ const SidebarItem = memo((props: SidebarItemProps) => {
     hide,
     tabIndex,
     isCR,
+    clusters = [],
     ...other
   } = props;
-  const clusters = useSelectedClusters();
   let fullURL = url;
   if (fullURL && useClusterURL && clusters.length && !fullURL.startsWith('http')) {
     fullURL = generatePath(getClusterPrefixedPath(url), {
@@ -114,39 +114,45 @@ const SidebarItem = memo((props: SidebarItemProps) => {
         {...other}
       />
       {subList.length > 0 && (
-        <ListItem
-          sx={{
-            padding: 0,
-          }}
-        >
-          <Collapse in={fullWidth && isSelected} sx={{ width: '100%' }}>
-            <List
-              component="ul"
-              disablePadding
-              sx={{
-                '& .MuiListItem-root': {
-                  fontSize: '.875rem',
-                  paddingTop: '2px',
-                  paddingBottom: '2px',
-                },
-              }}
-            >
-              {subList.map((item: SidebarItemProps) => (
-                <SidebarItem
-                  key={item.name}
-                  isSelected={item.isSelected}
-                  hasParent
-                  level={level + 1}
-                  search={search}
-                  {...item}
-                />
-              ))}
-            </List>
-          </Collapse>
-        </ListItem>
+        <Collapse component="li" in={fullWidth && isSelected} sx={{ width: '100%' }} unmountOnExit>
+          <List
+            component="ul"
+            disablePadding
+            sx={{
+              '& .MuiListItem-root': {
+                fontSize: '.875rem',
+                paddingTop: '2px',
+                paddingBottom: '2px',
+              },
+            }}
+          >
+            {subList.map((item: SidebarItemProps) => (
+              <SidebarItem
+                key={item.name}
+                isSelected={item.isSelected}
+                hasParent
+                level={level + 1}
+                search={search}
+                {...item}
+              />
+            ))}
+          </List>
+        </Collapse>
       )}
     </React.Fragment>
   );
+});
+
+const SidebarItemWithCluster = memo((props: SidebarItemProps) => {
+  const clusters = useSelectedClusters();
+  return <SidebarItemBase {...props} clusters={clusters} />;
+});
+
+const SidebarItem = memo((props: SidebarItemProps) => {
+  if (props.useClusterURL) {
+    return <SidebarItemWithCluster {...props} />;
+  }
+  return <SidebarItemBase {...props} />;
 });
 
 export default SidebarItem;
