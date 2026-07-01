@@ -339,7 +339,7 @@ class Pod extends KubeObject<KubePod> {
     };
 
     // Get current ephemeral containers
-    const currentEphemeralContainers = this.spec.ephemeralContainers || [];
+    const currentEphemeralContainers = this.spec?.ephemeralContainers || [];
 
     // Prepare the patch body
     const patchBody = {
@@ -411,11 +411,11 @@ class Pod extends KubeObject<KubePod> {
     let lastRestartDate = new Date(0);
     let lastRestartableInitContainerRestartDate = new Date(0);
 
-    let reason = this.status.reason || this.status.phase;
+    let reason = this.status?.reason || this.status?.phase || 'Unknown';
 
     const initContainers: Record<string, KubeContainer> = {};
-    let totalContainers = (this.spec.containers ?? []).length;
-    for (const ic of this.spec.initContainers ?? []) {
+    let totalContainers = (this.spec?.containers ?? []).length;
+    for (const ic of this.spec?.initContainers ?? []) {
       initContainers[ic.name] = ic;
       if (this.isRestartableInitContainer(ic)) {
         totalContainers++;
@@ -423,12 +423,16 @@ class Pod extends KubeObject<KubePod> {
     }
 
     let initializing = false;
-    for (const i in this.status.initContainerStatuses ?? []) {
-      const container = this.status.initContainerStatuses![i];
+    const initContainerStatuses = this.status?.initContainerStatuses ?? [];
+    for (const i in initContainerStatuses) {
+      const container = initContainerStatuses[i];
       restarts += container.restartCount;
       lastRestartDate = this.getLastRestartDate(container, lastRestartDate);
 
-      if (container.lastState.terminated !== null) {
+      if (
+        container.lastState?.terminated !== null &&
+        container.lastState?.terminated !== undefined
+      ) {
         const terminatedDate = container.lastState.terminated?.finishedAt
           ? new Date(container.lastState.terminated?.finishedAt)
           : undefined;
@@ -439,7 +443,10 @@ class Pod extends KubeObject<KubePod> {
 
       if (this.isRestartableInitContainer(initContainers[container.name])) {
         restartableInitContainerRestarts += container.restartCount;
-        if (container.lastState.terminated !== null) {
+        if (
+          container.lastState?.terminated !== null &&
+          container.lastState?.terminated !== undefined
+        ) {
           const terminatedDate = container.lastState.terminated?.finishedAt
             ? new Date(container.lastState.terminated?.finishedAt)
             : undefined;
@@ -477,7 +484,7 @@ class Pod extends KubeObject<KubePod> {
           message = container.state.waiting!.message || '';
           break;
         default:
-          reason = `Init:${i}/${(this.spec.initContainers || []).length}`;
+          reason = `Init:${i}/${(this.spec?.initContainers || []).length}`;
           initializing = true;
       }
       break;
@@ -488,7 +495,7 @@ class Pod extends KubeObject<KubePod> {
       lastRestartDate = lastRestartableInitContainerRestartDate;
       let hasRunning = false;
       for (let i = (this.status?.containerStatuses?.length || 0) - 1; i >= 0; i--) {
-        const container = this.status?.containerStatuses[i];
+        const container = this.status?.containerStatuses?.[i];
 
         restarts += container.restartCount;
         lastRestartDate = this.getLastRestartDate(container, lastRestartDate);
