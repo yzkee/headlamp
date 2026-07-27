@@ -70,26 +70,6 @@
           <div
             class="MuiBox-root css-wicc6q"
           >
-            <h1>
-              Release Notes
-            </h1>
-            
-
-            <h2>
-              Hello
-            </h2>
-            
-
-            <h3>
-              Sub-heading
-            </h3>
-            
-
-            <p>
-              world
-            </p>
-            
-
             <h2>
               Changes
             </h2>
@@ -112,82 +92,17 @@
               <tbody>
                 <tr>
                   <td>
-                    Dark mode
-                  </td>
-                  <td>
-                    ✅ Done
-                  </td>
-                  <td>
-                    Available in settings
-                  </td>
-                </tr>
-                <tr>
-                  <td>
                     Tables
                   </td>
                   <td>
-                    ✅ Done
+                    Done
                   </td>
                   <td>
-                    Now rendered properly
-                  </td>
-                </tr>
-                <tr>
-                  <td>
-                    Images
-                  </td>
-                  <td>
-                    ✅ Done
-                  </td>
-                  <td>
-                    Bounded to container
+                    Rendered with GFM
                   </td>
                 </tr>
               </tbody>
             </table>
-            
-
-            <h2>
-              Screenshot
-            </h2>
-            
-
-            <p>
-              <img
-                alt="Example release screenshot"
-                src="https://github.com/user-attachments/assets/674137f5-99db-4d7f-ab50-d91b19202704"
-              />
-            </p>
-            
-
-            <h2>
-              Code Example
-            </h2>
-            
-
-            <pre>
-              <code
-                class="language-yaml"
-              >
-                apiVersion: v1
-kind: Pod
-
-              </code>
-            </pre>
-            
-
-            <blockquote>
-              
-
-              <p>
-                <strong>
-                  Note:
-                </strong>
-                 This is a blockquote with important information.
-              </p>
-              
-
-            </blockquote>
           </div>
         </div>
       </div>
