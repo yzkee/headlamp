@@ -52,7 +52,13 @@ import {
   getPluginBinDirectories,
   PluginManager,
 } from './plugin-management';
-import { addRunCmdConsent, removeRunCmdConsent, runScript, setupRunCmdHandlers } from './runCmd';
+import {
+  addRunCmdConsent,
+  environmentOverrides,
+  removeRunCmdConsent,
+  runScript,
+  setupRunCmdHandlers,
+} from './runCmd';
 import { loadSettings, SETTINGS_PATH } from './settings';
 import {
   cleanupHeadlampTray,
@@ -717,6 +723,21 @@ async function getShellEnv(): Promise<NodeJS.ProcessEnv> {
     console.error('Failed to get shell environment:', error);
     return process.env;
   }
+}
+
+let shellEnvironmentPromise: Promise<NodeJS.ProcessEnv> | null = null;
+
+/** Returns the cached login-shell changes merged with the current process environment. */
+export async function getShellEnvironment(): Promise<NodeJS.ProcessEnv> {
+  if (!shellEnvironmentPromise) {
+    shellEnvironmentPromise = getShellEnv()
+      .then(environment => environmentOverrides(environment))
+      .catch(error => {
+        console.warn('Failed to get shell environment, using process.env:', error);
+        return {};
+      });
+  }
+  return { ...process.env, ...(await shellEnvironmentPromise) };
 }
 
 /**
