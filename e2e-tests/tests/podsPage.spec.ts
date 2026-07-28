@@ -14,9 +14,20 @@
  * limitations under the License.
  */
 
+import { execFile } from 'node:child_process';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { promisify } from 'node:util';
 import { expect, test } from '@playwright/test';
 import { HeadlampPage } from './headlampPage';
 import { podsPage } from './podsPage';
+
+const execFileAsync = promisify(execFile);
+
+async function kubectl(kubeconfig: string, ...args: string[]) {
+  await execFileAsync('kubectl', ['--kubeconfig', kubeconfig, '--context=kind-test', ...args]);
+}
 
 function makePod(name: string, resourceVersion: string) {
   return {
@@ -135,6 +146,48 @@ test('multi tab create delete pod', async ({ browser }) => {
 
   await realtimeUpdate1.createPod(name);
   await realtimeUpdate2.confirmPodCreation(name);
+});
+
+test('removes a pod from the list when it is deleted with kubectl', async ({ page }) => {
+  test.setTimeout(90000);
+  const name = `headlamp-watch-${Date.now()}`;
+  const tempDirectory = await mkdtemp(join(tmpdir(), 'headlamp-e2e-'));
+  const kubeconfig = join(tempDirectory, 'kubeconfig');
+
+  try {
+    const { stdout } = await execFileAsync('kind', ['get', 'kubeconfig', '--name', 'test']);
+    await writeFile(kubeconfig, stdout);
+    await kubectl(
+      kubeconfig,
+      '--namespace=default',
+      'run',
+      name,
+      '--image=registry.k8s.io/pause:3.10',
+      '--restart=Never'
+    );
+
+    const headlampPage = new HeadlampPage(page);
+    await headlampPage.navigateToCluster('test', process.env.HEADLAMP_TEST_TOKEN);
+    await headlampPage.navigateTopage('/c/test/pods', /Pods/);
+
+    const podLink = page.getByRole('link', { name, exact: true });
+    await expect(podLink).toBeVisible({ timeout: 15000 });
+
+    await kubectl(kubeconfig, '--namespace=default', 'delete', 'pod', name, '--wait=false');
+
+    await expect(podLink).toHaveCount(0, { timeout: 45000 });
+  } finally {
+    await kubectl(
+      kubeconfig,
+      '--namespace=default',
+      'delete',
+      'pod',
+      name,
+      '--ignore-not-found=true'
+    )
+      .catch(() => undefined)
+      .finally(() => rm(tempDirectory, { recursive: true, force: true }));
+  }
 });
 
 test('react-hotkey for logs search', async ({ page }) => {
