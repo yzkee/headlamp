@@ -43,6 +43,7 @@ import { setNamespaceFilter } from '../../redux/filterSlice';
 import { useTypedSelector } from '../../redux/hooks';
 import { NamespacesAutocomplete } from '../common/NamespacesAutocomplete';
 import { filterGraph, filterGraphIncremental, GraphFilter } from './graph/graphFiltering';
+import { getGraphForNamespaceSelection } from './graph/graphForNamespaceSelection';
 import {
   collapseGraph,
   findGroupContaining,
@@ -113,6 +114,9 @@ interface GraphViewContentProps {
   /** Default filters to apply */
   defaultFilters?: GraphFilter[];
 }
+
+export const MAP_PERFORMANCE_FEATURES_ENABLED =
+  import.meta.env.REACT_APP_HEADLAMP_ENABLE_MAP_PERFORMANCE_FEATURES === 'true';
 
 const defaultFiltersValue: GraphFilter[] = [];
 
@@ -345,10 +349,20 @@ function GraphViewContent({
 
   const activeNamespaces = groupBy === 'namespace' ? allNamespaces : undefined;
   const activeNodes = groupBy === 'node' ? allNodes : undefined;
+  const graphForGrouping = useMemo(
+    () =>
+      getGraphForNamespaceSelection(
+        filteredGraph,
+        simplifiedGraph,
+        activeNamespaces ?? [],
+        selectedNodeId
+      ),
+    [filteredGraph, simplifiedGraph, activeNamespaces, selectedNodeId]
+  );
 
   const { visibleGraph, fullGraph } = useMemo(() => {
     const perfStart = performance.now();
-    const graph = groupGraph(simplifiedGraph.nodes, simplifiedGraph.edges, {
+    const graph = groupGraph(graphForGrouping.nodes, graphForGrouping.edges, {
       groupBy,
       namespaces: activeNamespaces ?? [],
       k8sNodes: activeNodes ?? [],
@@ -370,7 +384,7 @@ function GraphViewContent({
     }
 
     return { visibleGraph, fullGraph: graph };
-  }, [simplifiedGraph, groupBy, selectedNodeId, expandAll, activeNamespaces, activeNodes]);
+  }, [graphForGrouping, groupBy, selectedNodeId, expandAll, activeNamespaces, activeNodes]);
 
   const viewport = useGraphViewport();
 
@@ -543,11 +557,13 @@ function GraphViewContent({
                   />
                 )}
 
-                <ChipToggleButton
-                  label={t('Incremental Updates')}
-                  isActive={useIncrementalUpdates}
-                  onClick={() => setUseIncrementalUpdates(!useIncrementalUpdates)}
-                />
+                {MAP_PERFORMANCE_FEATURES_ENABLED && (
+                  <ChipToggleButton
+                    label={t('Incremental Updates')}
+                    isActive={useIncrementalUpdates}
+                    onClick={() => setUseIncrementalUpdates(!useIncrementalUpdates)}
+                  />
+                )}
 
                 {graphSize < 50 && (
                   <ChipToggleButton
@@ -557,11 +573,13 @@ function GraphViewContent({
                   />
                 )}
 
-                <ChipToggleButton
-                  label={t('Performance Stats')}
-                  isActive={showPerformanceStats}
-                  onClick={() => setShowPerformanceStats(!showPerformanceStats)}
-                />
+                {MAP_PERFORMANCE_FEATURES_ENABLED && (
+                  <ChipToggleButton
+                    label={t('Performance Stats')}
+                    isActive={showPerformanceStats}
+                    onClick={() => setShowPerformanceStats(!showPerformanceStats)}
+                  />
+                )}
               </Box>
 
               <div style={{ flexGrow: 1 }}>
@@ -569,7 +587,7 @@ function GraphViewContent({
                   nodes={layoutedGraph.nodes}
                   edges={layoutedGraph.edges}
                   isLoading={isLoading}
-                  onMoveStart={e => {
+                  onMove={e => {
                     if (e === null) return;
                     viewportMovedRef.current = true;
                   }}
@@ -604,7 +622,7 @@ function GraphViewContent({
             </Box>
           </CustomThemeProvider>
 
-          {showPerformanceStats && (
+          {MAP_PERFORMANCE_FEATURES_ENABLED && showPerformanceStats && (
             <PerformanceStats
               visible={showPerformanceStats}
               onToggle={() => setShowPerformanceStats(false)}
