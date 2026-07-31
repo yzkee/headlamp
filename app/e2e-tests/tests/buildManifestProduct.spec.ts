@@ -22,6 +22,7 @@ import path from 'node:path';
 
 const appPath = path.resolve(__dirname, '../..');
 const frontendPath = path.resolve(appPath, '../frontend');
+const appVersion = JSON.parse(fs.readFileSync(path.join(appPath, 'package.json'), 'utf8')).version;
 
 test('custom product metadata reaches the Electron Builder configuration', () => {
   const manifestDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'headlamp-product-manifest-'));
@@ -107,9 +108,10 @@ test('custom product metadata reaches the frontend environment', () => {
     );
 
     expect(env).toMatchObject({
-      REACT_APP_HEADLAMP_VERSION: '1.2.3=build',
+      REACT_APP_HEADLAMP_VERSION: appVersion,
       REACT_APP_HEADLAMP_GIT_VERSION: '0123456789abcdef=source',
       REACT_APP_HEADLAMP_PRODUCT_NAME: 'C# $HOME Desktop',
+      REACT_APP_HEADLAMP_PRODUCT_VERSION: '1.2.3=build',
     });
   } finally {
     fs.rmSync(manifestDirectory, { recursive: true, force: true });

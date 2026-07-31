@@ -51,7 +51,7 @@ function resolveBuildManifestPath(env = process.env) {
  * Validates product fields consumed by the frontend build.
  *
  * @param {unknown} manifest Parsed app build manifest.
- * @returns {ProductInfo} Validated product metadata or app package metadata.
+ * @returns {ProductInfo} Validated product metadata or an empty override.
  * @throws {TypeError} When the manifest, product, or consumed fields have an invalid shape.
  */
 function validateProductInfo(manifest) {
@@ -61,7 +61,7 @@ function validateProductInfo(manifest) {
 
   const product = manifest.product;
   if (product === undefined) {
-    return appInfo;
+    return {};
   }
   if (!product || typeof product !== 'object' || Array.isArray(product)) {
     throw new TypeError('Build manifest product must be an object');
@@ -78,14 +78,14 @@ function validateProductInfo(manifest) {
  * Reads product metadata from the selected app build manifest.
  *
  * @param {NodeJS.ProcessEnv} [env] Environment used to select a custom manifest.
- * @returns {ProductInfo} Product metadata from the selected manifest, or app package metadata
- * when the optional default manifest is absent or has no product override.
+ * @returns {ProductInfo} Product metadata from the selected manifest, or an empty override when
+ * the optional default manifest is absent or has no product metadata.
  * @throws {Error} When the configured manifest cannot be read or parsed as JSON.
  */
 function readProductInfo(env = process.env) {
   const manifestPath = resolveBuildManifestPath(env);
   if (!env.HEADLAMP_BUILD_MANIFEST && !fs.existsSync(manifestPath)) {
-    return appInfo;
+    return {};
   }
   return validateProductInfo(JSON.parse(fs.readFileSync(manifestPath, 'utf8')));
 }
@@ -108,11 +108,13 @@ function readGitVersion() {
 }
 
 const productInfo = readProductInfo();
+const productVersion = productInfo.version?.trim();
 
 const envContents = {
-  REACT_APP_HEADLAMP_VERSION: productInfo.version || appInfo.version,
+  REACT_APP_HEADLAMP_VERSION: appInfo.version,
   REACT_APP_HEADLAMP_GIT_VERSION: readGitVersion(),
   REACT_APP_HEADLAMP_PRODUCT_NAME: productInfo.productName || appInfo.productName,
+  ...(productVersion ? { REACT_APP_HEADLAMP_PRODUCT_VERSION: productVersion } : {}),
   REACT_APP_ENABLE_REACT_QUERY_DEVTOOLS: 'false',
   REACT_APP_HEADLAMP_SIDEBAR_DEFAULT_OPEN: 'true',
 };
