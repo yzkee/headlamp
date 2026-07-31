@@ -70,6 +70,7 @@ import {
 import { setupSecureStorageHandlers } from './secureStorage';
 import { loadSettings, SETTINGS_PATH } from './settings';
 import { getShellEnv } from './shellEnv';
+import { shouldCheckForAppUpdates } from './shouldCheckForAppUpdates';
 import {
   cleanupHeadlampTray,
   createHeadlampTray,
@@ -202,11 +203,11 @@ let actualPort = defaultPort; // Will be updated when backend starts
 const MAX_PORT_ATTEMPTS = Math.abs(Number(process.env.HEADLAMP_MAX_PORT_ATTEMPTS) || 100); // Maximum number of ports to try
 
 const useExternalServer = process.env.EXTERNAL_SERVER || false;
-const shouldCheckForUpdates = process.env.HEADLAMP_CHECK_FOR_UPDATES !== 'false';
 const legalDocumentsResourcePath = getLegalDocumentsResourcePath(isDev, process.resourcesPath);
 const appBuildManifestPath = path.join(legalDocumentsResourcePath, 'app-build-manifest.json');
 const legalDocuments = loadLegalDocuments(appBuildManifestPath);
 const protocolScheme = readProtocolScheme(appBuildManifestPath);
+const shouldCheckForUpdates = shouldCheckForAppUpdates(appBuildManifestPath);
 
 // make it global so that it doesn't get garbage collected
 let mainWindow: BrowserWindow | null;
