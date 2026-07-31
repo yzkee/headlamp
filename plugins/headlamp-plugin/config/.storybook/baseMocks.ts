@@ -339,6 +339,22 @@ export const fallbackMocks = [
       items: [],
     })
   ),
+  http.get('http://localhost:4466/apis/batch/v1/jobs', () =>
+    HttpResponse.json({
+      kind: 'JobList',
+      apiVersion: 'batch/v1',
+      metadata: {},
+      items: [],
+    })
+  ),
+  http.get('http://localhost:4466/apis/batch/v1/cronjobs', () =>
+    HttpResponse.json({
+      kind: 'CronJobList',
+      apiVersion: 'batch/v1',
+      metadata: {},
+      items: [],
+    })
+  ),
   http.get('http://localhost:4466/apis/apps/v1/deployments', () =>
     HttpResponse.json({
       kind: 'DeploymentList',

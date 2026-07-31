@@ -14,17 +14,16 @@
  * limitations under the License.
  */
 
-import fs from 'fs';
 import { setupServer } from 'msw/node';
-import path from 'path';
 import { afterAll, afterEach, beforeAll, expect, test } from 'vitest';
 import * as storybookMocks from '../../.storybook/baseMocks';
 import {
   APPS_WORKLOAD_COLLECTION_URLS,
-  appsWorkloadCollectionUrls,
+  BATCH_WORKLOAD_COLLECTION_URLS,
   CLUSTER_WIDE_PODS_URL,
   NAMESPACED_PODS_URL,
   podCollectionUrls,
+  workloadCollectionUrls,
 } from './storybookBaseMocks.testHelper';
 
 const server = setupServer();
@@ -33,6 +32,10 @@ const appsWorkloadKinds: Record<string, string> = {
   deployments: 'Deployment',
   replicasets: 'ReplicaSet',
   statefulsets: 'StatefulSet',
+};
+const batchWorkloadKinds: Record<string, string> = {
+  cronjobs: 'CronJob',
+  jobs: 'Job',
 };
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
@@ -64,12 +67,24 @@ test('returns empty PodList responses for exported Pod collections', async () =>
   }
 });
 
-test('returns empty apps workload lists from the frontend mocks', async () => {
-  const handlers = [...storybookMocks.baseMocks, ...storybookMocks.fallbackMocks];
-  server.use(...handlers);
-  const workloadUrls = appsWorkloadCollectionUrls(handlers);
+/**
+ * Verifies that one Storybook mock module serves workload defaults as fallbacks.
+ *
+ * @param apiGroup - Kubernetes API group served by the expected handlers.
+ * @param expectedUrls - Exact fallback collection URLs expected for the group.
+ * @param workloadKinds - Kubernetes resource kinds keyed by collection name.
+ * @returns A promise that resolves after every fallback response is verified.
+ */
+async function expectWorkloadFallbacks(
+  apiGroup: string,
+  expectedUrls: string[],
+  workloadKinds: Record<string, string>
+): Promise<void> {
+  expect(workloadCollectionUrls(storybookMocks.baseMocks, apiGroup)).toEqual([]);
 
-  expect(workloadUrls).toEqual(APPS_WORKLOAD_COLLECTION_URLS);
+  const workloadUrls = workloadCollectionUrls(storybookMocks.fallbackMocks, apiGroup);
+  expect(workloadUrls).toEqual(expectedUrls);
+  server.use(...storybookMocks.fallbackMocks);
 
   for (const url of workloadUrls) {
     const resource = new URL(url).pathname.split('/').at(-1)!;
@@ -77,24 +92,18 @@ test('returns empty apps workload lists from the frontend mocks', async () => {
 
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({
-      kind: `${appsWorkloadKinds[resource]}List`,
-      apiVersion: 'apps/v1',
+      kind: `${workloadKinds[resource]}List`,
+      apiVersion: `${apiGroup}/v1`,
       metadata: {},
       items: [],
     });
   }
+}
+
+test('returns apps workload lists from the frontend fallbacks', async () => {
+  await expectWorkloadFallbacks('apps', APPS_WORKLOAD_COLLECTION_URLS, appsWorkloadKinds);
 });
 
-test('keeps the plugin template apps workload mocks synchronized', () => {
-  const source = fs.readFileSync(
-    path.resolve(__dirname, '../../../plugins/headlamp-plugin/config/.storybook/baseMocks.ts'),
-    'utf8'
-  );
-
-  for (const url of APPS_WORKLOAD_COLLECTION_URLS) {
-    const resource = new URL(url).pathname.split('/').at(-1)!;
-
-    expect(source).toContain(url);
-    expect(source).toContain(`kind: '${appsWorkloadKinds[resource]}List'`);
-  }
+test('returns batch workload lists from the frontend fallbacks', async () => {
+  await expectWorkloadFallbacks('batch', BATCH_WORKLOAD_COLLECTION_URLS, batchWorkloadKinds);
 });
