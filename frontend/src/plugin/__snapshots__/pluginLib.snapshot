@@ -707,6 +707,7 @@
   "registerAppLogo": [Function],
   "registerAppTheme": [Function],
   "registerClusterChooser": [Function],
+  "registerClusterEmptyState": [Function],
   "registerClusterProviderDialog": [Function],
   "registerClusterProviderMenuItem": [Function],
   "registerClusterStatus": [Function],
