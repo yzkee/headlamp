@@ -131,6 +131,8 @@ import {
   setPluginSettingsComponent,
 } from './pluginsSlice';
 
+export { DefaultCreateProject } from '../redux/projectsSlice';
+
 export interface SectionFuncProps {
   title: string;
   component: (props: { resource: any }) => ReactNode;
