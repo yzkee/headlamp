@@ -32,7 +32,7 @@ test('keeps the MCP adapter out of the Electron startup bundle', () => {
   expect(fs.statSync(adapterBundlePath).size).toBeGreaterThan(100_000);
 });
 
-test('custom platform metadata reaches the Electron Builder configuration', () => {
+test('custom platform settings reach the Electron Builder configuration', () => {
   const manifestDir = fs.mkdtempSync(path.join(os.tmpdir(), 'headlamp-build-manifest-'));
   const manifestFile = path.join(manifestDir, 'app-build-manifest.json');
   fs.writeFileSync(
@@ -42,6 +42,11 @@ test('custom platform metadata reaches the Electron Builder configuration', () =
         linux: { executableName: 'branded-headlamp' },
         mac: { appId: 'io.example.branded-headlamp' },
         win: { artifactName: 'branded-${version}.${ext}' },
+      },
+      targets: {
+        linux: [{ target: 'AppImage', arch: ['x64'] }],
+        mac: [{ target: 'dmg', arch: ['arm64'] }],
+        win: [{ target: 'nsis', arch: ['x64'] }],
       },
     })
   );
@@ -63,10 +68,12 @@ test('custom platform metadata reaches the Electron Builder configuration', () =
 
     expect(config.linux.executableName).toBe('branded-headlamp');
     expect(config.linux.category).toBe('Network');
+    expect(config.linux.target).toEqual([{ target: 'AppImage', arch: ['x64'] }]);
     expect(config.mac.appId).toBe('io.example.branded-headlamp');
     expect(config.mac.hardenedRuntime).toBe(true);
+    expect(config.mac.target).toEqual([{ target: 'dmg', arch: ['arm64'] }]);
     expect(config.win.artifactName).toBe('branded-${version}.${ext}');
-    expect(config.win.target).toEqual(['nsis']);
+    expect(config.win.target).toEqual([{ target: 'nsis', arch: ['x64'] }]);
   } finally {
     fs.rmSync(manifestDir, { recursive: true, force: true });
   }

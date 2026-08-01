@@ -23,6 +23,7 @@ import path from 'node:path';
 import * as tar from 'tar';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  applyBuildTargets,
   applyPlatformMetadata,
   applyProductMetadata,
   DEFAULT_MANIFEST_FILE,
@@ -44,6 +45,123 @@ import {
 const require = createRequire(import.meta.url);
 const { getConfig } = require('app-builder-lib/out/util/config/config');
 const appPath = path.resolve(__dirname, '..');
+
+describe('build target validation', () => {
+  it('replaces platform targets without changing other platform settings', () => {
+    expect(
+      applyBuildTargets(
+        { mac: { hardenedRuntime: true, target: ['zip'] } },
+        { targets: { mac: [{ target: 'dmg', arch: ['arm64'] }] } }
+      )
+    ).toEqual({
+      mac: { hardenedRuntime: true, target: [{ target: 'dmg', arch: ['arm64'] }] },
+    });
+  });
+
+  it('rejects unknown architectures and empty target sets', () => {
+    expect(() => applyBuildTargets({}, { targets: { mac: [] } })).toThrow('non-empty array');
+    expect(() =>
+      applyBuildTargets({}, { targets: { mac: [{ target: 'dmg', arch: ['mips'] }] } })
+    ).toThrow('Invalid build manifest architecture for mac');
+  });
+
+  it('preserves the configuration when build targets are absent', () => {
+    const defaults = { mac: { target: ['zip'] } };
+
+    expect(applyBuildTargets(defaults, {})).toBe(defaults);
+  });
+
+  it.each([null, [], 'mac'])('rejects an invalid targets value: %j', targets => {
+    expect(() => applyBuildTargets({}, { targets })).toThrow(
+      'Build manifest targets must be an object'
+    );
+  });
+
+  it('rejects unsupported target platforms', () => {
+    expect(() => applyBuildTargets({}, { targets: { windows: ['nsis'] } })).toThrow(
+      'Unsupported build manifest target platform: windows'
+    );
+  });
+
+  it.each([null, {}, 'dmg', []])('rejects invalid mac targets: %j', mac => {
+    expect(() => applyBuildTargets({}, { targets: { mac } })).toThrow(
+      'Build manifest targets.mac must be a non-empty array'
+    );
+  });
+
+  it('accepts string targets for every supported platform', () => {
+    expect(
+      applyBuildTargets(
+        {
+          linux: { category: 'Network' },
+          mac: { hardenedRuntime: true },
+          win: { artifactName: 'headlamp-${version}.${ext}' },
+        },
+        { targets: { linux: ['AppImage'], mac: ['dmg'], win: ['nsis'] } }
+      )
+    ).toEqual({
+      linux: { category: 'Network', target: ['AppImage'] },
+      mac: { hardenedRuntime: true, target: ['dmg'] },
+      win: { artifactName: 'headlamp-${version}.${ext}', target: ['nsis'] },
+    });
+  });
+
+  it.each([
+    { platform: 'linux', architectures: ['arm64', 'armv7l', 'x64'] },
+    { platform: 'mac', architectures: ['arm64', 'universal', 'x64'] },
+    { platform: 'win', architectures: ['arm64', 'ia32', 'x64'] },
+  ])('accepts supported $platform architectures', ({ platform, architectures }) => {
+    expect(
+      applyBuildTargets(
+        {},
+        { targets: { [platform]: [{ target: 'package', arch: architectures }] } }
+      )
+    ).toEqual({
+      [platform]: { target: [{ target: 'package', arch: architectures }] },
+    });
+  });
+
+  it.each([
+    { platform: 'linux', architecture: 'ia32' },
+    { platform: 'linux', architecture: 'universal' },
+    { platform: 'mac', architecture: 'armv7l' },
+    { platform: 'mac', architecture: 'ia32' },
+    { platform: 'win', architecture: 'armv7l' },
+    { platform: 'win', architecture: 'universal' },
+  ])('rejects $architecture for $platform', ({ platform, architecture }) => {
+    expect(() =>
+      applyBuildTargets(
+        {},
+        { targets: { [platform]: [{ target: 'package', arch: [architecture] }] } }
+      )
+    ).toThrow(`Invalid build manifest architecture for ${platform}`);
+  });
+
+  it.each([null, {}, { target: 1, arch: [] }, { target: 'dmg', arch: 'arm64' }])(
+    'rejects an invalid mac target descriptor: %j',
+    target => {
+      expect(() => applyBuildTargets({}, { targets: { mac: [target] } })).toThrow(
+        'Invalid build manifest target for mac'
+      );
+    }
+  );
+
+  it.each(['', '  ', { target: '', arch: ['arm64'] }, { target: '  ', arch: ['arm64'] }])(
+    'rejects a blank mac target name: %j',
+    target => {
+      expect(() => applyBuildTargets({}, { targets: { mac: [target] } })).toThrow(
+        'Invalid build manifest target for mac'
+      );
+    }
+  );
+
+  it('rejects an empty architecture list', () => {
+    expect(() =>
+      applyBuildTargets({}, { targets: { linux: [{ target: 'AppImage', arch: [] }] } })
+    ).toThrow('Invalid build manifest architecture for linux');
+  });
+});
+
 describe('platform metadata', () => {
   afterEach(() => {
     delete process.env.HEADLAMP_BUILD_MANIFEST;

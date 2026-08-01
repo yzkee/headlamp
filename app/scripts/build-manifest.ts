@@ -33,8 +33,23 @@ export type BuildManifest = {
   /** Product identity fields consumed by Electron Builder. */
   product?: Record<string, unknown>;
 
+  /** Per-platform package targets consumed by Electron Builder. */
+  targets?: Record<string, unknown>;
+
   [key: string]: unknown;
 };
+
+/** An Electron Builder target with an explicit architecture selection. */
+type BuildTargetDescriptor = {
+  /** Electron Builder package target name. */
+  target: string;
+
+  /** Architectures to build for this package target. */
+  arch: string[];
+};
+
+/** A supported package target declaration from a build manifest. */
+type BuildTarget = string | BuildTargetDescriptor;
 
 type ProductMetadata = {
   name?: string;
@@ -201,6 +216,86 @@ export function applyProductMetadata<T extends object>(config: T, manifest: unkn
       ...(metadata.version && { version: metadata.version }),
     },
   } as T;
+}
+
+/**
+ * Applies manifest-declared package targets to supported Electron Builder platforms.
+ *
+ * @param config Electron Builder configuration to extend.
+ * @param manifest Parsed application build manifest.
+ * @returns The original configuration when targets are absent, or a copy with targets applied.
+ * @throws When target declarations or architecture names are malformed.
+ */
+export function applyBuildTargets<T extends object>(config: T, manifest: unknown): T {
+  if (typeof manifest !== 'object' || manifest === null || Array.isArray(manifest)) {
+    throw new Error('Build manifest must be an object');
+  }
+
+  const targets = (manifest as BuildManifest).targets;
+  if (targets === undefined) {
+    return config;
+  }
+  if (typeof targets !== 'object' || targets === null || Array.isArray(targets)) {
+    throw new Error('Build manifest targets must be an object');
+  }
+
+  const architecturesByPlatform: Record<string, ReadonlySet<string>> = {
+    linux: new Set(['arm64', 'armv7l', 'x64']),
+    mac: new Set(['arm64', 'universal', 'x64']),
+    win: new Set(['arm64', 'ia32', 'x64']),
+  };
+  const supportedPlatforms = new Set(Object.keys(architecturesByPlatform));
+  for (const platform of Object.keys(targets)) {
+    if (!supportedPlatforms.has(platform)) {
+      throw new Error(`Unsupported build manifest target platform: ${platform}`);
+    }
+  }
+
+  const configRecord = config as Record<string, unknown>;
+  const result: Record<string, unknown> = { ...configRecord };
+  for (const platform of supportedPlatforms) {
+    const platformTargets = targets[platform];
+    if (platformTargets === undefined) {
+      continue;
+    }
+    if (!Array.isArray(platformTargets) || platformTargets.length === 0) {
+      throw new Error(`Build manifest targets.${platform} must be a non-empty array`);
+    }
+    for (const target of platformTargets) {
+      if (typeof target === 'string') {
+        if (target.trim() === '') {
+          throw new Error(`Invalid build manifest target for ${platform}`);
+        }
+        continue;
+      }
+      if (
+        typeof target !== 'object' ||
+        target === null ||
+        typeof (target as Record<string, unknown>).target !== 'string' ||
+        ((target as Record<string, unknown>).target as string).trim() === '' ||
+        !Array.isArray((target as Record<string, unknown>).arch)
+      ) {
+        throw new Error(`Invalid build manifest target for ${platform}`);
+      }
+      const targetDescriptor = target as BuildTargetDescriptor;
+      if (
+        targetDescriptor.arch.length === 0 ||
+        targetDescriptor.arch.some(arch => !architecturesByPlatform[platform].has(arch))
+      ) {
+        throw new Error(`Invalid build manifest architecture for ${platform}`);
+      }
+    }
+    const defaults = configRecord[platform];
+    const platformDefaults =
+      typeof defaults === 'object' && defaults !== null
+        ? (defaults as Record<string, unknown>)
+        : {};
+    result[platform] = {
+      ...platformDefaults,
+      target: platformTargets as BuildTarget[],
+    };
+  }
+  return result as T;
 }
 
 /**
