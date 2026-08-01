@@ -33,6 +33,9 @@ export type BuildManifest = {
   /** Product identity fields consumed by Electron Builder. */
   product?: Record<string, unknown>;
 
+  /** Common and per-platform resources copied into desktop packages. */
+  resources?: Record<string, unknown>;
+
   /** Per-platform package targets consumed by Electron Builder. */
   targets?: Record<string, unknown>;
 
@@ -51,6 +54,18 @@ type BuildTargetDescriptor = {
 /** A supported package target declaration from a build manifest. */
 type BuildTarget = string | BuildTargetDescriptor;
 
+/** An Electron Builder resource declared by a product manifest. */
+type BuildResource = {
+  /** Glob patterns included beneath the source path. */
+  filter?: string[];
+
+  /** Source path, resolved relative to the selected manifest. */
+  from: string;
+
+  /** Optional destination beneath the packaged resources directory. */
+  to?: string;
+};
+
 type ProductMetadata = {
   name?: string;
   productName?: string;
@@ -59,6 +74,19 @@ type ProductMetadata = {
   artifactName?: string;
   protocols?: Record<string, unknown>;
 };
+
+/**
+ * Converts Electron Builder's optional singleton-or-array resources to an array.
+ *
+ * @param resources Existing Electron Builder extra resources.
+ * @returns An empty array for nullish input, the original array, or a wrapped singleton.
+ */
+function normalizeExtraResources(resources: unknown): unknown[] {
+  if (resources === undefined || resources === null) {
+    return [];
+  }
+  return Array.isArray(resources) ? resources : [resources];
+}
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 
@@ -216,6 +244,89 @@ export function applyProductMetadata<T extends object>(config: T, manifest: unkn
       ...(metadata.version && { version: metadata.version }),
     },
   } as T;
+}
+
+/**
+ * Appends manifest-declared resources to Electron Builder configuration.
+ *
+ * @param config Electron Builder configuration to extend.
+ * @param manifest Parsed application build manifest.
+ * @param manifestFile Path used to resolve resource source paths.
+ * @returns The original configuration when resources are absent, or a copy with resources applied.
+ * @throws When resource groups or entries are malformed.
+ */
+export function applyBuildResources<T extends object>(
+  config: T,
+  manifest: unknown,
+  manifestFile: string = resolveBuildManifestPath()
+): T {
+  if (typeof manifest !== 'object' || manifest === null || Array.isArray(manifest)) {
+    throw new Error('Build manifest must be an object');
+  }
+
+  const resources = (manifest as BuildManifest).resources;
+  if (resources === undefined) {
+    return config;
+  }
+  if (typeof resources !== 'object' || resources === null || Array.isArray(resources)) {
+    throw new Error('Build manifest resources must be an object');
+  }
+
+  const supportedGroups = new Set(['common', 'linux', 'mac', 'win']);
+  for (const group of Object.keys(resources)) {
+    if (!supportedGroups.has(group)) {
+      throw new Error(`Unsupported build manifest resource group: ${group}`);
+    }
+  }
+
+  const resolveResources = (entries: unknown, group: string): BuildResource[] => {
+    if (!Array.isArray(entries)) {
+      throw new Error(`Build manifest resources.${group} must be an array`);
+    }
+    return entries.map((entry, index) => {
+      if (typeof entry !== 'object' || entry === null || Array.isArray(entry)) {
+        throw new Error(`Invalid build manifest resources.${group}[${index}]`);
+      }
+      const resource = entry as Record<string, unknown>;
+      if (
+        typeof resource.from !== 'string' ||
+        Object.keys(resource).some(key => !['filter', 'from', 'to'].includes(key)) ||
+        (resource.to !== undefined && typeof resource.to !== 'string') ||
+        (resource.filter !== undefined &&
+          (!Array.isArray(resource.filter) ||
+            resource.filter.some(value => typeof value !== 'string')))
+      ) {
+        throw new Error(`Invalid build manifest resources.${group}[${index}]`);
+      }
+      return {
+        ...(resource as BuildResource),
+        from: path.resolve(path.dirname(manifestFile), resource.from),
+      };
+    });
+  };
+
+  const configRecord = config as Record<string, unknown>;
+  const result: Record<string, unknown> = { ...configRecord };
+  if (resources.common !== undefined) {
+    const extraResources = normalizeExtraResources(configRecord.extraResources);
+    result.extraResources = [...extraResources, ...resolveResources(resources.common, 'common')];
+  }
+  for (const platform of ['linux', 'mac', 'win']) {
+    if (resources[platform] === undefined) {
+      continue;
+    }
+    const defaults = configRecord[platform];
+    const platformDefaults =
+      typeof defaults === 'object' && defaults !== null
+        ? (defaults as Record<string, unknown>)
+        : {};
+    const extraResources = normalizeExtraResources(platformDefaults.extraResources);
+    result[platform] = {
+      ...platformDefaults,
+      extraResources: [...extraResources, ...resolveResources(resources[platform], platform)],
+    };
+  }
+  return result as T;
 }
 
 /**

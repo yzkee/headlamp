@@ -32,7 +32,7 @@ test('keeps the MCP adapter out of the Electron startup bundle', () => {
   expect(fs.statSync(adapterBundlePath).size).toBeGreaterThan(100_000);
 });
 
-test('custom platform settings reach the Electron Builder configuration', () => {
+test('custom manifest settings reach the Electron Builder configuration', () => {
   const manifestDir = fs.mkdtempSync(path.join(os.tmpdir(), 'headlamp-build-manifest-'));
   const manifestFile = path.join(manifestDir, 'app-build-manifest.json');
   fs.writeFileSync(
@@ -48,6 +48,12 @@ test('custom platform settings reach the Electron Builder configuration', () => 
         mac: [{ target: 'dmg', arch: ['arm64'] }],
         win: [{ target: 'nsis', arch: ['x64'] }],
       },
+      resources: {
+        common: [{ from: './shared', to: 'shared' }],
+        linux: [{ from: './tools/linux', to: 'tools' }],
+        mac: [{ from: './tools/mac', to: 'tools' }],
+        win: [{ from: './tools/windows.exe', to: 'tools/tool.exe' }],
+      },
     })
   );
 
@@ -56,7 +62,7 @@ test('custom platform settings reach the Electron Builder configuration', () => 
       process.execPath,
       [
         '-e',
-        "const { getConfig } = require('app-builder-lib/out/util/config/config'); getConfig(process.cwd(), 'electron-builder.config.ts', {}).then(config => process.stdout.write('HEADLAMP_CONFIG_JSON=' + JSON.stringify({ linux: config.linux, mac: config.mac, win: config.win })));",
+        "const { getConfig } = require('app-builder-lib/out/util/config/config'); getConfig(process.cwd(), 'electron-builder.config.ts', {}).then(config => process.stdout.write('HEADLAMP_CONFIG_JSON=' + JSON.stringify({ extraResources: config.extraResources, linux: config.linux, mac: config.mac, win: config.win })));",
       ],
       {
         cwd: appPath,
@@ -66,14 +72,30 @@ test('custom platform settings reach the Electron Builder configuration', () => 
     );
     const config = JSON.parse(output.split('HEADLAMP_CONFIG_JSON=')[1]);
 
+    expect(config.extraResources).toContainEqual({
+      from: path.join(manifestDir, 'shared'),
+      to: 'shared',
+    });
     expect(config.linux.executableName).toBe('branded-headlamp');
     expect(config.linux.category).toBe('Network');
     expect(config.linux.target).toEqual([{ target: 'AppImage', arch: ['x64'] }]);
+    expect(config.linux.extraResources).toContainEqual({
+      from: path.join(manifestDir, 'tools/linux'),
+      to: 'tools',
+    });
     expect(config.mac.appId).toBe('io.example.branded-headlamp');
     expect(config.mac.hardenedRuntime).toBe(true);
     expect(config.mac.target).toEqual([{ target: 'dmg', arch: ['arm64'] }]);
+    expect(config.mac.extraResources).toContainEqual({
+      from: path.join(manifestDir, 'tools/mac'),
+      to: 'tools',
+    });
     expect(config.win.artifactName).toBe('branded-${version}.${ext}');
     expect(config.win.target).toEqual([{ target: 'nsis', arch: ['x64'] }]);
+    expect(config.win.extraResources).toContainEqual({
+      from: path.join(manifestDir, 'tools/windows.exe'),
+      to: 'tools/tool.exe',
+    });
   } finally {
     fs.rmSync(manifestDir, { recursive: true, force: true });
   }

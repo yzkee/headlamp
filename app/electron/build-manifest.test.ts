@@ -23,6 +23,7 @@ import path from 'node:path';
 import * as tar from 'tar';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  applyBuildResources,
   applyBuildTargets,
   applyPlatformMetadata,
   applyProductMetadata,
@@ -45,6 +46,155 @@ import {
 const require = createRequire(import.meta.url);
 const { getConfig } = require('app-builder-lib/out/util/config/config');
 const appPath = path.resolve(__dirname, '..');
+
+describe('build resource validation', () => {
+  it.each([null, [], 'manifest'])('rejects an invalid manifest value: %j', manifest => {
+    expect(() => applyBuildResources({}, manifest)).toThrow('Build manifest must be an object');
+  });
+
+  it('preserves the configuration when build resources are absent', () => {
+    const defaults = { extraResources: [{ from: '/headlamp/frontend' }] };
+
+    expect(applyBuildResources(defaults, {})).toBe(defaults);
+  });
+
+  it.each([null, [], 'resources'])('rejects an invalid resources value: %j', resources => {
+    expect(() => applyBuildResources({}, { resources })).toThrow(
+      'Build manifest resources must be an object'
+    );
+  });
+
+  it('rejects unsupported resource groups', () => {
+    expect(() => applyBuildResources({}, { resources: { windows: [] } })).toThrow(
+      'Unsupported build manifest resource group: windows'
+    );
+  });
+
+  it.each([null, {}, 'tools'])('rejects invalid common resources: %j', common => {
+    expect(() => applyBuildResources({}, { resources: { common } })).toThrow(
+      'Build manifest resources.common must be an array'
+    );
+  });
+
+  it('resolves and appends common and platform resources without mutating defaults', () => {
+    const manifestFile = path.join('/product', 'config', 'app-build-manifest.json');
+    const manifestDirectory = path.dirname(manifestFile);
+    const defaults = {
+      extraResources: [{ from: '/headlamp/frontend' }],
+      linux: { category: 'Network', extraResources: [{ from: '/headlamp/backend' }] },
+      mac: { hardenedRuntime: true },
+      win: null,
+    };
+
+    expect(
+      applyBuildResources(
+        defaults,
+        {
+          resources: {
+            common: [{ from: '../shared', to: 'shared', filter: ['**/*'] }],
+            linux: [{ from: './tools/linux', to: 'tools' }],
+            mac: [{ from: './tools/mac' }],
+            win: [{ from: '/absolute/tool.exe', to: 'tools/tool.exe' }],
+          },
+        },
+        manifestFile
+      )
+    ).toEqual({
+      extraResources: [
+        { from: '/headlamp/frontend' },
+        {
+          from: path.resolve(manifestDirectory, '../shared'),
+          to: 'shared',
+          filter: ['**/*'],
+        },
+      ],
+      linux: {
+        category: 'Network',
+        extraResources: [
+          { from: '/headlamp/backend' },
+          { from: path.resolve(manifestDirectory, './tools/linux'), to: 'tools' },
+        ],
+      },
+      mac: {
+        hardenedRuntime: true,
+        extraResources: [{ from: path.resolve(manifestDirectory, './tools/mac') }],
+      },
+      win: {
+        extraResources: [
+          { from: path.resolve(manifestDirectory, '/absolute/tool.exe'), to: 'tools/tool.exe' },
+        ],
+      },
+    });
+    expect(defaults).toEqual({
+      extraResources: [{ from: '/headlamp/frontend' }],
+      linux: { category: 'Network', extraResources: [{ from: '/headlamp/backend' }] },
+      mac: { hardenedRuntime: true },
+      win: null,
+    });
+  });
+
+  it.each([
+    {
+      commonResource: '../frontend/build',
+      platformResource: { from: '../backend/headlamp-server', to: 'backend/headlamp-server' },
+    },
+    {
+      commonResource: { from: '../frontend/build', to: 'frontend' },
+      platformResource: '../backend/headlamp-server',
+    },
+  ])(
+    'preserves singleton common and platform resources: %j',
+    ({ commonResource, platformResource }) => {
+      const manifestFile = path.join('/product', 'app-build-manifest.json');
+
+      expect(
+        applyBuildResources(
+          {
+            extraResources: commonResource,
+            mac: { extraResources: platformResource },
+          },
+          {
+            resources: {
+              common: [{ from: './shared' }],
+              mac: [{ from: './tools/mac' }],
+            },
+          },
+          manifestFile
+        )
+      ).toEqual({
+        extraResources: [
+          commonResource,
+          { from: path.resolve(path.dirname(manifestFile), './shared') },
+        ],
+        mac: {
+          extraResources: [
+            platformResource,
+            { from: path.resolve(path.dirname(manifestFile), './tools/mac') },
+          ],
+        },
+      });
+    }
+  );
+
+  it.each([null, [], 'tools', {}, { to: 'tools' }, { from: 1 }, { from: 'tools', to: 1 }])(
+    'rejects an invalid resource entry: %j',
+    resource => {
+      expect(() => applyBuildResources({}, { resources: { common: [resource] } })).toThrow(
+        'Invalid build manifest resources.common[0]'
+      );
+    }
+  );
+
+  it.each([
+    { from: 'tools', filter: 'bin' },
+    { from: 'tools', filter: [1] },
+    { from: 'tools', unsafe: true },
+  ])('rejects invalid resource options: %j', resource => {
+    expect(() => applyBuildResources({}, { resources: { mac: [resource] } })).toThrow(
+      'Invalid build manifest resources.mac[0]'
+    );
+  });
+});
 
 describe('build target validation', () => {
   it('replaces platform targets without changing other platform settings', () => {
