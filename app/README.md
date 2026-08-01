@@ -92,6 +92,27 @@ string or `filter` string array. Manifest resources are appended to Headlamp's
 existing resources rather than replacing them. Invalid resource configuration
 stops the build before Electron Builder packaging.
 
+Packagers can also require selected files to match SHA-256 digests after
+Electron Builder copies them. Verification paths are relative to the packaged
+resources directory and must resolve to regular files beneath that directory:
+
+```json
+{
+  "verify": [
+    {
+      "path": "tools/helper",
+      "sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "platforms": ["linux", "mac"]
+    }
+  ]
+}
+```
+
+The optional `platforms` array accepts `linux`, `mac`, and `win`; entries without
+it apply to every package. Verification runs from Electron Builder's `afterPack`
+hook and stops packaging when a resource is missing, outside the resources
+directory, not a regular file, or does not match its declared digest.
+
 For example, from the repository root:
 
 ```bash

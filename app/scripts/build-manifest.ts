@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -38,6 +39,9 @@ export type BuildManifest = {
 
   /** Per-platform package targets consumed by Electron Builder. */
   targets?: Record<string, unknown>;
+
+  /** Packaged files whose SHA-256 digests must match after packaging. */
+  verify?: BuildVerification[];
 
   [key: string]: unknown;
 };
@@ -64,6 +68,18 @@ type BuildResource = {
 
   /** Optional destination beneath the packaged resources directory. */
   to?: string;
+};
+
+/** A packaged resource integrity requirement from a product manifest. */
+type BuildVerification = {
+  /** Relative path beneath the packaged resources directory. */
+  path: string;
+
+  /** Platforms on which the resource must be verified. */
+  platforms?: Array<'linux' | 'mac' | 'win'>;
+
+  /** Expected hexadecimal SHA-256 digest. */
+  sha256: string;
 };
 
 type ProductMetadata = {
@@ -118,6 +134,124 @@ export function loadBuildManifest(
 ): BuildManifest {
   const manifest = JSON.parse(fs.readFileSync(manifestFile, 'utf8')) as unknown;
   return validateBuildManifest(manifest);
+}
+
+/**
+ * Reports whether a candidate path is the root or is contained beneath it.
+ *
+ * @param root Absolute root path.
+ * @param candidate Absolute candidate path.
+ * @returns Whether the candidate is contained by the root.
+ */
+function isPathWithinRoot(root: string, candidate: string): boolean {
+  const relativePath = path.relative(root, candidate);
+  return (
+    relativePath === '' ||
+    (relativePath !== '..' &&
+      !relativePath.startsWith(`..${path.sep}`) &&
+      !path.isAbsolute(relativePath))
+  );
+}
+
+/**
+ * Calculates a file's SHA-256 digest with bounded memory usage.
+ *
+ * @param filePath Path to the file to hash.
+ * @returns The lowercase hexadecimal SHA-256 digest.
+ */
+function calculateFileSha256(filePath: string): string {
+  const hash = crypto.createHash('sha256');
+  const buffer = Buffer.allocUnsafe(64 * 1024);
+  const descriptor = fs.openSync(filePath, 'r');
+  try {
+    let bytesRead: number;
+    do {
+      bytesRead = fs.readSync(descriptor, buffer, 0, buffer.length, null);
+      if (bytesRead > 0) {
+        hash.update(buffer.subarray(0, bytesRead));
+      }
+    } while (bytesRead > 0);
+  } finally {
+    fs.closeSync(descriptor);
+  }
+  return hash.digest('hex');
+}
+
+/**
+ * Verifies manifest-declared files in a packaged app's resources directory.
+ *
+ * @param resourcesDirectory Root directory containing packaged resources.
+ * @param manifest Parsed application build manifest.
+ * @param platform Electron runtime platform name for the package being verified.
+ * @throws When verification declarations are malformed or a resource is unsafe or mismatched.
+ */
+export function verifyPackagedResources(
+  resourcesDirectory: string,
+  manifest: unknown,
+  platform: string
+): void {
+  if (typeof manifest !== 'object' || manifest === null || Array.isArray(manifest)) {
+    throw new Error('Build manifest must be an object');
+  }
+
+  const verification = (manifest as BuildManifest).verify;
+  if (verification === undefined) {
+    return;
+  }
+  if (!Array.isArray(verification)) {
+    throw new Error('Build manifest verify must be an array');
+  }
+
+  const platformName = { darwin: 'mac', mas: 'mac', win32: 'win' }[platform] ?? platform;
+  const root = path.resolve(resourcesDirectory);
+  for (const [index, entry] of verification.entries()) {
+    if (
+      typeof entry !== 'object' ||
+      entry === null ||
+      Array.isArray(entry) ||
+      typeof entry.path !== 'string' ||
+      entry.path.trim() === '' ||
+      typeof entry.sha256 !== 'string' ||
+      Object.keys(entry).some(key => !['path', 'platforms', 'sha256'].includes(key)) ||
+      (entry.platforms !== undefined &&
+        (!Array.isArray(entry.platforms) ||
+          entry.platforms.some(value => !['linux', 'mac', 'win'].includes(value))))
+    ) {
+      throw new Error(`Invalid build manifest verify[${index}]`);
+    }
+    if (entry.platforms && !entry.platforms.includes(platformName as 'linux' | 'mac' | 'win')) {
+      continue;
+    }
+    if (!/^[a-f0-9]{64}$/i.test(entry.sha256)) {
+      throw new Error(`Invalid SHA-256 for packaged resource ${entry.path}`);
+    }
+
+    const resource = path.resolve(root, entry.path);
+    if (!isPathWithinRoot(root, resource)) {
+      throw new Error(`Packaged resource escapes the resources directory: ${entry.path}`);
+    }
+
+    let stat: fs.Stats;
+    try {
+      stat = fs.lstatSync(resource);
+    } catch {
+      throw new Error(`Packaged resource is not a regular file: ${entry.path}`);
+    }
+    if (!stat.isFile() || stat.isSymbolicLink()) {
+      throw new Error(`Packaged resource is not a regular file: ${entry.path}`);
+    }
+
+    const canonicalRoot = fs.realpathSync(root);
+    const canonicalResource = fs.realpathSync(resource);
+    if (!isPathWithinRoot(canonicalRoot, canonicalResource)) {
+      throw new Error(`Packaged resource escapes the resources directory: ${entry.path}`);
+    }
+
+    const actualDigest = calculateFileSha256(resource);
+    if (actualDigest.toLowerCase() !== entry.sha256.toLowerCase()) {
+      throw new Error(`SHA-256 mismatch for packaged resource ${entry.path}`);
+    }
+  }
 }
 
 /**
