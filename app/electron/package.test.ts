@@ -26,6 +26,9 @@ const packageJson = JSON.parse(
   version: string;
   build: {
     artifactName: string;
+    linux: {
+      executableName?: string;
+    };
   };
 };
 const require = createRequire(import.meta.url);
@@ -48,5 +51,9 @@ describe('desktop package configuration', () => {
         arch: 'x64',
       })
     ).toBe(`${packageJson.name}-${packageJson.version}-win-x64.msi`);
+  });
+
+  it('derives the Linux executable name from package metadata', () => {
+    expect(packageJson.build.linux.executableName).toBeUndefined();
   });
 });
