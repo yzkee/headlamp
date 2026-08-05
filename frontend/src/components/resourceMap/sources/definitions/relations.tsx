@@ -327,6 +327,7 @@ const jobToJobSet = makeRelation('job-jobset', Job, JobSet, (job, jobSet) =>
 // worker set, so the controller's label is used instead. makeRelation already
 // scopes the match to the same cluster and namespace.
 const statefulSetToLeaderWorkerSet = makeRelation(
+  'statefulset-leaderworkerset',
   StatefulSet,
   LeaderWorkerSet,
   (statefulSet, leaderWorkerSet) =>
