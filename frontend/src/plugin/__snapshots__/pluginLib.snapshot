@@ -475,6 +475,8 @@
       "ServiceAccount": [Function],
       "StatefulSet": [Function],
       "StorageClass": [Function],
+      "TCPRoute": [Function],
+      "UDPRoute": [Function],
       "VolumeAttributesClass": [Function],
     },
     "cluster": {
