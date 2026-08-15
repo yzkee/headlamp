@@ -82,3 +82,30 @@ test('project header action selects a registered tab', async ({ page }) => {
   await expect(metricsTab).toHaveAttribute('aria-selected', 'true');
   await expect(page.getByText(`Metrics for project ${projectName}`)).toBeVisible();
 });
+
+test('offers the built-in project creation choices', async ({ page }) => {
+  const headlampPage = new HeadlampPage(page);
+  await headlampPage.navigateToCluster('test', process.env.HEADLAMP_TEST_TOKEN);
+  await headlampPage.navigateTopage('/c/test/projects');
+
+  await page.getByRole('button', { name: 'Create Project' }).click();
+
+  const dialog = page.getByRole('dialog');
+  await expect(dialog.getByRole('heading', { name: 'Create a Project' })).toBeVisible();
+  await expect(
+    dialog.getByRole('button', { name: /New Project Create a new project/ })
+  ).toBeVisible();
+  await expect(
+    dialog.getByRole('button', { name: /New Project from YAML Deploy a new application from YAML/ })
+  ).toBeVisible();
+
+  await dialog.getByRole('button', { name: /New Project Create a new project/ }).click();
+  await expect(dialog.getByRole('heading', { name: 'Create new project' })).toBeVisible();
+  await dialog.getByRole('button', { name: 'Cancel' }).click();
+  await expect(dialog.getByRole('heading', { name: 'Create a Project' })).toBeVisible();
+
+  await dialog
+    .getByRole('button', { name: /New Project from YAML Deploy a new application from YAML/ })
+    .click();
+  await expect(page).toHaveURL(/\/project\/create-yaml$/);
+});
