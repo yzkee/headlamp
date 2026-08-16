@@ -207,18 +207,6 @@ project creation menu.
 | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | ![Default project creation choices on a mobile viewport](../images/project-creation/default-choices-mobile.png) | ![Project creation choices replaced by a plugin on a mobile viewport](../images/project-creation/replaced-choices-mobile.png) |
 
-**Medium (768 x 900)**
-
-| Default choices                                                                                                 | Plugin replacements                                                                                                           |
-| --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| ![Default project creation choices on a medium viewport](../images/project-creation/default-choices-medium.png) | ![Project creation choices replaced by a plugin on a medium viewport](../images/project-creation/replaced-choices-medium.png) |
-
-**Large (1440 x 1000)**
-
-| Default choices                                                                                               | Plugin replacements                                                                                                         |
-| ------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| ![Default project creation choices on a large viewport](../images/project-creation/default-choices-large.png) | ![Project creation choices replaced by a plugin on a large viewport](../images/project-creation/replaced-choices-large.png) |
-
 - API reference: [registerCustomCreateProject](../../api/plugin/registry/functions/registercustomcreateproject)
 
 ### Headlamp Events
