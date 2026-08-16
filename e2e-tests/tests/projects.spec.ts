@@ -86,7 +86,8 @@ test('project header action selects a registered tab', async ({ page }) => {
 test('offers the built-in project creation choices', async ({ page }) => {
   const headlampPage = new HeadlampPage(page);
   await headlampPage.navigateToCluster('test', process.env.HEADLAMP_TEST_TOKEN);
-  await headlampPage.navigateTopage('/c/test/projects');
+  await headlampPage.navigateTopage('/');
+  await page.getByRole('tab', { name: 'Projects' }).click();
 
   await page.getByRole('button', { name: 'Create Project' }).click();
 
