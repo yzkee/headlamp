@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { loadClusterSettings } from '../../helpers/clusterSettings';
+import { getCombinedAllowedNamespaces } from '../../helpers/clusterSettings';
 import { getCluster } from '../cluster';
 import { KubeMetadata } from './KubeMetadata';
 export {
@@ -52,8 +52,7 @@ export function getAllowedNamespaces(cluster: string | null = getCluster()): str
     return [];
   }
 
-  const clusterSettings = loadClusterSettings(cluster);
-  return clusterSettings.allowedNamespaces || [];
+  return getCombinedAllowedNamespaces(cluster);
 }
 
 export interface Cluster {
