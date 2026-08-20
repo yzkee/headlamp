@@ -52,6 +52,9 @@ type PluginSource = {
 
   /** Expected hexadecimal SHA-256 digest of the selected archive. */
   sha256?: string;
+
+  /** Whether the bundled plugin is enabled when first discovered. */
+  enabledByDefault?: boolean;
 };
 
 /** Parsed subset of an app build manifest used during plugin setup. */
@@ -182,6 +185,9 @@ export function validatePluginSource(
   ) {
     throw new Error(`External plugin ${plugin.name} must declare a valid package name`);
   }
+  if (plugin.enabledByDefault !== undefined && typeof plugin.enabledByDefault !== 'boolean') {
+    throw new Error(`Plugin ${plugin.name} enabledByDefault must be a boolean`);
+  }
 }
 
 /**
@@ -209,6 +215,49 @@ export function verifyPluginIdentity(packageJsonPath: string, expectedPackageNam
     throw new Error(
       `Plugin package name mismatch: expected ${expectedPackageName}, got ${packageJson.name}`
     );
+  }
+}
+
+/**
+ * Atomically writes a bundled plugin's explicit initial enabled state.
+ *
+ * @param pluginRoot Root directory containing extracted bundled plugins.
+ * @param name Plugin installation directory name.
+ * @param enabledByDefault Explicit initial enabled state from the build manifest.
+ * @throws When the extracted package metadata is missing, invalid, or cannot be replaced.
+ */
+export function applyEnabledByDefault(
+  pluginRoot: string,
+  name: string,
+  enabledByDefault?: boolean
+): void {
+  if (enabledByDefault === undefined) return;
+
+  const packageJsonPath = path.join(pluginRoot, name, 'package.json');
+  if (!fs.existsSync(packageJsonPath)) {
+    throw new Error(`Plugin ${name} package.json is missing; cannot apply enabledByDefault`);
+  }
+
+  const temporaryPath = `${packageJsonPath}.tmp-${process.pid}-${crypto.randomUUID()}`;
+  try {
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8')) as Record<
+      string,
+      unknown
+    >;
+    const headlamp =
+      typeof packageJson.headlamp === 'object' &&
+      packageJson.headlamp !== null &&
+      !Array.isArray(packageJson.headlamp)
+        ? (packageJson.headlamp as Record<string, unknown>)
+        : {};
+    headlamp.enabledByDefault = enabledByDefault;
+    packageJson.headlamp = headlamp;
+
+    fs.writeFileSync(temporaryPath, JSON.stringify(packageJson, null, 2), { flag: 'wx' });
+    fs.renameSync(temporaryPath, packageJsonPath);
+  } catch (error) {
+    fs.rmSync(temporaryPath, { force: true });
+    throw new Error(`Failed to apply enabledByDefault for plugin ${name}`, { cause: error });
   }
 }
 
@@ -578,7 +627,7 @@ export async function main(): Promise<void> {
 
   const stagingFolder = fs.mkdtempSync(path.join(path.dirname(PLUGIN_FOLDER), '.plugins-stage-'));
   try {
-    for (const { name, packageName, archive, file, sha256 } of plugins) {
+    for (const { name, packageName, archive, file, sha256, enabledByDefault } of plugins) {
       if (archive) {
         await fetchArchive(name, archive, sha256, stagingFolder);
       }
@@ -597,8 +646,9 @@ export async function main(): Promise<void> {
           fs.rmSync(privateArchive.directory, { recursive: true, force: true });
         }
       }
-
-      verifyPluginIdentity(path.join(stagingFolder, name, 'package.json'), packageName);
+      const packageJsonPath = path.join(stagingFolder, name, 'package.json');
+      verifyPluginIdentity(packageJsonPath, packageName);
+      applyEnabledByDefault(stagingFolder, name, enabledByDefault);
     }
     replacePluginFolder(stagingFolder);
   } finally {
