@@ -1,6 +1,6 @@
 {
   "name": "headlamp",
-  "version": "0.44.0",
+  "version": "0.45.0",
   "description": "Easy-to-use and extensible Kubernetes web UI",
   "main": "build/main.js",
   "homepage": "https://github.com/kubernetes-sigs/headlamp/#readme",
@@ -38,7 +38,7 @@
     "beforeBuild": "./scripts/build-backend.js",
     "afterPack": "./scripts/after-pack.js",
     "asar": false,
-    "artifactName": "${name}-${version}-${os}-${arch}.${ext}",
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
     "protocols": {
       "name": "headlamp-protocol",
       "schemes": [
