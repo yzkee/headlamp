@@ -23,18 +23,37 @@ const VALID_PROTOCOL_SCHEME = /^[a-z][a-z0-9+.-]*$/i;
 /**
  * Gets a normalized custom protocol scheme from product metadata.
  *
+ * The scheme is read from `product.protocols.schemes`, which is the same field
+ * `applyProductMetadata` hands to Electron Builder to register the scheme with
+ * the OS at packaging time. Reading a separate key here would let the runtime
+ * and the installer disagree, which rejects every real deep link.
+ *
+ * Only the first scheme is honored. Electron Builder can register several
+ * aliases with the OS, but the renderer is handed a single scheme, so a deep
+ * link arriving via a later alias is rejected as an invalid URL.
+ *
  * @param buildManifest - Parsed product build manifest.
  * @returns The configured protocol scheme, or the Headlamp default.
  */
 export function getProtocolScheme(buildManifest: unknown): string {
-  if (typeof buildManifest !== 'object' || buildManifest === null) {
-    return DEFAULT_PROTOCOL_SCHEME;
-  }
+  const product = isRecord(buildManifest) ? buildManifest.product : undefined;
+  const protocols = isRecord(product) ? product.protocols : undefined;
+  const schemes = isRecord(protocols) ? protocols.schemes : undefined;
+  const scheme = Array.isArray(schemes) ? schemes[0] : undefined;
 
-  const scheme = (buildManifest as { protocolScheme?: unknown }).protocolScheme;
   return typeof scheme === 'string' && VALID_PROTOCOL_SCHEME.test(scheme)
     ? scheme.toLowerCase()
     : DEFAULT_PROTOCOL_SCHEME;
+}
+
+/**
+ * Narrows a value to a plain object usable for keyed lookups.
+ *
+ * @param value - Candidate value from parsed JSON.
+ * @returns Whether the value is a non-null, non-array object.
+ */
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 /**
@@ -52,15 +71,20 @@ export function readProtocolScheme(manifestPath: string): string {
 }
 
 /**
- * Checks whether a value is a URL for the configured protocol scheme.
+ * Checks whether a value is a routable URL for the configured protocol scheme.
+ *
+ * Opaque URLs such as `headlamp:cluster` are rejected: deep links are routed
+ * from the host component, so an empty host would silently navigate to the
+ * app root instead of the requested route.
  *
  * @param value - Candidate deep-link URL.
  * @param protocolScheme - Expected protocol scheme without a trailing colon.
- * @returns Whether the URL uses the configured protocol scheme.
+ * @returns Whether the URL uses the configured protocol scheme and has a host.
  */
 export function isProtocolUrl(value: string, protocolScheme: string): boolean {
   try {
-    return new URL(value).protocol === `${protocolScheme}:`;
+    const url = new URL(value);
+    return url.protocol === `${protocolScheme}:` && url.hostname !== '';
   } catch {
     return false;
   }

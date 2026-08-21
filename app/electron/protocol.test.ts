@@ -20,29 +20,56 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { findProtocolUrl, getProtocolScheme, isProtocolUrl, readProtocolScheme } from './protocol';
 
+/**
+ * Builds a manifest whose product metadata declares the given protocol schemes.
+ *
+ * @param schemes - Value placed at `product.protocols.schemes`.
+ * @returns A build manifest fragment for the scheme lookup.
+ */
+function manifestWithSchemes(schemes: unknown) {
+  return { product: { protocols: { name: 'my-desktop-protocol', schemes } } };
+}
+
 describe('getProtocolScheme', () => {
-  it('returns a normalized protocol persisted in product metadata', () => {
-    expect(getProtocolScheme({ protocolScheme: 'My-Desktop' })).toBe('my-desktop');
+  it('returns a normalized protocol from the packaged product metadata', () => {
+    expect(getProtocolScheme(manifestWithSchemes(['My-Desktop']))).toBe('my-desktop');
   });
 
-  it.each([undefined, null, {}, { protocolScheme: 1 }, { protocolScheme: '' }])(
-    'falls back for product metadata without a valid protocol: %j',
+  it('uses the first scheme when the product registers several', () => {
+    expect(getProtocolScheme(manifestWithSchemes(['my-desktop', 'legacy-desktop']))).toBe(
+      'my-desktop'
+    );
+  });
+
+  it.each([undefined, null, {}, { product: null }, { product: { protocols: null } }])(
+    'falls back for product metadata without protocols: %j',
     buildManifest => {
       expect(getProtocolScheme(buildManifest)).toBe('headlamp');
     }
   );
 
+  it.each([undefined, null, [], 'my-desktop', [1], [''], [null]])(
+    'falls back for an unusable schemes value: %j',
+    schemes => {
+      expect(getProtocolScheme(manifestWithSchemes(schemes))).toBe('headlamp');
+    }
+  );
+
+  it('ignores a top-level protocolScheme key that packaging never registers', () => {
+    expect(getProtocolScheme({ protocolScheme: 'my-desktop' })).toBe('headlamp');
+  });
+
   it.each(['1desktop', 'not a scheme', 'desktop_app', 'desktop:'])(
     'falls back for an invalid protocol: %s',
-    protocolScheme => {
-      expect(getProtocolScheme({ protocolScheme })).toBe('headlamp');
+    scheme => {
+      expect(getProtocolScheme(manifestWithSchemes([scheme]))).toBe('headlamp');
     }
   );
 
   it.each(['desktop+auth', 'desktop.auth', 'desktop-auth'])(
     'accepts URL scheme punctuation: %s',
-    protocolScheme => {
-      expect(getProtocolScheme({ protocolScheme })).toBe(protocolScheme);
+    scheme => {
+      expect(getProtocolScheme(manifestWithSchemes([scheme]))).toBe(scheme);
     }
   );
 });
@@ -53,7 +80,7 @@ describe('readProtocolScheme', () => {
     const manifestPath = path.join(directory, 'app-build-manifest.json');
 
     try {
-      fs.writeFileSync(manifestPath, JSON.stringify({ protocolScheme: 'Custom-Desktop' }));
+      fs.writeFileSync(manifestPath, JSON.stringify(manifestWithSchemes(['Custom-Desktop'])));
       expect(readProtocolScheme(manifestPath)).toBe('custom-desktop');
     } finally {
       fs.rmSync(directory, { force: true, recursive: true });
@@ -78,20 +105,22 @@ describe('readProtocolScheme', () => {
 });
 
 describe('isProtocolUrl', () => {
-  it.each([
-    'my-desktop://cluster?name=local',
-    'MY-DESKTOP://cluster?name=local',
-    'my-desktop:cluster',
-  ])('accepts a URL for the configured protocol: %s', value => {
-    expect(isProtocolUrl(value, 'my-desktop')).toBe(true);
-  });
-
-  it.each(['not a URL', 'headlamp://cluster', 'https://cluster'])(
-    'rejects malformed URLs and other protocols: %s',
+  it.each(['my-desktop://cluster?name=local', 'MY-DESKTOP://cluster?name=local'])(
+    'accepts a URL for the configured protocol: %s',
     value => {
-      expect(isProtocolUrl(value, 'my-desktop')).toBe(false);
+      expect(isProtocolUrl(value, 'my-desktop')).toBe(true);
     }
   );
+
+  it.each([
+    'not a URL',
+    'headlamp://cluster',
+    'https://cluster',
+    'my-desktop:cluster',
+    'my-desktop://',
+  ])('rejects malformed URLs, other protocols, and hostless URLs: %s', value => {
+    expect(isProtocolUrl(value, 'my-desktop')).toBe(false);
+  });
 });
 
 describe('findProtocolUrl', () => {

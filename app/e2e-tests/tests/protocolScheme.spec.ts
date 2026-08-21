@@ -36,7 +36,17 @@ test.describe('desktop protocol scheme', () => {
     const productManifest = JSON.parse(originalManifest);
     fs.writeFileSync(
       manifestPath,
-      JSON.stringify({ ...productManifest, protocolScheme: 'test-headlamp' }, null, 2) + '\n'
+      JSON.stringify(
+        {
+          ...productManifest,
+          product: {
+            ...productManifest.product,
+            protocols: { name: 'test-headlamp-protocol', schemes: ['test-headlamp'] },
+          },
+        },
+        null,
+        2
+      ) + '\n'
     );
 
     const electronEnv: Record<string, string> = {};
