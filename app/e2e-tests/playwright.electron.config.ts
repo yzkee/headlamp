@@ -28,6 +28,7 @@ export default defineConfig({
   testMatch: [
     'backendToken.spec.ts',
     'buildManifest.spec.ts',
+    'buildManifestProduct.spec.ts',
     'clusterRename.spec.ts',
     'namespaces.spec.ts',
     'clusterAutoConnect.spec.ts',
