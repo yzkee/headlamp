@@ -164,6 +164,29 @@ For example, from the repository root:
 HEADLAMP_BUILD_MANIFEST=./product/app-build-manifest.json npm run app:package
 ```
 
+#### Packaged resource verification
+
+The `verify` field checks selected files after Electron Builder copies them into
+the package. Each entry declares a path relative to the packaged resources
+directory and its expected SHA-256 digest:
+
+```json
+{
+  "verify": [
+    {
+      "path": "tools/helper",
+      "sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "platforms": ["linux", "mac"]
+    }
+  ]
+}
+```
+
+The optional `platforms` array accepts `linux`, `mac`, and `win`. An entry without
+`platforms` applies to every package. Verification stops packaging when a file
+is missing, escapes the resources directory, is a directory or symbolic link,
+or does not match its declared digest.
+
 ## Development workflow
 
 The typical development workflow for the desktop app:
