@@ -70,6 +70,28 @@ and `x64`; macOS supports `arm64`, `universal`, and `x64`; and Windows supports
 `arm64`, `ia32`, and `x64`. Invalid target configuration stops the build before
 Electron Builder packaging.
 
+A manifest can also append files and directories to Electron Builder's common
+or platform-specific `extraResources`. Resource `from` paths are resolved
+relative to the selected manifest file, so product assets can live beside their
+manifest:
+
+```json
+{
+  "resources": {
+    "common": [{ "from": "./shared", "to": "shared" }],
+    "linux": [{ "from": "./tools/linux", "to": "tools" }],
+    "mac": [{ "from": "./tools/mac", "to": "tools", "filter": ["**/*"] }],
+    "win": [{ "from": "./tools/windows.exe", "to": "tools/tool.exe" }]
+  }
+}
+```
+
+Only `common`, `linux`, `mac`, and `win` resource groups are supported. Each
+group must be an array of objects containing a `from` string and optional `to`
+string or `filter` string array. Manifest resources are appended to Headlamp's
+existing resources rather than replacing them. Invalid resource configuration
+stops the build before Electron Builder packaging.
+
 For example, from the repository root:
 
 ```bash
