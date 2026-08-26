@@ -41,6 +41,41 @@ Note, it runs the development servers for the backend and the frontend as well. 
 - `npm run verify-build-mac`: Verifies the macOS build artifacts and binaries (requires built app in dist/).
 - `npm run verify-build-windows`: Verifies the Windows build artifacts and binaries (requires built app in dist/).
 
+## Build manifest
+
+Desktop packages use `app-build-manifest.json` to configure product-specific
+build behavior. Set `HEADLAMP_BUILD_MANIFEST` to select another manifest; relative
+paths are resolved from the current working directory. The selected file is also
+copied into the packaged app as `app-build-manifest.json` for runtime features.
+
+When a manifest omits `targets`, Electron Builder uses the targets from
+`app/package.json`. A manifest can replace the target list for one or more
+platforms while preserving the other platform settings:
+
+```json
+{
+  "targets": {
+    "linux": ["AppImage"],
+    "mac": [{ "target": "dmg", "arch": ["arm64"] }],
+    "win": [{ "target": "nsis", "arch": ["x64"] }]
+  }
+}
+```
+
+Only `linux`, `mac`, and `win` platform keys are supported. Each configured
+platform must have a non-empty array whose entries are either a non-blank target
+name or an object containing a non-blank `target` and a non-empty `arch` array.
+Supported architectures depend on the platform: Linux supports `arm64`, `armv7l`,
+and `x64`; macOS supports `arm64`, `universal`, and `x64`; and Windows supports
+`arm64`, `ia32`, and `x64`. Invalid target configuration stops the build before
+Electron Builder packaging.
+
+For example, from the repository root:
+
+```bash
+HEADLAMP_BUILD_MANIFEST=../product/app-build-manifest.json npm --prefix app run package
+```
+
 ## Verifying Builds
 
 After building the desktop app with `npm run package`, you can verify that the built binaries work correctly:
