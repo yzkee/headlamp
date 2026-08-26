@@ -31,6 +31,7 @@ export default defineConfig({
     'clusterRename.spec.ts',
     'namespaces.spec.ts',
     'clusterAutoConnect.spec.ts',
+    'pluginSecureStorage.spec.ts',
   ],
   timeout: 60 * 1000,
   expect: {
