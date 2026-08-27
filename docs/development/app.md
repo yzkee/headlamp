@@ -174,6 +174,17 @@ example above selects `app/product/app-build-manifest.json` for both consumers.
 Use an absolute manifest path when invoking either consumer directly from a
 different working directory.
 
+The standard `make image` and `npm run image:build` commands pass the current
+Git revision to container builds. Direct Docker callers selecting a custom
+product manifest should pass both the manifest path and source revision:
+
+```bash
+docker buildx build \
+  --build-arg HEADLAMP_BUILD_MANIFEST=./product/app-build-manifest.json \
+  --build-arg HEADLAMP_SOURCE_COMMIT=0123456789abcdef \
+  -f Dockerfile .
+```
+
 The manifest must remain available throughout the frontend and app packaging
 steps. An unreadable manifest, a non-object `product`, non-string
 `productName`/`version` fields, or values containing newlines stop the frontend
