@@ -115,9 +115,7 @@ test('project overview renders plugin section cards', async ({ page }) => {
     });
     await expect(page.getByText(`Custom resource usage for project ${projectName}`)).toBeVisible();
 
-    const emptySection = page.locator(
-      '.MuiGrid-item:has(> .MuiCard-root > .MuiCardContent-root:empty)'
-    );
+    const emptySection = page.getByTestId('project-overview-section-empty-section');
     await expect(emptySection).toHaveCount(1);
     await expect(emptySection).toBeHidden();
   } finally {
