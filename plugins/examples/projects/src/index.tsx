@@ -186,6 +186,7 @@ registerProjectOverviewSection({
   isEnabled: async ({ project }) => project.clusters.length > 1,
 });
 
+// Fixture for the projectOverview e2e test: a section returning null must not leave a blank card.
 registerProjectOverviewSection({
   id: 'empty-section',
   component: () => null,

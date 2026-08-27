@@ -59,10 +59,14 @@ export interface ProjectOverviewSection {
   /**
    * Component rendered in the project overview.
    *
+   * Return `null` when the section has nothing to show: the surrounding card is then hidden so no
+   * blank space is left behind. Returning a wrapper element that renders no visible content keeps
+   * the card on screen.
+   *
    * @param props - Properties supplied to the section component.
    * @param props.project - Project currently displayed.
    * @param props.projectResources - Kubernetes resources loaded for the project.
-   * @returns Content to render in the section.
+   * @returns Content to render in the section, or `null` to hide it.
    */
   component: (props: { project: ProjectDefinition; projectResources: KubeObject[] }) => ReactNode;
   /**
