@@ -14,39 +14,48 @@
  * limitations under the License.
  */
 
-import { Card, CardContent, Grid } from '@mui/material';
+import { Card, cardClasses, CardContent, cardContentClasses, Grid } from '@mui/material';
 import type { KubeObject } from '../../lib/k8s/KubeObject';
-import type {
-  ProjectDefinition,
-  ProjectOverviewSection as ProjectOverviewSectionDefinition,
-} from '../../redux/projectsSlice';
+import type { ProjectDefinition, ProjectOverviewSection } from '../../redux/projectsSlice';
+import ErrorBoundary from '../common/ErrorBoundary';
 
 /** Props for a plugin-provided project overview section card. */
-interface ProjectOverviewSectionProps {
+interface ProjectOverviewSectionCardProps {
   /** Project displayed by the overview page. */
   project: ProjectDefinition;
   /** Kubernetes resources associated with the project. */
   projectResources: KubeObject[];
   /** Plugin section definition to render. */
-  section: ProjectOverviewSectionDefinition;
+  section: ProjectOverviewSection;
 }
 
-/** Render a plugin-provided project overview section in the standard card layout. */
-export function ProjectOverviewSection({
+/**
+ * Render a plugin-provided project overview section in the standard card layout.
+ *
+ * The card is hidden when the section renders nothing, so a section returning `null` does not
+ * leave blank space behind. A section that throws is caught by the error boundary and, since the
+ * boundary renders nothing, ends up hidden by the same rule.
+ */
+export function ProjectOverviewSectionCard({
   project,
   projectResources,
   section,
-}: ProjectOverviewSectionProps) {
+}: ProjectOverviewSectionCardProps) {
   return (
     <Grid
       item
       xs={12}
       md={4}
-      sx={{ '&:has(> .MuiCard-root > .MuiCardContent-root:empty)': { display: 'none' } }}
+      data-testid={`project-overview-section-${section.id}`}
+      sx={{
+        [`&:has(> .${cardClasses.root} > .${cardContentClasses.root}:empty)`]: { display: 'none' },
+      }}
     >
       <Card sx={{ height: '100%' }}>
         <CardContent>
-          <section.component project={project} projectResources={projectResources} />
+          <ErrorBoundary>
+            <section.component project={project} projectResources={projectResources} />
+          </ErrorBoundary>
         </CardContent>
       </Card>
     </Grid>

@@ -37,7 +37,7 @@ import { useTypedSelector } from '../../redux/hooks';
 import {
   ProjectDefinition,
   ProjectDetailsTab,
-  ProjectOverviewSection as ProjectOverviewSectionDefinition,
+  ProjectOverviewSection,
 } from '../../redux/projectsSlice';
 import { Activity } from '../activity/Activity';
 import { ButtonStyle, EditButton, EditorDialog, Loader, StatusLabel } from '../common';
@@ -49,7 +49,7 @@ import { GraphView } from '../resourceMap/GraphView';
 import { ResourceQuotaTable } from '../resourceQuota/Details';
 import { ProjectDeleteButton } from './ProjectDeleteButton';
 import { useProject } from './ProjectList';
-import { ProjectOverviewSection } from './ProjectOverviewSection';
+import { ProjectOverviewSectionCard } from './ProjectOverviewSectionCard';
 import { getEnabledProjectOverviewSections } from './projectOverviewSections';
 import { ProjectResourcesTab, useResourceCategoriesList } from './ProjectResourcesTab';
 import { getHealthIcon, getResourcesHealth } from './projectUtils';
@@ -128,7 +128,7 @@ function ProjectOverview({
   const additionalOverviewSections = useTypedSelector(state => state.projects.overviewSections);
   const [evaluatedSections, setEvaluatedSections] = useState<{
     project: ProjectDefinition;
-    sections: ProjectOverviewSectionDefinition[];
+    sections: ProjectOverviewSection[];
   }>();
 
   useEffect(() => {
@@ -333,7 +333,7 @@ function ProjectOverview({
       </Grid>
 
       {projectSections.map(section => (
-        <ProjectOverviewSection
+        <ProjectOverviewSectionCard
           key={section.id}
           project={project}
           projectResources={projectResources}

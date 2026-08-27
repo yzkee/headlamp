@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import { Card, CardContent } from '@mui/material';
+import { Box, Card, CardContent, cardContentClasses, gridClasses } from '@mui/material';
 import { render, screen } from '@testing-library/react';
 import { TestContext } from '../../test';
-import { ProjectOverviewSection } from './ProjectOverviewSection';
+import { ProjectOverviewSectionCard } from './ProjectOverviewSectionCard';
 
 const project = {
   id: 'project-1',
@@ -25,11 +25,11 @@ const project = {
   clusters: ['cluster-1'],
 };
 
-describe('ProjectOverviewSection', () => {
+describe('ProjectOverviewSectionCard', () => {
   it('renders plugin section content', () => {
     render(
       <TestContext>
-        <ProjectOverviewSection
+        <ProjectOverviewSectionCard
           project={project}
           projectResources={[]}
           section={{
@@ -46,7 +46,7 @@ describe('ProjectOverviewSection', () => {
   it('hides an empty card when the plugin section returns null', () => {
     const { container } = render(
       <TestContext>
-        <ProjectOverviewSection
+        <ProjectOverviewSectionCard
           project={project}
           projectResources={[]}
           section={{ id: 'empty-section', component: () => null }}
@@ -54,15 +54,34 @@ describe('ProjectOverviewSection', () => {
       </TestContext>
     );
 
-    const emptyCardContent = container.querySelector('.MuiCardContent-root');
+    const emptyCardContent = container.querySelector(`.${cardContentClasses.root}`);
     expect(emptyCardContent).toBeEmptyDOMElement();
-    expect(emptyCardContent?.closest('.MuiGrid-item')).toHaveStyle({ display: 'none' });
+    expect(emptyCardContent?.closest(`.${gridClasses.item}`)).toHaveStyle({ display: 'none' });
+  });
+
+  it('keeps the card visible when the plugin section renders an empty wrapper', () => {
+    const items: string[] = [];
+    const { container } = render(
+      <TestContext>
+        <ProjectOverviewSectionCard
+          project={project}
+          projectResources={[]}
+          section={{
+            id: 'empty-wrapper-section',
+            component: () => <Box>{items.map(item => item)}</Box>,
+          }}
+        />
+      </TestContext>
+    );
+
+    // Sections must return null to be hidden; a wrapper element keeps the card on screen.
+    expect(container.querySelector(`.${gridClasses.item}`)).not.toHaveStyle({ display: 'none' });
   });
 
   it('shows content when a plugin renders an empty nested card', () => {
     render(
       <TestContext>
-        <ProjectOverviewSection
+        <ProjectOverviewSectionCard
           project={project}
           projectResources={[]}
           section={{
@@ -80,6 +99,30 @@ describe('ProjectOverviewSection', () => {
       </TestContext>
     );
 
-    expect(screen.getByText('Plugin section content').closest('.MuiGrid-item')).toBeVisible();
+    expect(
+      screen.getByText('Plugin section content').closest(`.${gridClasses.item}`)
+    ).toBeVisible();
+  });
+
+  it('hides the card and keeps rendering when the plugin section throws', () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const { container } = render(
+      <TestContext>
+        <ProjectOverviewSectionCard
+          project={project}
+          projectResources={[]}
+          section={{
+            id: 'throwing-section',
+            component: () => {
+              throw new Error('Plugin section failure');
+            },
+          }}
+        />
+      </TestContext>
+    );
+
+    expect(container.querySelector(`.${cardContentClasses.root}`)).toBeEmptyDOMElement();
+    expect(container.querySelector(`.${gridClasses.item}`)).toHaveStyle({ display: 'none' });
   });
 });
