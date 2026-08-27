@@ -162,6 +162,14 @@ describe('validateCommandData', () => {
     expect(validateCommandData('string' as any)[0]).toBe(false);
   });
 
+  it('returns false if id is missing, empty, or not a string', () => {
+    expect(validateCommandData({ command: 'gh', args: [], options: {} })[0]).toBe(false);
+    expect(validateCommandData({ id: '', command: 'gh', args: [], options: {} })[0]).toBe(false);
+    expect(validateCommandData({ id: 1 as any, command: 'gh', args: [], options: {} })[0]).toBe(
+      false
+    );
+  });
+
   it('returns false if command is missing or not a string', () => {
     expect(validateCommandData({ args: [], options: {}, permissionSecrets: {} })[0]).toBe(false);
     expect(
@@ -246,6 +254,7 @@ describe('validateCommandData', () => {
   it('returns true for valid minikube command', () => {
     expect(
       validateCommandData({
+        id: 'test-id',
         command: 'minikube',
         args: [],
         options: {},
@@ -257,6 +266,7 @@ describe('validateCommandData', () => {
   it('returns true for valid az command', () => {
     expect(
       validateCommandData({
+        id: 'test-id',
         command: 'az',
         args: ['arg1'],
         options: {},
@@ -268,6 +278,7 @@ describe('validateCommandData', () => {
   it('returns true for valid scriptjs command', () => {
     expect(
       validateCommandData({
+        id: 'test-id',
         command: 'scriptjs',
         args: ['myscript.js'],
         options: {},
@@ -327,6 +338,77 @@ describe('handleRunCommand', () => {
 
     expect(sentMessages).toContainEqual(['command-stderr', 'test-id', 'spawn error']);
     expect(sentMessages).toContainEqual(['command-exit', 'test-id', -1]);
+
+    childEmitter.emit('close', null);
+    expect(sentMessages.filter(([channel]) => channel === 'command-exit')).toHaveLength(1);
+  });
+
+  it('reports exit only after stdout and stderr close', async () => {
+    const eventData = {
+      id: 'test-id',
+      command: 'gh',
+      args: ['auth', 'token'],
+      options: {},
+      permissionSecrets: { 'runCmd-gh': 99 },
+    };
+
+    await handleRunCommand(fakeEvent, eventData, { id: 1 } as any, { 'runCmd-gh': 99 });
+
+    childEmitter.emit('exit', 0);
+    childEmitter.stdout.emit('data', 'final output');
+    childEmitter.stderr.emit('data', 'final warning');
+
+    expect(sentMessages).toEqual([
+      ['command-stdout', 'test-id', 'final output'],
+      ['command-stderr', 'test-id', 'final warning'],
+    ]);
+
+    childEmitter.emit('close', 0);
+    expect(sentMessages.at(-1)).toEqual(['command-exit', 'test-id', 0]);
+  });
+
+  it.each([
+    ['missing window', { id: 'test-id' }, null, { 'runCmd-gh': 99 }],
+    [
+      'invalid command data',
+      { id: 'test-id', command: 'invalid', args: [], options: {}, permissionSecrets: {} },
+      { id: 1 },
+      {},
+    ],
+    [
+      'invalid permission secret',
+      {
+        id: 'test-id',
+        command: 'gh',
+        args: ['auth', 'token'],
+        options: {},
+        permissionSecrets: { 'runCmd-gh': 1 },
+      },
+      { id: 1 },
+      { 'runCmd-gh': 99 },
+    ],
+  ])('reports a rejected exit for %s', async (_name, data, window, secrets) => {
+    await handleRunCommand(fakeEvent, data as any, window as any, secrets);
+
+    expect(spawnMock).not.toHaveBeenCalled();
+    expect(sentMessages).toEqual([['command-exit', 'test-id', -1]]);
+  });
+
+  it('reports a rejected exit when command consent was denied previously', async () => {
+    const { loadSettings } = await import('./settings');
+    vi.mocked(loadSettings).mockReturnValueOnce({ confirmedCommands: { 'gh auth': false } });
+    const eventData = {
+      id: 'test-id',
+      command: 'gh',
+      args: ['auth', 'token'],
+      options: {},
+      permissionSecrets: { 'runCmd-gh': 99 },
+    };
+
+    await handleRunCommand(fakeEvent, eventData, { id: 1 } as any, { 'runCmd-gh': 99 });
+
+    expect(spawnMock).not.toHaveBeenCalled();
+    expect(sentMessages).toEqual([['command-exit', 'test-id', -1]]);
   });
 
   it('reports synchronous spawn errors without rejecting', async () => {

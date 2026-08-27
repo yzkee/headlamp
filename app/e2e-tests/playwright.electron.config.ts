@@ -32,6 +32,7 @@ export default defineConfig({
     'namespaces.spec.ts',
     'clusterAutoConnect.spec.ts',
     'pluginSecureStorage.spec.ts',
+    'listenerCleanup.spec.ts',
   ],
   timeout: 60 * 1000,
   expect: {
