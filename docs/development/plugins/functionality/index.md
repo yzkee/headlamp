@@ -226,6 +226,39 @@ This lets you add, remove, update, or move table columns.
 - Example plugin: [How to add a context menu to each row in the pods list table](https://github.com/kubernetes-sigs/headlamp/tree/main/plugins/examples/tables)
 - API reference: [registerResourceTableColumnsProcessor](../../api/plugin/registry/functions/registerresourcetablecolumnsprocessor)
 
+### Project Creation
+
+Add a project creation choice with
+[registerCustomCreateProject](../../api/plugin/registry/functions/registercustomcreateproject).
+To replace one of Headlamp's built-in choices in the same position, use its ID
+from `DefaultCreateProject`:
+
+```tsx
+import { DefaultCreateProject, registerCustomCreateProject } from '@kinvolk/headlamp-plugin/lib';
+
+registerCustomCreateProject({
+  id: DefaultCreateProject.NEW_PROJECT,
+  name: 'Create Managed Project',
+  description: 'Create a project managed by the platform',
+  icon: 'mdi:folder-plus',
+  component: ManagedProjectForm,
+});
+```
+
+Use `DefaultCreateProject.NEW_PROJECT` to replace the namespace-based project
+form, or `DefaultCreateProject.FROM_YAML` to replace the YAML creation flow.
+Use a unique ID to append another choice without replacing either built-in
+choice. The custom component receives an `onBack` callback for returning to the
+project creation menu.
+
+**Mobile (375 x 812)**
+
+| Default choices                                                                                                 | Plugin replacements                                                                                                           |
+| --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| ![Default project creation choices on a mobile viewport](../images/project-creation/default-choices-mobile.png) | ![Project creation choices replaced by a plugin on a mobile viewport](../images/project-creation/replaced-choices-mobile.png) |
+
+- API reference: [registerCustomCreateProject](../../api/plugin/registry/functions/registercustomcreateproject)
+
 ### Headlamp Events
 
 Headlamp fires events when something important happens.
