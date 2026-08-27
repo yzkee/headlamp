@@ -1202,7 +1202,7 @@ export function registerProjectDetailsTab(projectDetailsTab: ProjectDetailsTab) 
  *
  * @param projectOverviewSection - The section configuration to register
  * @param projectOverviewSection.id - Unique identifier for the section
- * @param projectOverviewSection.component - React component receiving the current project and its loaded resources
+ * @param projectOverviewSection.component - React component receiving the current project and its loaded resources. Return `null` to hide the section's card; a wrapper element that renders nothing still shows an empty card.
  * @param projectOverviewSection.isEnabled - Optional asynchronous predicate receiving the project being evaluated
  * @returns void
  *

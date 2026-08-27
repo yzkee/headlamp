@@ -111,7 +111,8 @@ test('replaces a built-in project creation choice', async ({ page }) => {
     .getByRole('button', { name: /Deploy Custom project Custom way to create resources/ })
     .click();
   await expect(dialog.getByRole('heading', { name: 'Your custom creator' })).toBeVisible();
-  await page.keyboard.press('Escape');
+  await dialog.getByRole('textbox').press('Escape');
+  await expect(dialog).toBeHidden();
 
   await page.getByRole('button', { name: 'Create Project' }).click();
 
