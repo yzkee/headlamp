@@ -15,7 +15,8 @@
  */
 
 import { expect, test } from '@playwright/test';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -98,5 +99,57 @@ test('custom manifest settings reach the Electron Builder configuration', () => 
     });
   } finally {
     fs.rmSync(manifestDir, { recursive: true, force: true });
+  }
+});
+
+test('after-pack rejects a packaged resource after it is tampered with', () => {
+  const packageDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'headlamp-package-'));
+  const resourcesDirectory = path.join(packageDirectory, 'packaged-resources');
+  const resourceFile = path.join(resourcesDirectory, 'tools', 'tool');
+  const manifestFile = path.join(packageDirectory, 'app-build-manifest.json');
+  fs.mkdirSync(path.dirname(resourceFile), { recursive: true });
+  fs.writeFileSync(resourceFile, 'bundled tool');
+  fs.writeFileSync(
+    manifestFile,
+    JSON.stringify({
+      verify: [
+        {
+          path: 'tools/tool',
+          sha256: crypto.createHash('sha256').update('bundled tool').digest('hex'),
+          platforms: ['linux'],
+        },
+      ],
+    })
+  );
+  const hookScript = [
+    "const path = require('node:path');",
+    "const hook = require('./scripts/after-pack.js').default;",
+    'const appOutDir = process.argv[1];',
+    'hook({',
+    '  appOutDir,',
+    "  electronPlatformName: 'linux',",
+    '  packager: { getResourcesDir: directory => path.join(directory, "packaged-resources") },',
+    '}).catch(error => { console.error(error.message); process.exitCode = 1; });',
+  ].join('\n');
+  const runHook = () =>
+    spawnSync(
+      process.execPath,
+      ['--no-experimental-strip-types', '-e', hookScript, packageDirectory],
+      {
+        cwd: appPath,
+        encoding: 'utf8',
+        env: { ...process.env, HEADLAMP_BUILD_MANIFEST: manifestFile },
+      }
+    );
+
+  try {
+    expect(runHook().status).toBe(0);
+
+    fs.writeFileSync(resourceFile, 'tampered tool');
+    const tampered = runHook();
+    expect(tampered.status).not.toBe(0);
+    expect(tampered.stderr).toContain('SHA-256 mismatch for packaged resource tools/tool');
+  } finally {
+    fs.rmSync(packageDirectory, { recursive: true, force: true });
   }
 });

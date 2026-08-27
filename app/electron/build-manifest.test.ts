@@ -30,6 +30,7 @@ import {
   DEFAULT_MANIFEST_FILE,
   loadBuildManifest,
   resolveBuildManifestPath,
+  verifyPackagedResources,
 } from '../scripts/build-manifest.ts';
 import {
   applyEnabledByDefault,
@@ -539,6 +540,193 @@ function temporaryFile(contents: string): string {
   fs.writeFileSync(file, contents);
   return file;
 }
+
+describe('packaged resource verification', () => {
+  it('preserves packages when verification is absent', () => {
+    expect(() => verifyPackagedResources('/missing', {}, 'linux')).not.toThrow();
+  });
+
+  it.each([
+    { runtimePlatform: 'darwin', manifestPlatform: 'mac' },
+    { runtimePlatform: 'mas', manifestPlatform: 'mac' },
+    { runtimePlatform: 'win32', manifestPlatform: 'win' },
+    { runtimePlatform: 'linux', manifestPlatform: 'linux' },
+  ])(
+    'accepts a matching digest for $runtimePlatform packages',
+    ({ runtimePlatform, manifestPlatform }) => {
+      const file = temporaryFile('bundled tool');
+      const digest = crypto.createHash('sha256').update('bundled tool').digest('hex').toUpperCase();
+
+      expect(() =>
+        verifyPackagedResources(
+          path.dirname(file),
+          {
+            verify: [{ path: path.basename(file), sha256: digest, platforms: [manifestPlatform] }],
+          },
+          runtimePlatform
+        )
+      ).not.toThrow();
+    }
+  );
+
+  it('skips entries for other packaged platforms', () => {
+    expect(() =>
+      verifyPackagedResources(
+        '/missing',
+        { verify: [{ path: 'tool.exe', sha256: '0'.repeat(64), platforms: ['win'] }] },
+        'linux'
+      )
+    ).not.toThrow();
+  });
+
+  it.each([null, [], 'manifest'])('rejects an invalid manifest value: %j', manifest => {
+    expect(() => verifyPackagedResources('/resources', manifest, 'linux')).toThrow(
+      'Build manifest must be an object'
+    );
+  });
+
+  it.each([null, {}, 'resource'])('rejects an invalid verify value: %j', verify => {
+    expect(() => verifyPackagedResources('/resources', { verify }, 'linux')).toThrow(
+      'Build manifest verify must be an array'
+    );
+  });
+
+  it.each([
+    null,
+    [],
+    'resource',
+    {},
+    { path: '', sha256: '0'.repeat(64) },
+    { path: 1, sha256: '0'.repeat(64) },
+    { path: 'tool', sha256: 1 },
+    { path: 'tool', sha256: '0'.repeat(64), platforms: 'linux' },
+    { path: 'tool', sha256: '0'.repeat(64), platforms: ['android'] },
+    { path: 'tool', sha256: '0'.repeat(64), unsafe: true },
+  ])('rejects an invalid verification entry: %j', verification => {
+    expect(() =>
+      verifyPackagedResources('/resources', { verify: [verification] }, 'linux')
+    ).toThrow('Invalid build manifest verify[0]');
+  });
+
+  it.each(['0', 'g'.repeat(64), `${'0'.repeat(64)}00`])(
+    'rejects an invalid SHA-256 digest: %s',
+    sha256 => {
+      expect(() =>
+        verifyPackagedResources('/resources', { verify: [{ path: 'tool', sha256 }] }, 'linux')
+      ).toThrow('Invalid SHA-256 for packaged resource tool');
+    }
+  );
+
+  it.each(['../tool', '/outside/tool'])(
+    'rejects a resource path outside the package: %s',
+    entry => {
+      const resourcesDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'headlamp-resources-'));
+      temporaryDirectories.push(resourcesDirectory);
+
+      expect(() =>
+        verifyPackagedResources(
+          resourcesDirectory,
+          { verify: [{ path: entry, sha256: '0'.repeat(64) }] },
+          'linux'
+        )
+      ).toThrow('escapes the resources directory');
+    }
+  );
+
+  it('rejects resources reached through a parent directory symlink', () => {
+    const resourcesDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'headlamp-resources-'));
+    const outsideDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'headlamp-outside-'));
+    temporaryDirectories.push(resourcesDirectory, outsideDirectory);
+    const contents = 'bundled tool';
+    fs.writeFileSync(path.join(outsideDirectory, 'tool'), contents);
+    fs.symlinkSync(
+      outsideDirectory,
+      path.join(resourcesDirectory, 'tools'),
+      process.platform === 'win32' ? 'junction' : 'dir'
+    );
+
+    expect(() =>
+      verifyPackagedResources(
+        resourcesDirectory,
+        {
+          verify: [
+            {
+              path: 'tools/tool',
+              sha256: crypto.createHash('sha256').update(contents).digest('hex'),
+            },
+          ],
+        },
+        'linux'
+      )
+    ).toThrow('escapes the resources directory');
+  });
+
+  it.each([
+    { name: 'missing files', prepare: () => undefined },
+    { name: 'directories', prepare: (resource: string) => fs.mkdirSync(resource) },
+    {
+      name: 'symbolic links',
+      prepare: (resource: string) => {
+        const target = `${resource}-target`;
+        fs.writeFileSync(target, 'bundled tool');
+        fs.symlinkSync(target, resource);
+      },
+    },
+  ])('rejects $name', ({ prepare }) => {
+    const resourcesDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'headlamp-resources-'));
+    temporaryDirectories.push(resourcesDirectory);
+    const resource = path.join(resourcesDirectory, 'tool');
+    prepare(resource);
+
+    expect(() =>
+      verifyPackagedResources(
+        resourcesDirectory,
+        { verify: [{ path: 'tool', sha256: '0'.repeat(64) }] },
+        'linux'
+      )
+    ).toThrow('Packaged resource is not a regular file: tool');
+  });
+
+  it('rejects digest mismatches', () => {
+    const file = temporaryFile('bundled tool');
+
+    expect(() =>
+      verifyPackagedResources(
+        path.dirname(file),
+        { verify: [{ path: path.basename(file), sha256: '0'.repeat(64) }] },
+        'linux'
+      )
+    ).toThrow(`SHA-256 mismatch for packaged resource ${path.basename(file)}`);
+  });
+
+  it('hashes packaged resources without reading the whole file at once', () => {
+    const contents = Buffer.alloc(128 * 1024, 'a');
+    const resourcesDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'headlamp-resources-'));
+    temporaryDirectories.push(resourcesDirectory);
+    fs.writeFileSync(path.join(resourcesDirectory, 'tool'), contents);
+    const readFileSync = vi.spyOn(fs, 'readFileSync');
+
+    try {
+      expect(() =>
+        verifyPackagedResources(
+          resourcesDirectory,
+          {
+            verify: [
+              {
+                path: 'tool',
+                sha256: crypto.createHash('sha256').update(contents).digest('hex'),
+              },
+            ],
+          },
+          'linux'
+        )
+      ).not.toThrow();
+      expect(readFileSync).not.toHaveBeenCalled();
+    } finally {
+      readFileSync.mockRestore();
+    }
+  });
+});
 
 describe('build manifest selection', () => {
   it('uses Headlamp defaults when no product manifest is configured', () => {
