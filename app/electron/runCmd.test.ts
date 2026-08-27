@@ -61,6 +61,8 @@ import {
   checkPermissionSecret,
   environmentOverrides,
   handleRunCommand,
+  removeRunCmdConsent,
+  setupRunCmdHandlers,
   validateCommandData,
 } from './runCmd';
 
@@ -71,6 +73,10 @@ it('does not cache process environment changes as shell overrides', () => {
       { PATH: '/usr/bin', HEADLAMP_CONFIG_ENABLE_HELM: 'true' }
     )
   ).toEqual({ PATH: '/opt/homebrew/bin:/usr/bin' });
+});
+
+it('uses process.env as the default comparison environment', () => {
+  expect(environmentOverrides(process.env)).toEqual({});
 });
 
 describe('checkPermissionSecret', () => {
@@ -453,6 +459,64 @@ describe('handleRunCommand', () => {
       })
     );
   });
+
+  it('runs plugin scripts with the Electron executable', async () => {
+    const { loadSettings } = await import('./settings');
+    const originalResourcesPath = process.resourcesPath;
+    // @ts-ignore Electron defines this at runtime.
+    process.resourcesPath = '/resources';
+    vi.mocked(loadSettings).mockReturnValueOnce({
+      confirmedCommands: { 'scriptjs missing-plugin/script.js': true },
+    });
+    const eventData = {
+      id: 'script-id',
+      command: 'scriptjs',
+      args: ['missing-plugin/script.js', '--flag'],
+      options: {},
+      permissionSecrets: { 'runCmd-scriptjs-missing-plugin/script.js': 99 },
+    };
+
+    try {
+      await handleRunCommand(fakeEvent, eventData, { id: 1 } as any, {
+        'runCmd-scriptjs-missing-plugin/script.js': 99,
+      });
+
+      expect(spawnMock).toHaveBeenCalledWith(
+        process.execPath,
+        [path.join('/plugins/default', 'missing-plugin/script.js'), '--flag'],
+        expect.objectContaining({
+          env: expect.objectContaining({ HEADLAMP_RUN_SCRIPT: 'true' }),
+        })
+      );
+    } finally {
+      // @ts-ignore Electron defines this at runtime.
+      process.resourcesPath = originalResourcesPath;
+    }
+  });
+
+  it('initializes consent settings for a new command', async () => {
+    const { loadSettings, saveSettings } = await import('./settings');
+    vi.mocked(loadSettings).mockReturnValueOnce({});
+    vi.mocked(saveSettings).mockClear();
+    showMessageBoxSyncMock.mockReturnValueOnce(0);
+    const eventData = {
+      id: 'consent-id',
+      command: 'minikube',
+      args: [],
+      options: {},
+      permissionSecrets: { 'runCmd-minikube': 99 },
+    };
+
+    await handleRunCommand(fakeEvent, eventData, { id: 1 } as any, {
+      'runCmd-minikube': 99,
+    });
+
+    expect(saveSettings).toHaveBeenCalledWith(
+      '/fake/settings.json',
+      expect.objectContaining({ confirmedCommands: { minikube: true } })
+    );
+    expect(spawnMock).toHaveBeenCalled();
+  });
 });
 
 describe('runScript', () => {
@@ -565,6 +629,99 @@ describe('addRunCmdConsent', () => {
     for (const cmd of AI_ASSISTANT_COMMANDS) {
       expect(savedSettings?.confirmedCommands?.[cmd]).toBeUndefined();
     }
+  });
+
+  it('initializes consent settings and pre-populates minikube commands', async () => {
+    const { loadSettings, saveSettings } = await import('./settings');
+    vi.mocked(loadSettings).mockReturnValueOnce({});
+    vi.mocked(saveSettings).mockClear();
+
+    addRunCmdConsent({ name: 'headlamp_minikube' });
+
+    const savedSettings = vi.mocked(saveSettings).mock.calls[0][1] as any;
+    expect(savedSettings.confirmedCommands['minikube status']).toBe(true);
+  });
+
+  it('recognizes the development minikube plugin name', async () => {
+    const { loadSettings, saveSettings } = await import('./settings');
+    vi.stubEnv('NODE_ENV', 'development');
+    vi.mocked(loadSettings).mockReturnValueOnce({ confirmedCommands: {} });
+    vi.mocked(saveSettings).mockClear();
+
+    addRunCmdConsent({ name: 'minikube' });
+
+    const savedSettings = vi.mocked(saveSettings).mock.calls[0][1] as any;
+    expect(savedSettings.confirmedCommands['minikube status']).toBe(true);
+    vi.unstubAllEnvs();
+  });
+});
+
+describe('removeRunCmdConsent', () => {
+  it('returns when consent settings do not exist', async () => {
+    const { loadSettings, saveSettings } = await import('./settings');
+    vi.mocked(loadSettings).mockReturnValueOnce({});
+    vi.mocked(saveSettings).mockClear();
+
+    removeRunCmdConsent('@headlamp-k8s/minikube');
+
+    expect(saveSettings).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['@headlamp-k8s/minikube', 'minikube status'],
+    ['@headlamp-k8s/minikubeprerelease', 'minikube status'],
+    ['@headlamp-k8s/ai-assistant', 'gh auth'],
+    ['@headlamp-k8s/ai-assistantprerelease', 'gh auth'],
+  ])('removes consent for %s', async (pluginName, command) => {
+    const { loadSettings, saveSettings } = await import('./settings');
+    vi.mocked(loadSettings).mockReturnValueOnce({ confirmedCommands: { [command]: true } });
+    vi.mocked(saveSettings).mockClear();
+
+    removeRunCmdConsent(pluginName);
+
+    const savedSettings = vi.mocked(saveSettings).mock.calls[0][1] as any;
+    expect(savedSettings.confirmedCommands[command]).toBeUndefined();
+  });
+});
+
+describe('setupRunCmdHandlers', () => {
+  it('does not register handlers without a main window', () => {
+    const ipcMain = { on: vi.fn() } as any;
+
+    setupRunCmdHandlers(null, ipcMain);
+
+    expect(ipcMain.on).not.toHaveBeenCalled();
+  });
+
+  it('sends permission secrets once per main-frame load', () => {
+    const ipcHandlers = new Map<string, (...args: any[]) => void>();
+    let frameLoadHandler: (_event: unknown, isMainFrame: boolean) => void = () => {};
+    const send = vi.fn();
+    const mainWindow = {
+      webContents: {
+        on: vi.fn((_event: string, handler: typeof frameLoadHandler) => {
+          frameLoadHandler = handler;
+        }),
+        send,
+      },
+    } as any;
+    const ipcMain = {
+      on: vi.fn((channel: string, handler: (...args: any[]) => void) => {
+        ipcHandlers.set(channel, handler);
+      }),
+    } as any;
+
+    setupRunCmdHandlers(mainWindow, ipcMain);
+    const requestSecrets = ipcHandlers.get('request-plugin-permission-secrets')!;
+    requestSecrets();
+    requestSecrets();
+    frameLoadHandler({}, false);
+    requestSecrets();
+    frameLoadHandler({}, true);
+    requestSecrets();
+
+    expect(send).toHaveBeenCalledTimes(2);
+    expect(ipcHandlers.has('run-command')).toBe(true);
   });
 });
 
