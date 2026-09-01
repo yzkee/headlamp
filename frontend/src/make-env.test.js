@@ -138,6 +138,7 @@ test('writes the default product metadata without requiring Git', async () => {
     REACT_APP_HEADLAMP_GIT_VERSION: 'source-commit',
     REACT_APP_HEADLAMP_PRODUCT_NAME: appInfo.productName,
   });
+  expect(env).not.toHaveProperty('REACT_APP_HEADLAMP_PRODUCT_VERSION');
 });
 
 test('reads product metadata from the default manifest', async () => {
@@ -146,8 +147,9 @@ test('reads product metadata from the default manifest', async () => {
   });
 
   expect(env).toMatchObject({
-    REACT_APP_HEADLAMP_VERSION: '2.3.4',
+    REACT_APP_HEADLAMP_VERSION: '0.0.0',
     REACT_APP_HEADLAMP_PRODUCT_NAME: 'Default Product',
+    REACT_APP_HEADLAMP_PRODUCT_VERSION: '2.3.4',
   });
 });
 
@@ -158,6 +160,7 @@ test('falls back to package metadata when the default manifest is absent', async
     REACT_APP_HEADLAMP_VERSION: '0.0.0',
     REACT_APP_HEADLAMP_PRODUCT_NAME: 'Headlamp',
   });
+  expect(env).not.toHaveProperty('REACT_APP_HEADLAMP_PRODUCT_VERSION');
 });
 
 test('resolves a relative custom manifest from the app directory', async () => {
@@ -167,8 +170,9 @@ test('resolves a relative custom manifest from the app directory', async () => {
   });
 
   expect(env).toMatchObject({
-    REACT_APP_HEADLAMP_VERSION: '3.4.5',
+    REACT_APP_HEADLAMP_VERSION: '0.0.0',
     REACT_APP_HEADLAMP_PRODUCT_NAME: 'Relative Product',
+    REACT_APP_HEADLAMP_PRODUCT_VERSION: '3.4.5',
   });
 });
 
@@ -184,9 +188,10 @@ test('uses custom product metadata and the source commit', async () => {
   });
 
   expect(env).toMatchObject({
-    REACT_APP_HEADLAMP_VERSION: '1.2.3',
+    REACT_APP_HEADLAMP_VERSION: appInfo.version,
     REACT_APP_HEADLAMP_GIT_VERSION: '0123456789abcdef',
     REACT_APP_HEADLAMP_PRODUCT_NAME: 'Example Desktop',
+    REACT_APP_HEADLAMP_PRODUCT_VERSION: '1.2.3',
   });
 });
 
@@ -200,6 +205,7 @@ test('falls back to package metadata for omitted product fields', async () => {
     REACT_APP_HEADLAMP_VERSION: appInfo.version,
     REACT_APP_HEADLAMP_PRODUCT_NAME: 'Example Desktop',
   });
+  expect(env).not.toHaveProperty('REACT_APP_HEADLAMP_PRODUCT_VERSION');
 });
 
 test('falls back to package metadata for empty product fields', async () => {
@@ -212,6 +218,7 @@ test('falls back to package metadata for empty product fields', async () => {
     REACT_APP_HEADLAMP_VERSION: appInfo.version,
     REACT_APP_HEADLAMP_PRODUCT_NAME: appInfo.productName,
   });
+  expect(env).not.toHaveProperty('REACT_APP_HEADLAMP_PRODUCT_VERSION');
 });
 
 test('falls back to package metadata when a manifest has no product', async () => {
@@ -224,6 +231,16 @@ test('falls back to package metadata when a manifest has no product', async () =
     REACT_APP_HEADLAMP_VERSION: appInfo.version,
     REACT_APP_HEADLAMP_PRODUCT_NAME: appInfo.productName,
   });
+  expect(env).not.toHaveProperty('REACT_APP_HEADLAMP_PRODUCT_VERSION');
+});
+
+test('omits a whitespace-only product version', async () => {
+  const env = await createEnv({
+    manifest: { product: { productName: 'Example Desktop', version: ' \t' } },
+    sourceCommit: 'source-commit',
+  });
+
+  expect(env).not.toHaveProperty('REACT_APP_HEADLAMP_PRODUCT_VERSION');
 });
 
 test.each([
@@ -247,9 +264,10 @@ test('preserves dotenv-sensitive characters through Vite', async () => {
   });
 
   expect(env).toMatchObject({
-    REACT_APP_HEADLAMP_VERSION: '1.2.3=build',
+    REACT_APP_HEADLAMP_VERSION: appInfo.version,
     REACT_APP_HEADLAMP_GIT_VERSION: 'source=commit',
     REACT_APP_HEADLAMP_PRODUCT_NAME: 'C# $HOME O\'Reilly "Desktop" \\path',
+    REACT_APP_HEADLAMP_PRODUCT_VERSION: '1.2.3=build',
   });
 });
 
