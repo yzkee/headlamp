@@ -44,6 +44,7 @@ import {
 import { withBackendMemoryDefaults } from './backendMemory';
 import { resolveBackendToken, waitForExternalBackend } from './backendToken';
 import { createCertificateSetup } from './certificates';
+import { setupDevelopmentPluginsHandlers } from './developmentPlugins';
 import { startWindowsVMDetection, waitForWindowsVMDetection } from './hardwareAcceleration';
 import i18n from './i18next.config';
 import {
@@ -76,7 +77,7 @@ import {
   setupRunCmdHandlers,
 } from './runCmd';
 import { isTrustedDocumentUrl, setupSecureStorageHandlers } from './secureStorage';
-import { loadSettings, SETTINGS_PATH } from './settings';
+import { areDevelopmentPluginsEnabled, loadSettings, SETTINGS_PATH } from './settings';
 import { getShellEnv } from './shellEnv';
 import { shouldCheckForAppUpdates } from './shouldCheckForAppUpdates';
 import {
@@ -1604,7 +1605,7 @@ function startElectron() {
       startUrl,
       undefined,
       isDev,
-      () => true
+      areDevelopmentPluginsEnabled
     );
 
     applyZoom();
@@ -1801,6 +1802,8 @@ function startElectron() {
       }
       applyTrayIconSetting(enabled);
     });
+
+    setupDevelopmentPluginsHandlers(mainWindow, ipcMain, startUrl);
 
     setupSecureStorageHandlers(mainWindow, startUrl);
 
