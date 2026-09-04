@@ -33,6 +33,7 @@ const wrappedListeners = new WeakMap<
 // the ipcRenderer without exposing the entire object
 contextBridge.exposeInMainWorld('desktopApi', {
   isDevelopment: Boolean(process.env.ELECTRON_DEV),
+  getDevelopmentPluginsEnabled: () => ipcRenderer.invoke('get-development-plugins'),
   send: (channel: string, data: unknown) => {
     // allowed channels
     const validChannels = [

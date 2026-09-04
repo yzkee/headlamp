@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { BrowserWindow, dialog, IpcMain, IpcMainEvent } from 'electron';
+import { BrowserWindow, dialog, IpcMain, IpcMainEvent, IpcMainInvokeEvent } from 'electron';
 import i18n from './i18next.config';
 import { revokeRunCmdCapabilities } from './runCmd';
 import { isTrustedDocumentUrl } from './secureStorage';
@@ -23,6 +23,7 @@ import { areDevelopmentPluginsEnabled, setDevelopmentPluginsEnabled } from './se
 type DevelopmentPluginsIpcListeners = {
   requestDevelopmentPlugins: (event: IpcMainEvent) => void;
   setDevelopmentPlugins: (event: IpcMainEvent, enabled: boolean) => void;
+  getDevelopmentPlugins: (event: IpcMainInvokeEvent) => boolean;
 };
 
 const developmentPluginsIpcListeners = new WeakMap<IpcMain, DevelopmentPluginsIpcListeners>();
@@ -76,6 +77,7 @@ export function setupDevelopmentPluginsHandlers(
   if (previousListeners) {
     ipcMain.off('request-development-plugins', previousListeners.requestDevelopmentPlugins);
     ipcMain.off('set-development-plugins', previousListeners.setDevelopmentPlugins);
+    ipcMain.removeHandler('get-development-plugins');
   }
 
   const requestDevelopmentPlugins = (event: IpcMainEvent) => {
@@ -116,10 +118,23 @@ export function setupDevelopmentPluginsHandlers(
     revokeRunCmdCapabilities(ipcMain);
     mainWindow.webContents.reload();
   };
+  const getDevelopmentPlugins = (event: IpcMainInvokeEvent) => {
+    if (
+      event.sender !== mainWindow.webContents ||
+      event.senderFrame !== mainWindow.webContents.mainFrame ||
+      !isTrustedDocumentUrl(event.senderFrame.url, startUrl)
+    ) {
+      return false;
+    }
+    return areDevelopmentPluginsEnabled();
+  };
+
   ipcMain.on('request-development-plugins', requestDevelopmentPlugins);
   ipcMain.on('set-development-plugins', setDevelopmentPlugins);
+  ipcMain.handle('get-development-plugins', getDevelopmentPlugins);
   developmentPluginsIpcListeners.set(ipcMain, {
     requestDevelopmentPlugins,
     setDevelopmentPlugins,
+    getDevelopmentPlugins,
   });
 }

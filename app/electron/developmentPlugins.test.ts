@@ -98,6 +98,12 @@ describe('setupDevelopmentPluginsHandlers', () => {
     on: vi.fn((channel: string, handler: (...args: any[]) => void) => {
       handlers.set(channel, handler);
     }),
+    handle: vi.fn((channel: string, handler: (...args: any[]) => void) => {
+      handlers.set(channel, handler);
+    }),
+    removeHandler: vi.fn((channel: string) => {
+      handlers.delete(channel);
+    }),
   } as any;
 
   beforeEach(() => {
@@ -117,6 +123,15 @@ describe('setupDevelopmentPluginsHandlers', () => {
     expect(webContents.reload).not.toHaveBeenCalled();
   });
 
+  it('reports disabled to untrusted frames', () => {
+    areDevelopmentPluginsEnabled.mockReturnValue(true);
+
+    expect(handlers.get('get-development-plugins')!({ sender: webContents, senderFrame: {} })).toBe(
+      false
+    );
+    expect(areDevelopmentPluginsEnabled).not.toHaveBeenCalled();
+  });
+
   it('does not disclose the persisted state through the send channel to untrusted frames', () => {
     areDevelopmentPluginsEnabled.mockReturnValue(true);
 
@@ -129,15 +144,26 @@ describe('setupDevelopmentPluginsHandlers', () => {
   it.each([
     ['request-development-plugins', undefined],
     ['set-development-plugins', true],
+    ['get-development-plugins', undefined],
   ])('rejects %s after the main frame navigates away', (channel, enabled) => {
     mainFrame.url = 'https://untrusted.example/';
 
-    handlers.get(channel)!({ sender: webContents, senderFrame: mainFrame }, enabled);
+    const result = handlers.get(channel)!({ sender: webContents, senderFrame: mainFrame }, enabled);
 
+    expect(result).toBe(channel === 'get-development-plugins' ? false : undefined);
     expect(areDevelopmentPluginsEnabled).not.toHaveBeenCalled();
     expect(setDevelopmentPluginsEnabled).not.toHaveBeenCalled();
     expect(webContents.send).not.toHaveBeenCalled();
   });
+
+  it('reports the persisted state to the main frame', () => {
+    areDevelopmentPluginsEnabled.mockReturnValue(true);
+
+    expect(
+      handlers.get('get-development-plugins')!({ sender: webContents, senderFrame: mainFrame })
+    ).toBe(true);
+  });
+
   it('leaves the setting unchanged when native confirmation is cancelled', () => {
     showMessageBoxSync.mockReturnValueOnce(1);
 
@@ -195,6 +221,7 @@ describe('setupDevelopmentPluginsHandlers', () => {
 
     expect(ipcMain.off).toHaveBeenCalledWith('request-development-plugins', previousRequestHandler);
     expect(ipcMain.off).toHaveBeenCalledWith('set-development-plugins', previousSetHandler);
+    expect(ipcMain.removeHandler).toHaveBeenCalledWith('get-development-plugins');
     handlers.get('request-development-plugins')!({
       sender: replacementWindow.webContents,
       senderFrame: replacementWindow.webContents.mainFrame,
