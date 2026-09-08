@@ -74,6 +74,7 @@ RUN ./fetch-plugins.sh /plugins/
 
 FROM image-base AS final
 
+# Install runtime dependencies and create the non-root user
 RUN if command -v apt-get > /dev/null; then \
     apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
@@ -81,7 +82,11 @@ RUN if command -v apt-get > /dev/null; then \
     && adduser --system --ingroup headlamp headlamp \
     && rm -rf /var/lib/apt/lists/*; \
     else \
-    addgroup -S headlamp && adduser -S headlamp -G headlamp; \
+    apk add --no-cache \
+    'libcrypto3=3.5.8-r0' \
+    'libssl3=3.5.8-r0' \
+    && addgroup -S headlamp \
+    && adduser -S headlamp -G headlamp; \
     fi
 
 COPY --from=backend-build --link /headlamp/backend/headlamp-server /headlamp/headlamp-server
