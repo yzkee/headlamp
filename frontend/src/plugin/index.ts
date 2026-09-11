@@ -59,6 +59,10 @@ import {
   PluginCommandCapability,
   preparePluginCommandCapabilities,
 } from './commandCapabilities';
+import {
+  filterDisabledDevelopmentPlugins,
+  getDormantDevelopmentPluginSettings,
+} from './developmentPlugins';
 import { fetchPluginResource } from './fetchPluginResource';
 import { Headlamp, Plugin } from './lib';
 import { changePluginLanguage, initializePluginI18n } from './pluginI18n';
@@ -337,6 +341,7 @@ export function updateSettingsPackages(
 
   const pluginsChanged =
     backendPlugins.length !== settingsPlugins.length ||
+    settingsPlugins.some(plugin => plugin.isDevelopmentModeBlocked) ||
     backendPlugins.map(p => getPluginKey(p) + p.version).join('') !==
       settingsPlugins.map(p => getPluginKey(p) + p.version).join('');
 
@@ -356,11 +361,14 @@ export function updateSettingsPackages(
       };
     }
 
+    const settingsPlugin = { ...settingsPlugins[index] };
+    delete settingsPlugin.isDevelopmentModeBlocked;
+
     // Merge settings with backend info, preserving user's isEnabled preference
     return {
-      ...settingsPlugins[index],
+      ...settingsPlugin,
       ...plugin,
-      isEnabled: settingsPlugins[index].isEnabled,
+      isEnabled: settingsPlugin.isEnabled,
     };
   });
 }
@@ -489,11 +497,17 @@ export async function fetchAndExecutePlugins(
     name: string;
   }
 
-  const pluginMetadataList = await fetchWithRetry<PluginMetadata[]>(
+  const discoveredPluginMetadata = await fetchWithRetry<PluginMetadata[]>(
     `${getAppUrl()}plugins`,
     headers,
     response => response.json(),
     deadline
+  );
+  const pluginMetadataList = await filterDisabledDevelopmentPlugins(discoveredPluginMetadata);
+  const dormantDevelopmentPluginSettings = getDormantDevelopmentPluginSettings(
+    discoveredPluginMetadata,
+    pluginMetadataList,
+    settingsPackages
   );
 
   // Extract paths for fetching plugin files
@@ -560,7 +574,7 @@ export async function fetchAndExecutePlugins(
   updatedSettingsPackages = applyPluginPriority(updatedSettingsPackages);
 
   // Notify settings of changes
-  onSettingsChange(updatedSettingsPackages);
+  onSettingsChange([...updatedSettingsPackages, ...dormantDevelopmentPluginSettings]);
 
   // Can set this to a semver version range like '>=0.8.0-alpha.3'.
   // '' means all versions.
@@ -589,7 +603,7 @@ export async function fetchAndExecutePlugins(
   }
 
   // Update settings with compatibility info
-  onSettingsChange(updatedSettingsPackages);
+  onSettingsChange([...updatedSettingsPackages, ...dormantDevelopmentPluginSettings]);
 
   // Filter to only execute plugins that should be loaded
   // A plugin is executed if:

@@ -32,6 +32,8 @@ const wrappedListeners = new WeakMap<
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
 contextBridge.exposeInMainWorld('desktopApi', {
+  isDevelopment: Boolean(process.env.ELECTRON_DEV),
+  getDevelopmentPluginsEnabled: () => ipcRenderer.invoke('get-development-plugins'),
   send: (channel: string, data: unknown) => {
     // allowed channels
     const validChannels = [
@@ -47,6 +49,8 @@ contextBridge.exposeInMainWorld('desktopApi', {
       'request-backend-port',
       'request-tray-icon',
       'set-tray-icon',
+      'request-development-plugins',
+      'set-development-plugins',
       'cluster-changed',
       'route-changed',
     ];
@@ -69,6 +73,7 @@ contextBridge.exposeInMainWorld('desktopApi', {
       'open-about-dialog',
       'backend-port',
       'tray-icon',
+      'development-plugins',
     ];
     if (validChannels.includes(channel)) {
       // Deliberately strip event as it includes `sender`
