@@ -30,6 +30,7 @@ export default defineConfig({
     'buildManifest.spec.ts',
     'buildManifestProduct.spec.ts',
     'clusterRename.spec.ts',
+    'configDirectories.spec.ts',
     'namespaces.spec.ts',
     'clusterAutoConnect.spec.ts',
     'externalBackendToken.spec.ts',

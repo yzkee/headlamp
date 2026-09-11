@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import './runtimeProductIdentity';
 import { ChildProcessWithoutNullStreams, execFileSync, spawn } from 'child_process';
 import dotenv from 'dotenv';
 import {
@@ -76,6 +75,7 @@ import {
   runScript,
   setupRunCmdHandlers,
 } from './runCmd';
+import { pluginConfigDirName } from './runtimeProductIdentity';
 import { isTrustedDocumentUrl, setupSecureStorageHandlers } from './secureStorage';
 import { areDevelopmentPluginsEnabled, loadSettings, SETTINGS_PATH } from './settings';
 import { getShellEnv } from './shellEnv';
@@ -96,11 +96,13 @@ import {
   saveZoomFactor,
 } from './zoom';
 
+const isDev = !!process.env.ELECTRON_DEV;
+
 if (process.env.APPIMAGE) {
   app.commandLine.appendSwitch('disable-setuid-sandbox');
 }
 
-setAppConfigDirName(app.getName());
+setAppConfigDirName(pluginConfigDirName(app.getName(), isDev));
 
 // On Linux, force the GTK 3 backend. Electron 36+ defaults to GTK 4, which
 // conflicts with GTK 2/3 symbols pulled into the process by IM modules and
@@ -124,7 +126,6 @@ dotenv.config({ path: path.join(process.resourcesPath, '.env') });
 const settings = loadSettings(SETTINGS_PATH);
 const ensureCertificates = createCertificateSetup(settings);
 
-const isDev = !!process.env.ELECTRON_DEV;
 let frontendPath = '';
 
 if (isDev) {
