@@ -672,6 +672,12 @@ export function applyProductMetadata<T extends object>(config: T, manifest: unkn
     !Array.isArray(configRecord.extraMetadata)
       ? configRecord.extraMetadata
       : {};
+  const currentLinux =
+    configRecord.linux &&
+    typeof configRecord.linux === 'object' &&
+    !Array.isArray(configRecord.linux)
+      ? (configRecord.linux as Record<string, unknown>)
+      : {};
 
   return {
     ...config,
@@ -680,9 +686,16 @@ export function applyProductMetadata<T extends object>(config: T, manifest: unkn
     ...(metadata.artifactName && { artifactName: metadata.artifactName }),
     ...(metadata.protocols && { protocols: metadata.protocols }),
     ...(metadata.version && { buildVersion: metadata.version }),
+    ...(metadata.companyName && {
+      linux: {
+        ...currentLinux,
+        vendor: metadata.companyName,
+      },
+    }),
     extraMetadata: {
       ...currentExtraMetadata,
       ...(metadata.name && { name: metadata.name }),
+      ...(metadata.companyName && { author: { name: metadata.companyName } }),
       ...(metadata.productName && { productName: metadata.productName }),
       ...(metadata.version && { version: metadata.version }),
     },
@@ -874,17 +887,22 @@ export function applyPlatformMetadata<T extends object>(config: T, manifest: unk
     throw new Error('Build manifest platforms must be an object');
   }
 
-  const allowedFields = new Set([
+  const commonAllowedFields = [
     'appId',
     'bundleShortVersion',
     'bundleVersion',
     'executableName',
     'icon',
     'artifactName',
-  ]);
+  ];
+  const allowedFields = {
+    linux: new Set([...commonAllowedFields, 'maintainer']),
+    mac: new Set(commonAllowedFields),
+    win: new Set(commonAllowedFields),
+  };
   const configRecord = config as Record<string, unknown>;
   const result: Record<string, unknown> = { ...configRecord };
-  for (const platform of ['linux', 'mac', 'win']) {
+  for (const platform of ['linux', 'mac', 'win'] as const) {
     const metadata = (platforms as Record<string, unknown>)[platform];
     if (metadata === undefined) {
       continue;
@@ -893,7 +911,7 @@ export function applyPlatformMetadata<T extends object>(config: T, manifest: unk
       throw new Error(`Build manifest platforms.${platform} must be an object`);
     }
     for (const [field, fieldValue] of Object.entries(metadata)) {
-      if (!allowedFields.has(field)) {
+      if (!allowedFields[platform].has(field)) {
         throw new Error(`Unsupported build manifest platforms.${platform}.${field}`);
       }
       if (typeof fieldValue !== 'string') {

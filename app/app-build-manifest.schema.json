@@ -39,6 +39,10 @@
       "properties": {
         "name": { "type": "string" },
         "productName": { "type": "string" },
+        "companyName": {
+          "type": "string",
+          "description": "Company attribution used for Windows and macOS metadata and the Linux vendor field."
+        },
         "version": { "type": "string" },
         "appId": { "type": "string" },
         "artifactName": { "type": "string" },
@@ -87,7 +91,7 @@
       "type": "object",
       "description": "Electron Builder metadata overrides selected per platform.",
       "properties": {
-        "linux": { "$ref": "#/definitions/platformMetadata" },
+        "linux": { "$ref": "#/definitions/linuxPlatformMetadata" },
         "mac": { "$ref": "#/definitions/platformMetadata" },
         "win": { "$ref": "#/definitions/platformMetadata" }
       },
@@ -381,6 +385,22 @@
         "executableName": { "type": "string" },
         "icon": { "type": "string" },
         "artifactName": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "linuxPlatformMetadata": {
+      "type": "object",
+      "properties": {
+        "appId": { "type": "string" },
+        "bundleShortVersion": { "type": "string" },
+        "bundleVersion": { "type": "string" },
+        "executableName": { "type": "string" },
+        "icon": { "type": "string" },
+        "artifactName": { "type": "string" },
+        "maintainer": {
+          "type": "string",
+          "description": "Linux package maintainer including a contact address, for example Example Company <support@example.com>."
+        }
       },
       "additionalProperties": false
     },
